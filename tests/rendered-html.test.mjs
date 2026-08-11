@@ -1,0 +1,58 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+const workerUrl = new URL("../dist/server/index.js", import.meta.url);
+
+async function render(pathname = "/", headers = {}) {
+  const moduleUrl = new URL(workerUrl);
+  moduleUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${pathname}`);
+  const { default: worker } = await import(moduleUrl.href);
+
+  return worker.fetch(
+    new Request(`http://localhost${pathname}`, {
+      headers: { accept: "text/html", ...headers },
+    }),
+    {
+      ASSETS: {
+        fetch: async () => new Response("Not found", { status: 404 }),
+      },
+    },
+    {
+      waitUntil() {},
+      passThroughOnException() {},
+    },
+  );
+}
+
+test("server-renders the finished public landing page", async () => {
+  const response = await render();
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
+
+  const html = await response.text();
+  assert.match(html, /<title>玄鉴｜命理投研罗盘<\/title>/);
+  assert.match(html, /观五行之势/);
+  assert.match(html, /量化权重主导/);
+  assert.match(html, /产品演示/);
+  assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
+});
+
+test("renders the end-to-end demo shell without authentication", async () => {
+  const response = await render("/demo");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /填写出生信息/);
+  assert.match(html, /生成我的命理投研报告/);
+  assert.match(html, /量化基本面/);
+  assert.match(html, /不构成投资建议/);
+});
+
+test("keeps the personal dashboard behind sign-in", async () => {
+  const response = await render("/dashboard");
+  assert.ok([302, 303, 307, 308].includes(response.status));
+  assert.match(
+    response.headers.get("location") ?? "",
+    /^\/signin-with-chatgpt\?return_to=%2Fdashboard$/,
+  );
+});
