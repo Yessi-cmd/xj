@@ -45,7 +45,8 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.match(html, /填写出生信息/);
   assert.match(html, /生成我的命理投研报告/);
   assert.match(html, /量化基本面/);
-  assert.match(html, /不构成投资建议/);
+  assert.match(html, /当前原型不写入数据库/);
+  assert.doesNotMatch(html, /先守量化纪律|本产品原型不构成投资建议/);
 });
 
 test("renders a public standalone VPS entry without Sites authentication links", async () => {
@@ -57,6 +58,7 @@ test("renders a public standalone VPS entry without Sites authentication links",
   assert.match(html, /公开测试版/);
   assert.match(html, /生成我的命理投研报告/);
   assert.doesNotMatch(html, /signin-with-chatgpt|signout-with-chatgpt/);
+  assert.doesNotMatch(html, /方法说明|先守量化纪律|本产品原型不构成投资建议/);
 });
 
 test("keeps the personal dashboard behind sign-in", async () => {

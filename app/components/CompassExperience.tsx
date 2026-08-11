@@ -84,7 +84,6 @@ export default function CompassExperience({
           <a className="active" href="#birth-profile"><span>◉</span>命理罗盘</a>
           <a href="#fortune-result"><span>◇</span>命格画像</a>
           <a href="#recommendations"><span>↗</span>投研候选</a>
-          <a href="#methodology"><span>冊</span>方法说明</a>
         </nav>
 
         <div className="rail-divider" />
@@ -373,28 +372,8 @@ export default function CompassExperience({
               </div>
             </section>
 
-            <section className="method-card" id="methodology">
-              <div>
-                <span className="method-icon">衡</span>
-                <div>
-                  <strong>先守量化纪律，再谈命理偏好</strong>
-                  <p>
-                    正式流程先过滤 ST、流动性不足和上市时间过短的证券，再完成行业内标准化、
-                    行业权重上限与个股权重上限。命理层不能把不合格证券“推”进组合。
-                  </p>
-                </div>
-              </div>
-              <small>
-                风水命理属于传统文化表达，缺乏可重复验证的金融预测证据。本页面仅作产品研究与娱乐展示，
-                不构成投资建议，也不承诺收益。
-              </small>
-            </section>
           </div>
         )}
-
-        <footer className="product-disclaimer">
-          风水命理属于传统文化体验，不具备可重复验证的金融预测能力；本产品原型不构成投资建议。
-        </footer>
       </main>
     </div>
   );
