@@ -13,6 +13,7 @@ type CompassExperienceProps = {
   displayName: string;
   signedIn?: boolean;
   demoMode?: boolean;
+  standaloneMode?: boolean;
 };
 
 const ELEMENT_META = {
@@ -35,6 +36,7 @@ export default function CompassExperience({
   displayName,
   signedIn = false,
   demoMode = false,
+  standaloneMode = false,
 }: CompassExperienceProps) {
   const [profile, setProfile] = useState<BirthProfile>(INITIAL_PROFILE);
   const [result, setResult] = useState<FortuneResult | null>(null);
@@ -99,9 +101,13 @@ export default function CompassExperience({
           <span className="avatar">{displayName.slice(0, 1).toUpperCase()}</span>
           <span className="user-copy">
             <strong>{displayName}</strong>
-            <small>{demoMode ? "访客演示" : "已登录用户"}</small>
+            <small>
+              {standaloneMode ? "公开测试版" : demoMode ? "访客演示" : "已登录用户"}
+            </small>
           </span>
-          {signedIn ? (
+          {standaloneMode ? (
+            <span className="quiet-action">已上线</span>
+          ) : signedIn ? (
             <a className="quiet-action" href="/signout-with-chatgpt?return_to=/">退出</a>
           ) : (
             <a className="quiet-action" href="/signin-with-chatgpt?return_to=/dashboard">登录</a>

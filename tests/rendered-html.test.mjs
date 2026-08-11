@@ -48,6 +48,17 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.match(html, /不构成投资建议/);
 });
 
+test("renders a public standalone VPS entry without Sites authentication links", async () => {
+  const response = await render("/live");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /玄鉴命理投研罗盘/);
+  assert.match(html, /公开测试版/);
+  assert.match(html, /生成我的命理投研报告/);
+  assert.doesNotMatch(html, /signin-with-chatgpt|signout-with-chatgpt/);
+});
+
 test("keeps the personal dashboard behind sign-in", async () => {
   const response = await render("/dashboard");
   assert.ok([302, 303, 307, 308].includes(response.status));
