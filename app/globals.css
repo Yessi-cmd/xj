@@ -1515,11 +1515,42 @@ select:focus-visible {
   font-size: 8px;
 }
 
-.security-card > p {
+.security-reason p {
   margin: 0;
   color: #6d6962;
   font-size: 9px;
   line-height: 1.6;
+}
+
+.security-reason {
+  display: grid;
+  gap: 7px;
+}
+
+.mystic-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.mystic-tags span,
+.signature-line {
+  border: 1px solid rgba(91, 54, 126, 0.15);
+  border-radius: 999px;
+  background: rgba(91, 54, 126, 0.055);
+  color: #6e5285;
+}
+
+.mystic-tags span {
+  padding: 2px 6px;
+  font-size: 7px;
+}
+
+.signature-line {
+  width: fit-content;
+  padding: 6px 10px;
+  font-size: 9px;
+  line-height: 1.5;
 }
 
 .score-cluster {
@@ -1941,7 +1972,7 @@ select:focus-visible {
     gap: 12px;
   }
 
-  .security-card > p {
+  .security-reason {
     grid-column: 2;
   }
 

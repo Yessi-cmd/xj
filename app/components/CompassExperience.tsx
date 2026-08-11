@@ -17,11 +17,11 @@ type CompassExperienceProps = {
 };
 
 const ELEMENT_META = {
-  木: { color: "#39a96b", phrase: "成长 · 生发" },
-  火: { color: "#ef6a5b", phrase: "动量 · 热度" },
-  土: { color: "#c4933f", phrase: "质量 · 稳健" },
-  金: { color: "#8b7eb8", phrase: "价值 · 收敛" },
-  水: { color: "#397db2", phrase: "低波 · 流动" },
+  木: { color: "#39a96b", phrase: "青龙 · 生发" },
+  火: { color: "#ef6a5b", phrase: "朱雀 · 明耀" },
+  土: { color: "#c4933f", phrase: "勾陈 · 承载" },
+  金: { color: "#8b7eb8", phrase: "白虎 · 决断" },
+  水: { color: "#397db2", phrase: "玄武 · 流变" },
 } as const;
 
 const INITIAL_PROFILE: BirthProfile = {
@@ -83,15 +83,15 @@ export default function CompassExperience({
         <nav className="side-nav">
           <a className="active" href="#birth-profile"><span>◉</span>命理罗盘</a>
           <a href="#fortune-result"><span>◇</span>命格画像</a>
-          <a href="#recommendations"><span>↗</span>投研候选</a>
+          <a href="#recommendations"><span>↗</span>玄学缘分榜</a>
         </nav>
 
         <div className="rail-divider" />
         <div className="rail-status">
           <span className="status-dot" />
           <div>
-            <strong>AShare 量化内核</strong>
-            <small>五因子映射已连接</small>
+            <strong>近5,000只A股玄学标签池</strong>
+            <small>五行 · 星曜 · 灵数已连接</small>
           </div>
         </div>
 
@@ -132,17 +132,19 @@ export default function CompassExperience({
 
         <section className="workspace-hero">
           <div>
-            <span className="eyebrow">命格不是买入信号，而是偏好镜片</span>
-            <h1>以命理观人，<em>以量化择股</em></h1>
+            <span className="eyebrow">命格不是买入信号，而是一枚缘分索引</span>
+            <h1>以命理观人，<em>以缘分寻股</em></h1>
             <p>
-              从出生时空生成八字与五行画像，再把喜用倾向映射为 AShare
-              的质量、成长、价值、动量与低波因子权重。
+              为全A股赋予五行、阴阳、星曜、神兽、卦宫与灵数标签；你的八字命盘
+              将从几千只股票中抽取更个性、更小众的玄学缘分签。
             </p>
           </div>
           <div className="hero-formula" aria-label="推荐方法权重">
-            <span>量化基本面</span><strong>85%</strong>
+            <span>命理共振</span><strong>70%</strong>
             <i />
-            <span>命理偏好</span><strong>15%</strong>
+            <span>小众探索</span><strong>20%</strong>
+            <i />
+            <span>基础过滤</span><strong>10%</strong>
           </div>
         </section>
 
@@ -151,7 +153,7 @@ export default function CompassExperience({
           <i />
           <span className={result ? "complete" : "current"}><b>2</b>命盘推演</span>
           <i />
-          <span className={result ? "complete" : ""}><b>3</b>量化推荐</span>
+          <span className={result ? "complete" : ""}><b>3</b>缘分寻股</span>
         </div>
 
         <section className="input-stage" id="birth-profile">
@@ -233,7 +235,7 @@ export default function CompassExperience({
             {error && <p className="form-error" role="alert">{error}</p>}
 
             <button className="primary-button" type="submit" disabled={loading}>
-              <span>{loading ? "正在推演命盘…" : "生成我的命理投研报告"}</span>
+              <span>{loading ? "正在千股池中寻缘…" : "生成我的玄学缘分榜"}</span>
               <b aria-hidden="true">→</b>
             </button>
             <p className="privacy-note">🔒 出生信息仅在本次分析中使用，当前原型不写入数据库</p>
@@ -272,8 +274,8 @@ export default function CompassExperience({
               </div>
             ) : (
               <div className="compass-empty-copy">
-                <strong>四柱定盘 · 五行取象 · 因子映射</strong>
-                <span>命理只影响 15% 的偏好分，量化纪律保持主导。</span>
+                <strong>四柱定盘 · 星曜落位 · 千股寻缘</strong>
+                <span>命理共振主导 70%，每一份出生时空都对应不同的缘分榜。</span>
               </div>
             )}
           </section>
@@ -315,10 +317,10 @@ export default function CompassExperience({
             <section className="factor-section surface-card">
               <div className="section-title-row">
                 <div>
-                  <span className="section-kicker">因子映射 · 第三步</span>
-                  <h2>把“喜{result.favorableElement}”翻译成可验证的量化权重</h2>
+                  <span className="section-kicker">玄学签名 · 第三步</span>
+                  <h2>把“喜{result.favorableElement}”与星曜、卦宫、灵数合成缘分签名</h2>
                 </div>
-                <span className="logic-badge">命理层上限 15%</span>
+                <span className="logic-badge">娱乐命理权重 70%</span>
               </div>
               <div className="factor-layout">
                 <div className="factor-radar-copy">
@@ -326,6 +328,10 @@ export default function CompassExperience({
                   <strong style={{ color: ELEMENT_META[result.favorableElement].color }}>
                     {result.favorableElement} · {ELEMENT_META[result.favorableElement].phrase}
                   </strong>
+                  <div className="signature-line">
+                    {result.mysticSignature.star}星 · {result.mysticSignature.beast} · {result.mysticSignature.palace}宫 ·
+                    {result.mysticSignature.destinyNumber}号灵数 · {result.mysticSignature.yinYang}象
+                  </div>
                   <p>{result.methodologyNote}</p>
                 </div>
                 <div className="factor-weights">
@@ -343,11 +349,11 @@ export default function CompassExperience({
             <section className="recommendation-section" id="recommendations">
               <div className="section-title-row">
                 <div>
-                  <span className="section-kicker">研究候选 · 原型结果</span>
-                  <h2>股票与基金候选组合</h2>
-                  <p>以下为固定样本数据，用于验证产品框架；正式版将调用 AShare 当日扫描结果。</p>
+                  <span className="section-kicker">玄学缘分榜 · 娱乐结果</span>
+                  <h2>A股小众缘分榜</h2>
+                  <p>从 {result.universeSize.toLocaleString("zh-CN")} 只非ST、未退市A股标签池中，按本次命盘寻找冷门灵感；换一份出生时空，榜单也会随之变化。</p>
                 </div>
-                <span className="count-badge">{result.recommendations.length} 个候选</span>
+                <span className="count-badge">{result.recommendations.length} 只缘分股</span>
               </div>
 
               <div className="recommendation-list">
@@ -355,17 +361,22 @@ export default function CompassExperience({
                   <article className="security-card" key={item.code}>
                     <span className="security-rank">{String(index + 1).padStart(2, "0")}</span>
                     <div className="security-name">
-                      <span className={`kind-pill ${item.kind === "基金" ? "fund" : ""}`}>{item.kind}</span>
+                      <span className="kind-pill">{item.kind}</span>
                       <h3>{item.name}</h3>
                       <small>{item.code} · {item.theme}</small>
                     </div>
-                    <p>{item.rationale}</p>
+                    <div className="security-reason">
+                      <p>{item.rationale}</p>
+                      <div className="mystic-tags">
+                        {item.tags.map((tag) => <span key={tag}>{tag}</span>)}
+                      </div>
+                    </div>
                     <div className="score-cluster">
-                      <span><small>量化</small><b>{item.quantScore}</b></span>
+                      <span><small>命理</small><b>{item.mysticScore}</b></span>
                       <i>+</i>
-                      <span><small>命理</small><b>{item.elementScore}</b></span>
+                      <span><small>探索</small><b>{item.explorationScore}</b></span>
                       <i>=</i>
-                      <span className="total-score"><small>综合</small><b>{item.combinedScore}</b></span>
+                      <span className="total-score"><small>缘分</small><b>{item.combinedScore}</b></span>
                     </div>
                   </article>
                 ))}
