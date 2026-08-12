@@ -18,6 +18,7 @@
   - `app/lib/profile-crypto.ts`：`.xjprofile` 的 PBKDF2-SHA256 + AES-GCM 加解密。
   - `app/live/`：VPS 公网入口；`app/demo/`：免登录体验；`app/dashboard/`：登录保护入口。
 - `public/data/mystic-stocks.json`：生产运行时使用的静态股票标签池。
+- `app/data/market-snapshot.json`：首页展示的版本化三大指数延时或收盘快照。
 - `app/data/china-locations.json`：随前端打包的全国县市与经度静态快照。
 - `scripts/`：交易所资料刷新、标签增强与 VPS 静态构建。
 - `tests/`：Node 测试和服务端渲染验收。
@@ -42,6 +43,7 @@ npm run build:vps
 - `npm test` 会先执行生产构建，再运行页面渲染、排序、本地状态与加密测试。
 - `npm run build:vps` 生成被忽略的 `dist-vps/`，并验证 `/live` 可作为公开静态首页。
 - `npm run data:refresh` 需要 Python 与 AkShare，并会访问交易所数据源；不要在普通单元测试中调用网络。
+- `npm run data:market` 显式刷新上证指数、深证成指和创业板指静态快照；不要在普通构建或测试中调用网络。
 - `npm run data:locations` 使用民政部版本化行政区划和固定版本坐标源刷新地点快照；属于显式联网维护操作，不要在普通构建或测试中调用。
 - `dist/`、`dist-vps/`、`.next/`、`.vinext/`、`var/` 和 `*.tsbuildinfo` 都是生成状态，不要提交。
 
@@ -93,6 +95,13 @@ npm run build:vps
 - 地点选择应按“省级 → 市级 → 县区级”逐级联动，支持各级名称筛选，并用完整路径区分重名区县。
 - 真太阳时校正优先使用所选县区中心经度；新设区划缺少坐标时允许回退到所属城市经度，不得编造坐标。
 - 刷新地点后检查 `schemaVersion`、`divisionVersion`、`locationCount`，并运行完整测试。
+
+## Market snapshot rules
+
+- `app/data/market-snapshot.json` 是需要提交的版本化首页数据；页面不得在运行时请求行情接口。
+- 大盘卡必须展示交易日、行情更新时间、数据来源，并在非当日快照时明确写“最近大盘快照”。
+- 指数摘要只能描述已发生的同步收涨、同步收跌、分化或持平，不得与流日风水建立因果关系或推断后市。
+- 刷新快照后检查 `schemaVersion`、三项指数代码和数值完整性，并运行完整测试。
 
 ## Persistence and privacy
 

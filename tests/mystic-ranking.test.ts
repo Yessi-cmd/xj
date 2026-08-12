@@ -2,9 +2,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+import { buildDailyFengShuiOverview } from "../app/lib/daily-overview.ts";
+import { summarizeMarket, type MarketSnapshot } from "../app/lib/market-overview.ts";
 import { DAILY_ROLES, rankMysticStocks, type MysticContext, type MysticUniverse } from "../app/lib/mystic-ranking.ts";
 
 const universe = JSON.parse(await readFile(new URL("../public/data/mystic-stocks.json", import.meta.url), "utf8")) as MysticUniverse;
+const marketSnapshot = JSON.parse(await readFile(new URL("../app/data/market-snapshot.json", import.meta.url), "utf8")) as MarketSnapshot;
 
 const BASE_CONTEXT: MysticContext = {
   profileKey: "male|1990-06-15|08:30|北京市|庚午|壬午|辛亥|壬辰",
@@ -24,6 +27,25 @@ test("daily draw is deterministic, unique, and contains all six roles", () => {
   assert.deepEqual(first.recommendations.map((item) => item.role), DAILY_ROLES);
   assert.equal(new Set(first.recommendations.map((item) => item.code)).size, 6);
   assert.equal(first.recommendations.find((item) => item.role === "clash")?.isPositive, false);
+});
+
+test("daily feng shui overview is deterministic and only follows the Beijing-time daily element", () => {
+  const first = buildDailyFengShuiOverview(BASE_CONTEXT.daily);
+  const second = buildDailyFengShuiOverview({ ...BASE_CONTEXT.daily, drawVersion: 1 });
+  assert.deepEqual(first, second);
+  assert.equal(first.headline, "戊午日 · 土气当值");
+  assert.equal(first.direction, "中宫");
+  assert.match(first.favorable, /归置旧物/);
+  assert.doesNotMatch(`${first.summary}${first.favorable}${first.avoid}`, /涨|跌|买入|卖出|收益/);
+});
+
+test("versioned market snapshot contains three factual indices and a non-predictive summary", () => {
+  assert.equal(marketSnapshot.schemaVersion, 1);
+  assert.deepEqual(marketSnapshot.indices.map((index) => index.code), ["000001", "399001", "399006"]);
+  assert.ok(marketSnapshot.indices.every((index) => Number.isFinite(index.level) && Number.isFinite(index.changePercent)));
+  const summary = summarizeMarket(marketSnapshot);
+  assert.match(summary.title, /同步收涨|同步收跌|表现分化|大致持平/);
+  assert.match(summary.description, /不推断后市|不把分化解读为后市信号/);
 });
 
 test("one reroll changes variable signs but preserves guardian and clash", () => {

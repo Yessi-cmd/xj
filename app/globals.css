@@ -5049,3 +5049,438 @@ select:focus-visible {
     font-size: 44px;
   }
 }
+
+/* Today overview: daily cultural reading beside factual market data. */
+
+.today-overview {
+  position: relative;
+  z-index: 3;
+  width: min(1240px, calc(100% - 64px));
+  margin: 18px auto 72px;
+}
+
+.today-overview-heading {
+  display: grid;
+  grid-template-columns: 1fr minmax(300px, 0.7fr);
+  align-items: end;
+  gap: 48px;
+  margin-bottom: 25px;
+}
+
+.today-overview-heading h2 {
+  margin: 12px 0 0;
+  font-family: var(--serif);
+  font-size: clamp(32px, 3.2vw, 46px);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  line-height: 1.3;
+}
+
+.today-overview-heading > p {
+  margin: 0;
+  color: #77736a;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.today-overview-grid {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 16px;
+}
+
+.today-overview-card {
+  position: relative;
+  min-width: 0;
+  min-height: 420px;
+  padding: 30px;
+  overflow: hidden;
+  border: 1px solid rgba(21, 26, 54, 0.12);
+}
+
+.today-overview-card > header {
+  display: flex;
+  position: relative;
+  z-index: 2;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 18px;
+  border-bottom: 1px solid currentColor;
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.today-overview-card > header span {
+  color: inherit;
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.today-overview-card > header small {
+  color: inherit;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.fengshui-overview-card {
+  background:
+    radial-gradient(circle at 12% 85%, rgba(212, 169, 72, 0.18), transparent 26%),
+    radial-gradient(circle at 100% 0%, rgba(68, 117, 104, 0.25), transparent 35%),
+    #101b1d;
+  color: #ede6d3;
+  box-shadow: 0 24px 60px rgba(21, 26, 54, 0.14);
+}
+
+.fengshui-overview-card::after {
+  position: absolute;
+  right: -115px;
+  bottom: -130px;
+  width: 330px;
+  height: 330px;
+  content: "";
+  border: 1px solid rgba(230, 192, 102, 0.16);
+  border-radius: 50%;
+  box-shadow: 0 0 0 36px rgba(230, 192, 102, 0.025), 0 0 0 72px rgba(230, 192, 102, 0.018);
+}
+
+.fengshui-overview-main {
+  display: grid;
+  position: relative;
+  z-index: 2;
+  grid-template-columns: 112px 1fr;
+  align-items: center;
+  gap: 24px;
+  padding: 30px 0 24px;
+}
+
+.element-orb {
+  display: grid;
+  width: 112px;
+  height: 112px;
+  place-items: center;
+  border: 1px solid rgba(235, 199, 112, 0.55);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: inset 0 0 0 9px rgba(255, 255, 255, 0.025), 0 14px 35px rgba(0, 0, 0, 0.2);
+  color: #edc96f;
+  font-family: var(--serif);
+  font-size: 27px;
+  letter-spacing: 0.08em;
+}
+
+.element-orb.element-木 { color: #8bc68f; }
+.element-orb.element-火 { color: #e98773; }
+.element-orb.element-土 { color: #edc96f; }
+.element-orb.element-金 { color: #c3b8e5; }
+.element-orb.element-水 { color: #83b8d8; }
+
+.fengshui-overview-main small,
+.market-overview-intro > small {
+  color: #caae67;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.fengshui-overview-main h3,
+.market-overview-intro h3 {
+  margin: 7px 0 8px;
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.fengshui-overview-main p,
+.market-overview-intro p {
+  margin: 0;
+  color: #a8aaa0;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.fengshui-facts {
+  display: grid;
+  position: relative;
+  z-index: 2;
+  grid-template-columns: 1fr 1fr;
+  margin: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.fengshui-facts > div {
+  display: grid;
+  gap: 4px;
+  padding: 14px 0;
+}
+
+.fengshui-facts > div + div {
+  padding-left: 22px;
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.fengshui-facts dt {
+  color: #6f817c;
+  font-size: 9px;
+}
+
+.fengshui-facts dd {
+  margin: 0;
+  color: #e8dfc8;
+  font-size: 12px;
+}
+
+.fengshui-actions {
+  display: grid;
+  position: relative;
+  z-index: 2;
+  gap: 7px;
+  padding-top: 18px;
+}
+
+.fengshui-actions p {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0;
+  color: #a8aaa0;
+  font-size: 10px;
+}
+
+.fengshui-actions b {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid rgba(225, 188, 98, 0.35);
+  border-radius: 50%;
+  color: #d9b75f;
+  font-family: var(--serif);
+  font-weight: 500;
+}
+
+.fengshui-actions p:last-child b {
+  border-color: rgba(187, 77, 65, 0.48);
+  color: #df8a7e;
+}
+
+.market-overview-card {
+  background:
+    linear-gradient(135deg, rgba(201, 149, 25, 0.055), transparent 40%),
+    rgba(255, 255, 255, 0.66);
+  color: var(--ink);
+}
+
+.market-overview-card > header {
+  color: rgba(21, 26, 54, 0.22);
+}
+
+.market-overview-intro {
+  padding: 28px 0 21px;
+}
+
+.market-overview-intro > small {
+  color: var(--purple);
+}
+
+.market-overview-intro h3 {
+  font-size: 29px;
+}
+
+.market-overview-intro p {
+  max-width: 560px;
+  color: #706d66;
+}
+
+.market-index-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.market-index-grid > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 16px 14px;
+  border: 1px solid rgba(21, 26, 54, 0.1);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.market-index-grid span {
+  color: #77736a;
+  font-size: 9px;
+}
+
+.market-index-grid strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+}
+
+.market-index-grid b {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.market-index-grid .up b { color: #b3463d; }
+.market-index-grid .down b { color: #25805b; }
+.market-index-grid .flat b { color: #77736a; }
+
+.market-overview-card > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18px;
+  color: #8a867f;
+  font-size: 9px;
+}
+
+.market-overview-card > footer a {
+  color: var(--purple);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.today-overview--compact {
+  width: 100%;
+  margin: 10px 0 28px;
+}
+
+.today-overview--compact .today-overview-heading {
+  grid-template-columns: 1fr minmax(260px, 0.7fr);
+}
+
+.today-overview--compact .today-overview-heading h2 {
+  font-size: 34px;
+}
+
+.daily-shell.mystic-shell .today-overview-heading h2 {
+  color: #eee5cd;
+}
+
+.daily-shell.mystic-shell .today-overview-heading > p {
+  color: #798681;
+}
+
+.daily-shell.mystic-shell .today-overview-card {
+  border-color: rgba(210, 170, 87, 0.2);
+}
+
+.daily-shell.mystic-shell .market-overview-card {
+  background:
+    linear-gradient(135deg, rgba(210, 170, 87, 0.055), transparent 42%),
+    rgba(6, 19, 20, 0.92);
+  color: #e4ddc9;
+}
+
+.daily-shell.mystic-shell .market-overview-card > header {
+  color: rgba(210, 170, 87, 0.25);
+}
+
+.daily-shell.mystic-shell .market-overview-intro h3,
+.daily-shell.mystic-shell .market-index-grid strong {
+  color: #ede6d3;
+}
+
+.daily-shell.mystic-shell .market-overview-intro p,
+.daily-shell.mystic-shell .market-index-grid span,
+.daily-shell.mystic-shell .market-overview-card > footer {
+  color: #7e8a84;
+}
+
+.daily-shell.mystic-shell .market-index-grid > div {
+  border-color: rgba(210, 170, 87, 0.13);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.daily-shell.mystic-shell .market-overview-card > footer a {
+  color: var(--mystic-gold);
+}
+
+@media (max-width: 900px) {
+  .today-overview,
+  .today-overview--compact {
+    width: min(100% - 36px, 720px);
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .today-overview--compact {
+    width: 100%;
+  }
+
+  .today-overview-heading,
+  .today-overview--compact .today-overview-heading {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .today-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .today-overview-card {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .today-overview {
+    width: calc(100% - 28px);
+    margin-bottom: 52px;
+  }
+
+  .today-overview--compact {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .today-overview-heading h2,
+  .today-overview--compact .today-overview-heading h2 {
+    font-size: 29px;
+  }
+
+  .today-overview-heading > p {
+    font-size: 11px;
+  }
+
+  .today-overview-card {
+    padding: 22px;
+  }
+
+  .fengshui-overview-main {
+    grid-template-columns: 82px 1fr;
+    gap: 16px;
+  }
+
+  .element-orb {
+    width: 82px;
+    height: 82px;
+    font-size: 22px;
+  }
+
+  .fengshui-overview-main h3,
+  .market-overview-intro h3 {
+    font-size: 22px;
+  }
+
+  .market-index-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .market-index-grid > div {
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .market-overview-card > footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+}

@@ -34,6 +34,10 @@ test("server-renders the finished public landing page", async () => {
   assert.match(html, /一命一盘/);
   assert.match(html, /命理共振/);
   assert.match(html, /产品演示/);
+  assert.match(html, /先看今日气象，再看大盘事实/);
+  assert.match(html, /流日风水/);
+  assert.match(html, /上证指数/);
+  assert.match(html, /延时或收盘快照 · 不构成投资建议/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
 });
 
@@ -51,6 +55,8 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.match(html, /生辰只在本机推演/);
   assert.match(html, /全国县市 · 经度校正/);
   assert.match(html, /省级 \/ 市级 \/ 县区级/);
+  assert.match(html, /先看今日气象，再看大盘事实/);
+  assert.match(html, /创业板指/);
   assert.match(html, />男<\/button>/);
   assert.match(html, />女<\/button>/);
   assert.doesNotMatch(html, /先守量化纪律|本产品原型不构成投资建议/);
@@ -65,6 +71,8 @@ test("renders a public standalone VPS entry without Sites authentication links",
   assert.match(html, /公开测试版/);
   assert.match(html, /启盘 · 寻找我的缘分股/);
   assert.match(html, /一命一盘/);
+  assert.match(html, /流日风水/);
+  assert.match(html, /最近大盘快照|今日大盘/);
   assert.doesNotMatch(html, /本局取象/);
   assert.doesNotMatch(html, /命理共振\s*70%/);
   assert.doesNotMatch(html, /小众探索\s*20%/);

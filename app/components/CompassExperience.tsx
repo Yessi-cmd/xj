@@ -2,6 +2,7 @@
 
 import { ChangeEvent, CSSProperties, FormEvent, useEffect, useMemo, useState } from "react";
 import LocationPicker from "@/app/components/LocationPicker";
+import TodayOverview from "@/app/components/TodayOverview";
 import {
   analyzeProfile,
   createDailyContext,
@@ -23,10 +24,14 @@ import {
   type PersistedMysticState,
 } from "@/app/lib/mystic-state";
 import { decryptMysticState, encryptMysticState } from "@/app/lib/profile-crypto";
+import type { DailyFengShuiOverview } from "@/app/lib/daily-overview";
+import type { MarketSnapshot } from "@/app/lib/market-overview";
 import type { DailyRecommendation, FeedbackAction } from "@/app/lib/mystic-ranking";
 
 type CompassExperienceProps = {
   displayName: string;
+  dailyOverview: DailyFengShuiOverview;
+  marketSnapshot: MarketSnapshot;
   signedIn?: boolean;
   demoMode?: boolean;
   standaloneMode?: boolean;
@@ -150,6 +155,8 @@ async function createShareImage(result: FortuneResult): Promise<Blob> {
 
 export default function CompassExperience({
   displayName,
+  dailyOverview,
+  marketSnapshot,
   signedIn = false,
   demoMode = false,
   standaloneMode = false,
@@ -385,6 +392,8 @@ export default function CompassExperience({
                 <div className="hero-omens" aria-label="命理标签维度"><span><b>本命</b>定底色</span><span><b>流日</b>转天机</span><span><b>反馈</b>养缘感</span></div>
               </div>
             </header>
+
+            <TodayOverview fengShui={dailyOverview} market={marketSnapshot} compact />
 
             <div className="journey-steps" aria-label="开签步骤">
               <span className="complete"><b>1</b>出生信息</span><i />

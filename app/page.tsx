@@ -1,4 +1,7 @@
 import { chatGPTSignInPath, getChatGPTUser } from "./chatgpt-auth";
+import TodayOverview from "./components/TodayOverview";
+import { summarizeMarket } from "./lib/market-overview";
+import { getTodayOverviewData } from "./lib/today-overview-data";
 
 const PIPELINE = [
   { number: "壹", title: "本命立盘", copy: "公历、时辰、性别与出生地生成四柱和五行分布。" },
@@ -8,6 +11,8 @@ const PIPELINE = [
 
 export default async function Home() {
   const user = await getChatGPTUser();
+  const { fengShui, market } = await getTodayOverviewData();
+  const marketSummary = summarizeMarket(market);
   const primaryHref = user ? "/dashboard" : chatGPTSignInPath("/dashboard");
 
   return (
@@ -21,6 +26,7 @@ export default async function Home() {
           </span>
         </a>
         <nav aria-label="主导航">
+          <a href="#today-overview">今日</a>
           <a href="#approach">方法</a>
           <a href="#boundaries">边界</a>
           <a href="/demo">产品演示</a>
@@ -61,11 +67,13 @@ export default async function Home() {
               <div><small>本命</small><strong>玄鉴</strong><span>流日</span></div>
             </div>
           </div>
-          <div className="floating-card card-growth"><small>今日流日</small><strong>戊午 · 土</strong><span>宜观冷门 · 忌追热</span></div>
-          <div className="floating-card card-score"><small>今日缘分</small><strong>87</strong><span>本命 45% + 流日 25%</span></div>
+          <div className="floating-card card-growth"><small>今日流日</small><strong>{fengShui.dayPillar} · {fengShui.dayElement}</strong><span>{fengShui.direction}取气 · {fengShui.favorable.split(" · ")[0]}</span></div>
+          <div className="floating-card card-score"><small>大盘快照</small><strong>{marketSummary.title}</strong><span>{market.status} · 行情与取象分栏</span></div>
           <div className="floating-card card-risk"><small>六签成局</small><strong>守 · 吉 · 潜</strong><span>曜 · 补 · 冲</span></div>
         </div>
       </section>
+
+      <TodayOverview fengShui={fengShui} market={market} />
 
       <section className="approach-section" id="approach">
         <div className="approach-heading">

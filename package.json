@@ -10,6 +10,7 @@
     "build": "vinext build",
     "build:vps": "npm run build && node scripts/build-vps.mjs",
     "data:locations": "node scripts/build-china-locations.mjs",
+    "data:market": "node scripts/refresh-market-snapshot.mjs",
     "data:refresh": "python scripts/fetch-stock-listings.py && node scripts/enrich-mystic-stocks.mjs",
     "start": "vinext start",
     "test": "npm run build && node --test tests/rendered-html.test.mjs && node --experimental-strip-types --test tests/*.test.ts",
