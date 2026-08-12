@@ -90,7 +90,7 @@ npm run build:vps
 ## Location data rules
 
 - `app/data/china-locations.json` 是需要提交的版本化静态快照，生产页面不得在运行时请求地图、定位或地名接口。
-- 地点选择应支持按省、市、县区名称搜索，并用完整路径区分重名区县。
+- 地点选择应按“省级 → 市级 → 县区级”逐级联动，支持各级名称筛选，并用完整路径区分重名区县。
 - 真太阳时校正优先使用所选县区中心经度；新设区划缺少坐标时允许回退到所属城市经度，不得编造坐标。
 - 刷新地点后检查 `schemaVersion`、`divisionVersion`、`locationCount`，并运行完整测试。
 

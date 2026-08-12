@@ -10,9 +10,29 @@ export type LocationOption = {
   level: LocationLevel;
 };
 
-export type LocationSearchResult = {
-  options: LocationOption[];
-  total: number;
+export type CountyLocationOption = {
+  code: string;
+  name: string;
+  location: LocationOption;
+};
+
+export type CityLocationOption = {
+  code: string;
+  name: string;
+  location: LocationOption;
+  counties: CountyLocationOption[];
+};
+
+export type ProvinceLocationOption = {
+  code: string;
+  name: string;
+  cities: CityLocationOption[];
+};
+
+export type LocationPath = {
+  province: ProvinceLocationOption;
+  city: CityLocationOption;
+  county?: CountyLocationOption;
 };
 
 type LocationTuple = [
@@ -45,25 +65,6 @@ for (const location of LOCATIONS) {
   locationsByShortName.set(location.shortName, existing === undefined ? location : null);
 }
 
-function compactQuery(value: string): string {
-  return value.toLocaleLowerCase("zh-CN").replace(/[\s/·—-]+/g, "");
-}
-
-function looseQuery(value: string): string {
-  return compactQuery(value).replace(
-    /特别行政区|维吾尔自治区|壮族自治区|回族自治区|自治区|自治州|自治县|省|市|地区|盟|区|县|旗/g,
-    "",
-  );
-}
-
-const searchableLocations = LOCATIONS.map((location) => ({
-  location,
-  compactLabel: compactQuery(location.label),
-  compactName: compactQuery(location.shortName),
-  looseLabel: looseQuery(location.label),
-  looseName: looseQuery(location.shortName),
-}));
-
 export function resolveLocation(value: string): LocationOption | undefined {
   return locationsByLabel.get(value) ?? locationsByShortName.get(value) ?? undefined;
 }
@@ -76,50 +77,93 @@ export function formatLocationLabel(value: string): string {
   return value.replaceAll(" / ", " · ");
 }
 
-const POPULAR_NAMES = [
-  "北京市",
-  "上海市",
-  "广州市",
-  "深圳市",
-  "杭州市",
-  "成都市",
-  "武汉市",
-  "西安市",
-  "乌鲁木齐市",
-];
+type MutableCity = Omit<CityLocationOption, "counties"> & { counties: CountyLocationOption[] };
+type MutableProvince = Omit<ProvinceLocationOption, "cities"> & { cities: MutableCity[] };
 
-const popularLocations = POPULAR_NAMES
-  .map(resolveLocation)
-  .filter((location): location is LocationOption => Boolean(location));
+const provinceBuilders = new Map<string, MutableProvince>();
+const cityBuilders = new Map<string, MutableCity>();
 
-function matchScore(
-  candidate: (typeof searchableLocations)[number],
-  compact: string,
-  loose: string,
-): number | null {
-  if (candidate.compactName === compact) return 0;
-  if (candidate.looseName === loose) return 1;
-  if (candidate.compactName.startsWith(compact)) return 2;
-  if (candidate.looseName.startsWith(loose)) return 3;
-  if (candidate.compactLabel.includes(compact)) return 4;
-  if (loose && candidate.looseLabel.includes(loose)) return 5;
-  return null;
+function locationParts(location: LocationOption): string[] {
+  return location.label.split(" / ");
 }
 
-export function searchLocations(query: string, limit = 80): LocationSearchResult {
-  const compact = compactQuery(query);
-  const loose = looseQuery(query);
-  if (!compact) return { options: popularLocations, total: LOCATION_COUNT };
+function ensureProvince(code: string, name: string): MutableProvince {
+  const existing = provinceBuilders.get(code);
+  if (existing) return existing;
+  const province = { code, name, cities: [] };
+  provinceBuilders.set(code, province);
+  return province;
+}
 
-  const matches = searchableLocations
-    .map((candidate) => ({ candidate, score: matchScore(candidate, compact, loose) }))
-    .filter((match): match is { candidate: (typeof searchableLocations)[number]; score: number } => match.score !== null)
-    .sort((left, right) => left.score - right.score
-      || left.candidate.location.label.length - right.candidate.location.label.length
-      || left.candidate.location.code.localeCompare(right.candidate.location.code, "en"));
+function ensureCity(
+  province: MutableProvince,
+  code: string,
+  name: string,
+  location: LocationOption,
+): MutableCity {
+  const existing = cityBuilders.get(code);
+  if (existing) return existing;
+  const city = { code, name, location, counties: [] };
+  cityBuilders.set(code, city);
+  province.cities.push(city);
+  return city;
+}
 
-  return {
-    options: matches.slice(0, limit).map((match) => match.candidate.location),
-    total: matches.length,
-  };
+for (const location of LOCATIONS.filter((candidate) => candidate.level !== "county")) {
+  const parts = locationParts(location);
+  const provinceCode = location.code.slice(0, 2);
+  const province = ensureProvince(provinceCode, parts[0]);
+  const cityCode = location.level === "region" ? `${provinceCode}00` : location.code;
+  ensureCity(province, cityCode, parts.at(-1) ?? location.shortName, location);
+}
+
+for (const location of LOCATIONS.filter((candidate) => candidate.level === "county")) {
+  const parts = locationParts(location);
+  const provinceCode = location.code.slice(0, 2);
+  const province = ensureProvince(provinceCode, parts[0]);
+  const cityCode = location.code.slice(0, 4);
+  const fallbackLocation = resolveLocation(parts[0]) ?? location;
+  const city = ensureCity(
+    province,
+    cityCode,
+    parts.length >= 3 ? parts[1] : parts[0],
+    fallbackLocation,
+  );
+  city.counties.push({ code: location.code, name: location.shortName, location });
+}
+
+export const LOCATION_HIERARCHY: readonly ProvinceLocationOption[] = [...provinceBuilders.values()]
+  .map((province) => ({
+    ...province,
+    cities: province.cities
+      .map((city) => ({
+        ...city,
+        counties: [...city.counties].sort((left, right) => left.code.localeCompare(right.code, "en")),
+      }))
+      .sort((left, right) => left.code.localeCompare(right.code, "en")),
+  }))
+  .sort((left, right) => left.code.localeCompare(right.code, "en"));
+
+const locationPaths = new Map<string, LocationPath>();
+
+for (const province of LOCATION_HIERARCHY) {
+  for (const city of province.cities) {
+    locationPaths.set(city.location.label, { province, city });
+    for (const county of city.counties) {
+      locationPaths.set(county.location.label, { province, city, county });
+    }
+  }
+}
+
+const defaultLocationPath = locationPaths.get("北京市");
+
+export function resolveLocationPath(value: string): LocationPath {
+  const location = resolveLocation(value);
+  const path = location ? locationPaths.get(location.label) : undefined;
+  if (path) return path;
+  if (defaultLocationPath) return defaultLocationPath;
+  const province = LOCATION_HIERARCHY[0];
+  const city = province?.cities[0];
+  if (!province || !city) throw new Error("全国县市地点数据为空");
+  return { province, city };
 }

@@ -4,9 +4,10 @@ import test from "node:test";
 import {
   LOCATION_COUNT,
   LOCATION_DATA_VERSION,
+  LOCATION_HIERARCHY,
   LOCATIONS,
   resolveLocationLongitude,
-  searchLocations,
+  resolveLocationPath,
 } from "../app/lib/locations.ts";
 
 test("bundles the nationwide county and city snapshot with usable longitudes", () => {
@@ -16,15 +17,22 @@ test("bundles the nationwide county and city snapshot with usable longitudes", (
   assert.ok(LOCATIONS.every((location) => location.longitude >= 73 && location.longitude <= 135));
 });
 
-test("location search disambiguates duplicate county names with the full path", () => {
-  const labels = searchLocations("长安区").options.map((location) => location.label);
-  assert.ok(labels.includes("河北省 / 石家庄市 / 长安区"));
-  assert.ok(labels.includes("陕西省 / 西安市 / 长安区"));
+test("location hierarchy exposes province, city, and county levels", () => {
+  assert.ok(LOCATION_HIERARCHY.length >= 34);
+  const guangdong = LOCATION_HIERARCHY.find((province) => province.name === "广东省");
+  const guangzhou = guangdong?.cities.find((city) => city.name === "广州市");
+  assert.ok(guangdong);
+  assert.ok(guangzhou);
+  assert.ok(guangzhou.counties.some((county) => county.name === "天河区"));
 });
 
-test("location search accepts compact province city and county input", () => {
-  const labels = searchLocations("广东广州天河").options.map((location) => location.label);
-  assert.ok(labels.includes("广东省 / 广州市 / 天河区"));
+test("full paths disambiguate duplicate county names", () => {
+  const hebei = resolveLocationPath("河北省 / 石家庄市 / 长安区");
+  const shaanxi = resolveLocationPath("陕西省 / 西安市 / 长安区");
+  assert.equal(hebei.province.name, "河北省");
+  assert.equal(hebei.city.name, "石家庄市");
+  assert.equal(shaanxi.province.name, "陕西省");
+  assert.equal(shaanxi.city.name, "西安市");
 });
 
 test("legacy city-only profiles retain their longitude correction", () => {
