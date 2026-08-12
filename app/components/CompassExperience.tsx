@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, CSSProperties, FormEvent, useEffect, useMemo, useState } from "react";
 import {
   analyzeProfile,
   createDailyContext,
@@ -43,6 +43,15 @@ const ELEMENT_META = {
 } as const;
 
 const ROLE_GLYPHS = { guardian: "守", today: "吉", hidden: "潜", sameStar: "曜", remedy: "补", clash: "冲" } as const;
+
+const TRIGRAMS = [
+  { symbol: "☰", name: "乾" }, { symbol: "☱", name: "兑" },
+  { symbol: "☲", name: "离" }, { symbol: "☳", name: "震" },
+  { symbol: "☴", name: "巽" }, { symbol: "☵", name: "坎" },
+  { symbol: "☶", name: "艮" }, { symbol: "☷", name: "坤" },
+] as const;
+
+const EARTHLY_BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"] as const;
 
 const INITIAL_PROFILE: BirthProfile = {
   name: "", gender: "male", birthDate: "1990-06-15", birthTime: "08:30", location: "北京市",
@@ -333,7 +342,7 @@ export default function CompassExperience({
   ];
 
   return (
-    <div className="product-shell daily-shell">
+    <div className="product-shell daily-shell mystic-shell">
       <aside className="side-rail" aria-label="产品导航">
         <button className="brand-lockup rail-brand-button" onClick={() => setView(result ? "today" : "profile")} aria-label="玄鉴首页">
           <span className="brand-seal">玄</span><span><strong>玄鉴</strong><small>每日玄签 · AShare Lab</small></span>
@@ -368,8 +377,24 @@ export default function CompassExperience({
           <section className="oracle-loading"><span>玄</span><strong>浑天运转，正在排布今日星轨</strong><small>本命与近五千只股票标签合盘中</small></section>
         ) : view === "profile" ? (
           <section className="profile-workspace">
-            <header className="subpage-heading"><span>本命档案 · 一次填写，每日开签</span><h1>{state.profile ? "本命可改，星轨随行" : "请入生辰，立下本命"}</h1><p>你的生辰、反馈与历史只保存在浏览器中，不会上传服务器。</p></header>
-            <div className="profile-workspace-grid">
+            <header className="workspace-hero profile-oracle-hero">
+              <div className="mystic-hero-copy">
+                <div className="oracle-eyebrow"><span>玄鉴 · 千股命盘</span><i /><b>{result?.dailyContext.dayPillar ?? "静候入局"}</b></div>
+                <h1>一命一盘，<em>千股寻缘</em></h1>
+                <p>以生辰启局，以流日定象。让星曜、神兽、卦宫与灵数穿过近五千只 A 股，揭开今日六枚玄签。</p>
+                <div className="hero-omens" aria-label="命理标签维度"><span><b>本命</b>定底色</span><span><b>流日</b>转天机</span><span><b>反馈</b>养缘感</span></div>
+              </div>
+            </header>
+
+            <div className="journey-steps" aria-label="开签步骤">
+              <span className="complete"><b>1</b>出生信息</span><i />
+              <span className={result ? "complete" : "current"}><b>2</b>本命推演</span><i />
+              <span className={result ? "complete" : ""}><b>3</b>每日开签</span>
+            </div>
+
+            <section className="input-stage profile-input-stage">
+              <i className="stage-corner corner-nw" aria-hidden="true" /><i className="stage-corner corner-ne" aria-hidden="true" />
+              <i className="stage-corner corner-sw" aria-hidden="true" /><i className="stage-corner corner-se" aria-hidden="true" />
               <form className="birth-card profile-editor" onSubmit={submitProfile}>
                 <div className="card-heading"><span className="heading-mark">{profile.gender === "male" ? "乾" : "坤"}</span><div><span className="section-kicker">生辰入局</span><h2>{state.profile ? "修订本命档案" : "请入生辰"}</h2><p>公历起盘，并依出生地经度校正真太阳时。</p></div></div>
                 <div className="form-grid">
@@ -380,11 +405,27 @@ export default function CompassExperience({
                   <label className="field field-wide"><span>出生地点 <small>经度校正</small></span><select value={profile.location} onChange={(event) => updateProfile("location", event.target.value)}>{LOCATIONS.map((location) => <option value={location.name} key={location.name}>{location.name}</option>)}</select></label>
                 </div>
                 <button className="primary-button" type="submit" disabled={loading}><small>敕</small><span>{loading ? "星盘运转 · 正在寻缘…" : state.profile ? "重排本命 · 开启今日玄签" : "启盘 · 寻找我的缘分股"}</span><b>卜</b></button>
-                <p className="privacy-note">◌ 生辰只在本机推演，本地状态键 xuanjian.state.v1</p>
+                <p className="privacy-note">◌ 生辰只在本机推演，不上传云端</p>
               </form>
 
+              <section className={`compass-card profile-compass ${result ? "has-result" : ""}`} aria-live="polite">
+                <div className="celestial-dust" aria-hidden="true" />
+                <div className="compass-topline"><span>{result ? "天机已显 · 命盘成局" : "浑天未动 · 静候生辰"}</span><small>{result ? result.riskProfile : "输入生辰后启盘"}</small></div>
+                <div className="compass-visual" aria-label="五行命理罗盘">
+                  <div className="outer-ticks" /><div className="branch-ring" aria-hidden="true">{EARTHLY_BRANCHES.map((branch, index) => <span key={branch} style={{ "--orbit-index": index } as CSSProperties}>{branch}</span>)}</div>
+                  <div className="trigram-ring" aria-hidden="true">{TRIGRAMS.map((trigram, index) => <span key={trigram.name} style={{ "--orbit-index": index } as CSSProperties}><b>{trigram.symbol}</b><small>{trigram.name}</small></span>)}</div>
+                  <div className="heaven-needle" aria-hidden="true" />
+                  <div className="five-wheel"><span className="wheel-label wood">木</span><span className="wheel-label fire">火</span><span className="wheel-label earth">土</span><span className="wheel-label metal">金</span><span className="wheel-label water">水</span><div className="compass-center"><small>{result ? "日主本命" : "太极之眼"}</small><strong>{result?.dayMaster ?? "玄"}</strong><span>{result ? `喜用 · ${result.favorableElement}` : "待君启局"}</span></div></div>
+                </div>
+                {result ? <div className="pillar-row">{result.pillars.map((pillar) => <div key={pillar.label}><small>{pillar.label}</small><strong>{pillar.value}</strong></div>)}</div> : <div className="compass-empty-copy"><strong>天地定位 · 山泽通气 · 雷风相薄</strong><span>四柱一落，星曜归宫，千股因缘自此显形</span></div>}
+              </section>
+            </section>
+
+            <div className="profile-workspace-grid profile-details-grid">
               <div className="profile-side-stack">
-                {result && <section className="surface-card natal-summary"><div className="natal-seal">{result.favorableElement}</div><span>本命称号</span><h2>{result.riskProfile}</h2><p>{result.pattern}</p><div className="pillar-row">{result.pillars.map((pillar) => <div key={pillar.label}><small>{pillar.label}</small><strong>{pillar.value}</strong></div>)}</div><div className="element-bars">{ELEMENTS.map((element) => <div className="element-line" key={element}><span><b style={{ background: ELEMENT_META[element].color }} />{element}</span><div><i style={{ width: `${result.elementPercentages[element]}%`, background: ELEMENT_META[element].color }} /></div><strong>{result.elementPercentages[element]}%</strong></div>)}</div></section>}
+                {result && <section className="surface-card natal-summary"><div className="natal-seal">{result.favorableElement}</div><span>本命称号</span><h2>{result.riskProfile}</h2><p>{result.pattern}</p><div className="element-bars">{ELEMENTS.map((element) => <div className="element-line" key={element}><span><b style={{ background: ELEMENT_META[element].color }} />{element}</span><div><i style={{ width: `${result.elementPercentages[element]}%`, background: ELEMENT_META[element].color }} /></div><strong>{result.elementPercentages[element]}%</strong></div>)}</div></section>}
+              </div>
+              <div className="profile-side-stack">
                 <section className="surface-card transfer-card"><span className="section-kicker">跨设备迁移</span><h2>带走你的玄鉴档案</h2><p>使用 AES-GCM 加密导出。密码不会保存，遗忘后无法找回。</p><label className="field"><span>档案密码 <small>至少6位</small></span><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="输入导出或导入密码" /></label><div className="transfer-actions"><button onClick={exportProfile} disabled={!state.profile}>加密导出 .xjprofile</button><label className={password.length < 6 ? "disabled" : ""}>解密导入<input type="file" accept=".xjprofile,application/json" disabled={password.length < 6} onChange={importProfile} /></label></div></section>
                 {avoided.length > 0 && <section className="surface-card avoided-card"><span className="section-kicker">避开名单</span><h2>{avoided.length} 只股票暂不入签</h2>{avoided.map((entry) => <div key={entry.code}><span><strong>{entry.name}</strong><small>{entry.code}</small></span><button onClick={() => { const feedback = { ...state.feedback }; delete feedback[entry.code]; commit({ ...state, feedback }); }}>解除避开</button></div>)}</section>}
               </div>

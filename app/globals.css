@@ -4100,3 +4100,434 @@ select:focus-visible {
   .daily-compass-rings .ring-one,
   .daily-sign-card { animation: none; }
 }
+
+/* Preserve the ink-night visual language across the daily experience. */
+
+.daily-shell.mystic-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 72% 4%, rgba(64, 123, 111, 0.18), transparent 27%),
+    radial-gradient(circle at 95% 54%, rgba(158, 61, 49, 0.1), transparent 23%),
+    linear-gradient(135deg, #071315 0%, #0b1b1d 46%, #061012 100%);
+  color: #eae3cf;
+}
+
+.daily-shell.mystic-shell .daily-side-nav button {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  color: #89948e;
+  letter-spacing: 0.06em;
+}
+
+.daily-shell.mystic-shell .daily-side-nav button:hover,
+.daily-shell.mystic-shell .daily-side-nav button.active {
+  border-color: rgba(210, 170, 87, 0.18);
+  background: linear-gradient(90deg, rgba(210, 170, 87, 0.13), rgba(210, 170, 87, 0.015));
+  color: var(--mystic-gold-bright);
+}
+
+.daily-shell.mystic-shell .daily-side-nav button.active::before {
+  top: 50%;
+  bottom: auto;
+  left: -5px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--mystic-gold);
+  border-radius: 0;
+  background: #071315;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.daily-shell.mystic-shell .daily-side-nav button > span {
+  color: #6f796f;
+}
+
+.daily-shell.mystic-shell .daily-side-nav button > b {
+  background: var(--mystic-cinnabar);
+  color: #f3d98f;
+}
+
+.daily-shell.mystic-shell .streak-stamp {
+  border-color: rgba(210, 170, 87, 0.22);
+  background: rgba(12, 32, 31, 0.72);
+}
+
+.daily-shell.mystic-shell .streak-stamp strong {
+  border: 1px solid rgba(240, 211, 138, 0.55);
+  background: transparent;
+  color: var(--mystic-gold-bright);
+}
+
+.daily-shell.mystic-shell .streak-stamp span {
+  color: #77837d;
+}
+
+.daily-shell.mystic-shell .demo-banner {
+  border-color: rgba(210, 170, 87, 0.16);
+  background: rgba(7, 21, 22, 0.88);
+  color: #83908a;
+}
+
+.daily-shell.mystic-shell .oracle-notice,
+.daily-shell.mystic-shell .oracle-error {
+  border-color: rgba(210, 170, 87, 0.3);
+  background: rgba(7, 21, 22, 0.96);
+  color: #cbbf9b;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.32);
+}
+
+.daily-shell.mystic-shell .oracle-error {
+  border-color: rgba(183, 67, 56, 0.45);
+  color: #e49a91;
+}
+
+.daily-shell.mystic-shell .oracle-loading {
+  color: #74817c;
+}
+
+.daily-shell.mystic-shell .oracle-loading > span {
+  border-color: rgba(210, 170, 87, 0.55);
+  background: repeating-conic-gradient(from 0deg, rgba(210, 170, 87, 0.12) 0 1deg, transparent 1deg 15deg);
+  color: var(--mystic-gold-bright);
+}
+
+.daily-shell.mystic-shell .oracle-loading strong {
+  color: #eae3cf;
+}
+
+.daily-shell.mystic-shell .profile-workspace {
+  width: 100%;
+  padding: 0 0 100px;
+}
+
+.daily-shell.mystic-shell .profile-oracle-hero {
+  display: block;
+  min-height: 255px;
+  padding-right: 48px;
+  padding-left: 48px;
+}
+
+.daily-shell.mystic-shell .profile-oracle-hero .mystic-hero-copy {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.daily-shell.mystic-shell .profile-oracle-hero::before {
+  right: 6%;
+}
+
+.daily-shell.mystic-shell .profile-input-stage {
+  margin-top: 0;
+}
+
+.daily-shell.mystic-shell .profile-editor {
+  width: auto;
+  padding: 56px 55px 48px;
+  border: 0;
+  box-shadow: none;
+}
+
+.daily-shell.mystic-shell .profile-compass {
+  min-height: 650px;
+}
+
+.daily-shell.mystic-shell .profile-details-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.daily-shell.mystic-shell .natal-summary,
+.daily-shell.mystic-shell .transfer-card,
+.daily-shell.mystic-shell .avoided-card,
+.daily-shell.mystic-shell .history-aside {
+  border-color: rgba(210, 170, 87, 0.24);
+  background:
+    linear-gradient(135deg, rgba(210, 170, 87, 0.045), transparent 40%),
+    rgba(6, 19, 20, 0.92);
+  color: #dcd6c5;
+}
+
+.daily-shell.mystic-shell .natal-summary > span,
+.daily-shell.mystic-shell .transfer-card .section-kicker,
+.daily-shell.mystic-shell .avoided-card .section-kicker,
+.daily-shell.mystic-shell .history-aside .section-kicker {
+  color: var(--mystic-gold);
+}
+
+.daily-shell.mystic-shell .natal-summary h2,
+.daily-shell.mystic-shell .transfer-card h2,
+.daily-shell.mystic-shell .avoided-card h2 {
+  color: #eee5cd;
+}
+
+.daily-shell.mystic-shell .natal-summary > p,
+.daily-shell.mystic-shell .transfer-card > p {
+  color: #7f8d86;
+}
+
+.daily-shell.mystic-shell .natal-seal {
+  border-color: rgba(240, 211, 138, 0.45);
+  color: var(--mystic-gold-bright);
+}
+
+.daily-shell.mystic-shell .transfer-card .field > span,
+.daily-shell.mystic-shell .transfer-card .field small {
+  color: #8c9993;
+}
+
+.daily-shell.mystic-shell .transfer-card .field input {
+  border-color: rgba(210, 170, 87, 0.2);
+  background: rgba(3, 14, 15, 0.72);
+  color: #e7dfcb;
+}
+
+.daily-shell.mystic-shell .transfer-actions button {
+  border-color: rgba(210, 170, 87, 0.4);
+  background: var(--mystic-cinnabar);
+  color: #f7edcf;
+}
+
+.daily-shell.mystic-shell .transfer-actions label {
+  border-color: rgba(210, 170, 87, 0.28);
+  color: #c7b879;
+}
+
+.daily-shell.mystic-shell .daily-workspace,
+.daily-shell.mystic-shell .subpage {
+  width: min(1240px, calc(100% - 70px));
+  padding-top: 52px;
+}
+
+.daily-shell.mystic-shell .oracle-date,
+.daily-shell.mystic-shell .subpage-heading > span,
+.daily-shell.mystic-shell .sign-heading span {
+  color: var(--mystic-gold);
+}
+
+.daily-shell.mystic-shell .daily-heading h1,
+.daily-shell.mystic-shell .subpage-heading h1,
+.daily-shell.mystic-shell .sign-heading h2 {
+  color: #eee5cd;
+}
+
+.daily-shell.mystic-shell .daily-heading h1 em {
+  color: var(--mystic-gold-bright);
+}
+
+.daily-shell.mystic-shell .daily-heading p,
+.daily-shell.mystic-shell .subpage-heading p,
+.daily-shell.mystic-shell .sign-heading p {
+  color: #7b8983;
+}
+
+.daily-shell.mystic-shell .daily-actions button,
+.daily-shell.mystic-shell .empty-oracle button {
+  border-color: rgba(210, 170, 87, 0.25);
+  background: rgba(9, 28, 28, 0.85);
+  color: #d7c995;
+}
+
+.daily-shell.mystic-shell .daily-actions .reroll-button {
+  border-color: rgba(240, 211, 138, 0.42);
+  background: var(--mystic-cinnabar);
+  color: #f7edcf;
+}
+
+.daily-shell.mystic-shell .daily-compass {
+  border-color: rgba(210, 170, 87, 0.3);
+  background:
+    radial-gradient(circle at 50% 48%, rgba(46, 101, 91, 0.18), transparent 34%),
+    repeating-linear-gradient(45deg, transparent 0 24px, rgba(210, 170, 87, 0.025) 24px 25px),
+    #071516;
+}
+
+.daily-shell.mystic-shell .daily-compass-rings > span {
+  border-color: rgba(210, 170, 87, 0.34);
+}
+
+.daily-shell.mystic-shell .daily-compass-rings .ring-one {
+  background: repeating-conic-gradient(from 0deg, rgba(210, 170, 87, 0.16) 0 1deg, transparent 1deg 10deg);
+}
+
+.daily-shell.mystic-shell .daily-core {
+  border: 1px solid rgba(240, 211, 138, 0.32);
+  background: #071213;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45), 0 0 0 8px rgba(210, 170, 87, 0.035);
+}
+
+.daily-shell.mystic-shell .daily-compass-rings > i {
+  border-color: rgba(210, 170, 87, 0.34);
+  background: #0a1919;
+  color: var(--mystic-gold-bright);
+}
+
+.daily-shell.mystic-shell .daily-signature {
+  border-color: rgba(210, 170, 87, 0.16);
+  color: #6f7c76;
+}
+
+.daily-shell.mystic-shell .daily-signature strong {
+  color: #d8c999;
+}
+
+.daily-shell.mystic-shell .omen-panel {
+  border-color: rgba(210, 170, 87, 0.3);
+  background: linear-gradient(150deg, #081718, #102725 65%, #2c191b);
+}
+
+.daily-shell.mystic-shell .daily-sign-card {
+  border-color: rgba(210, 170, 87, 0.2);
+  background:
+    linear-gradient(145deg, rgba(210, 170, 87, 0.045), transparent 45%),
+    #0a1c1c;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+  color: #d8d4c8;
+}
+
+.daily-shell.mystic-shell .daily-sign-card:hover {
+  border-color: rgba(210, 170, 87, 0.45);
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.34), inset 3px 0 var(--mystic-cinnabar);
+}
+
+.daily-shell.mystic-shell .clash-sign {
+  border-color: rgba(183, 67, 56, 0.55);
+  background: linear-gradient(145deg, rgba(158, 61, 49, 0.12), transparent 45%), #1b1515;
+}
+
+.daily-shell.mystic-shell .sign-card-top {
+  border-color: rgba(210, 170, 87, 0.14);
+}
+
+.daily-shell.mystic-shell .role-seal {
+  border-color: rgba(240, 211, 138, 0.5);
+  color: var(--mystic-gold-bright);
+}
+
+.daily-shell.mystic-shell .sign-card-top small,
+.daily-shell.mystic-shell .stock-identity h3 {
+  color: #eee5cd;
+}
+
+.daily-shell.mystic-shell .sign-card-top strong,
+.daily-shell.mystic-shell .stock-identity small,
+.daily-shell.mystic-shell .daily-sign-card > p,
+.daily-shell.mystic-shell .score-script {
+  color: #77857f;
+}
+
+.daily-shell.mystic-shell .stock-identity > span {
+  border: 1px solid rgba(210, 170, 87, 0.26);
+  background: rgba(158, 61, 49, 0.26);
+  color: #e1c678;
+}
+
+.daily-shell.mystic-shell .feedback-row button {
+  border-color: rgba(210, 170, 87, 0.16);
+  background: rgba(4, 15, 16, 0.68);
+  color: #7e8b85;
+}
+
+.daily-shell.mystic-shell .feedback-row button.selected {
+  border-color: rgba(210, 170, 87, 0.5);
+  background: rgba(210, 170, 87, 0.1);
+  color: var(--mystic-gold-bright);
+}
+
+.daily-shell.mystic-shell .subpage-heading {
+  border-color: rgba(210, 170, 87, 0.18);
+}
+
+.daily-shell.mystic-shell .collection-card,
+.daily-shell.mystic-shell .history-timeline > article,
+.daily-shell.mystic-shell .empty-oracle {
+  border-color: rgba(210, 170, 87, 0.2);
+  background: rgba(7, 23, 24, 0.78);
+  color: #d8d4c8;
+}
+
+.daily-shell.mystic-shell .collection-card > span {
+  border: 1px solid rgba(240, 211, 138, 0.48);
+  background: var(--mystic-cinnabar);
+  color: #f1d384;
+}
+
+.daily-shell.mystic-shell .collection-card h2,
+.daily-shell.mystic-shell .history-timeline article h2,
+.daily-shell.mystic-shell .empty-oracle strong,
+.daily-shell.mystic-shell .history-aside strong {
+  color: #eee5cd;
+}
+
+.daily-shell.mystic-shell .collection-card small,
+.daily-shell.mystic-shell .collection-card p,
+.daily-shell.mystic-shell .history-timeline time,
+.daily-shell.mystic-shell .history-timeline article p,
+.daily-shell.mystic-shell .empty-oracle p,
+.daily-shell.mystic-shell .history-aside p {
+  color: #77857f;
+}
+
+.daily-shell.mystic-shell .history-timeline > article {
+  border-left-color: rgba(210, 170, 87, 0.34);
+}
+
+.daily-shell.mystic-shell .history-dot {
+  border-color: #071516;
+  background: var(--mystic-gold);
+}
+
+@media (max-width: 1040px) {
+  .daily-shell.mystic-shell .profile-input-stage,
+  .daily-shell.mystic-shell .profile-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-shell.mystic-shell .profile-compass {
+    border-top: 1px solid rgba(210, 170, 87, 0.3);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .daily-shell.mystic-shell .product-main {
+    width: min(100% - 28px, 760px);
+    padding-bottom: 72px;
+  }
+
+  .daily-shell.mystic-shell .mobile-oracle-nav {
+    border-color: rgba(210, 170, 87, 0.2);
+    background: rgba(5, 17, 18, 0.96);
+  }
+
+  .daily-shell.mystic-shell .mobile-oracle-nav button {
+    color: #75817b;
+  }
+
+  .daily-shell.mystic-shell .mobile-oracle-nav button.active,
+  .daily-shell.mystic-shell .mobile-oracle-nav button span {
+    color: var(--mystic-gold-bright);
+  }
+
+  .daily-shell.mystic-shell .profile-oracle-hero {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .daily-shell.mystic-shell .daily-workspace,
+  .daily-shell.mystic-shell .subpage {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .daily-shell.mystic-shell .profile-editor {
+    padding: 40px 24px 36px;
+  }
+
+  .daily-shell.mystic-shell .profile-oracle-hero h1 {
+    font-size: 44px;
+  }
+}

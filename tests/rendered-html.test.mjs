@@ -60,7 +60,11 @@ test("renders a public standalone VPS entry without Sites authentication links",
   assert.match(html, /玄鉴命理投研罗盘/);
   assert.match(html, /公开测试版/);
   assert.match(html, /启盘 · 寻找我的缘分股/);
-  assert.match(html, /一次填写，每日开签/);
+  assert.match(html, /一命一盘/);
+  assert.doesNotMatch(html, /本局取象/);
+  assert.doesNotMatch(html, /命理共振\s*70%/);
+  assert.doesNotMatch(html, /小众探索\s*20%/);
+  assert.doesNotMatch(html, /基础过滤\s*10%/);
   assert.doesNotMatch(html, /signin-with-chatgpt|signout-with-chatgpt/);
   assert.doesNotMatch(html, /方法说明|先守量化纪律|本产品原型不构成投资建议/);
 });
