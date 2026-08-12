@@ -15,19 +15,19 @@ export async function generateMetadata(): Promise<Metadata> {
       default: "玄鉴｜命理投研罗盘",
       template: "%s｜玄鉴",
     },
-    description: "以传统命理理解投资偏好，以 AShare 量化纪律筛选股票与基金。",
+    description: "一命一盘，千股寻缘。以五行、星曜、卦宫与灵数探索你的 A 股缘分签。",
     metadataBase: new URL(origin),
     openGraph: {
       type: "website",
       locale: "zh_CN",
-      title: "玄鉴｜观五行之势，守投资之衡",
-      description: "命理偏好 15%，量化纪律 85%。一套可解释的股票与基金研究框架。",
+      title: "玄鉴｜一命一盘，千股寻缘",
+      description: "以生辰启局，让五行、星曜、卦宫与灵数穿过近五千只 A 股。",
       images: [{ url: socialImage, width: 1731, height: 909, alt: "玄鉴命理投研罗盘" }],
     },
     twitter: {
       card: "summary_large_image",
       title: "玄鉴｜命理投研罗盘",
-      description: "观五行之势，守投资之衡。",
+      description: "一命一盘，千股寻缘。",
       images: [socialImage],
     },
   };

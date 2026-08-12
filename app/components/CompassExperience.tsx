@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { CSSProperties, FormEvent, useState } from "react";
 import {
   analyzeProfile,
   BirthProfile,
@@ -23,6 +23,19 @@ const ELEMENT_META = {
   金: { color: "#8b7eb8", phrase: "白虎 · 决断" },
   水: { color: "#397db2", phrase: "玄武 · 流变" },
 } as const;
+
+const TRIGRAMS = [
+  { symbol: "☰", name: "乾" },
+  { symbol: "☱", name: "兑" },
+  { symbol: "☲", name: "离" },
+  { symbol: "☳", name: "震" },
+  { symbol: "☴", name: "巽" },
+  { symbol: "☵", name: "坎" },
+  { symbol: "☶", name: "艮" },
+  { symbol: "☷", name: "坤" },
+] as const;
+
+const EARTHLY_BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"] as const;
 
 const INITIAL_PROFILE: BirthProfile = {
   name: "",
@@ -70,7 +83,7 @@ export default function CompassExperience({
   ) => setProfile((current) => ({ ...current, [key]: value }));
 
   return (
-    <div className="product-shell">
+    <div className="product-shell mystic-shell">
       <aside className="side-rail" aria-label="产品导航">
         <a className="brand-lockup" href="#top" aria-label="玄鉴首页">
           <span className="brand-seal">玄</span>
@@ -131,20 +144,29 @@ export default function CompassExperience({
         )}
 
         <section className="workspace-hero">
-          <div>
-            <span className="eyebrow">命格不是买入信号，而是一枚缘分索引</span>
-            <h1>以命理观人，<em>以缘分寻股</em></h1>
+          <div className="mystic-hero-copy">
+            <div className="oracle-eyebrow">
+              <span>玄鉴 · 千股命盘</span>
+              <i />
+              <b>甲辰局</b>
+            </div>
+            <h1>一命一盘，<em>千股寻缘</em></h1>
             <p>
-              为全A股赋予五行、阴阳、星曜、神兽、卦宫与灵数标签；你的八字命盘
-              将从几千只股票中抽取更个性、更小众的玄学缘分签。
+              以生辰启局，以五行定象。让星曜、神兽、卦宫与灵数穿过近五千只 A 股，
+              寻出只属于这一刻的六枚缘分签。
             </p>
+            <div className="hero-omens" aria-label="命理标签维度">
+              <span><b>五行</b>定本气</span>
+              <span><b>星曜</b>照命宫</span>
+              <span><b>灵数</b>引缘分</span>
+            </div>
           </div>
           <div className="hero-formula" aria-label="推荐方法权重">
-            <span>命理共振</span><strong>70%</strong>
-            <i />
-            <span>小众探索</span><strong>20%</strong>
-            <i />
-            <span>基础过滤</span><strong>10%</strong>
+            <span className="formula-seal">鉴</span>
+            <small>本局取象</small>
+            <div><strong>七</strong><span>命理共振<em>70%</em></span></div>
+            <div><strong>二</strong><span>小众探索<em>20%</em></span></div>
+            <div><strong>一</strong><span>基础过滤<em>10%</em></span></div>
           </div>
         </section>
 
@@ -157,13 +179,17 @@ export default function CompassExperience({
         </div>
 
         <section className="input-stage" id="birth-profile">
+          <i className="stage-corner corner-nw" aria-hidden="true" />
+          <i className="stage-corner corner-ne" aria-hidden="true" />
+          <i className="stage-corner corner-sw" aria-hidden="true" />
+          <i className="stage-corner corner-se" aria-hidden="true" />
           <form className="birth-card" onSubmit={submit}>
             <div className="card-heading">
-              <span className="heading-mark">乾</span>
+              <span className="heading-mark">{profile.gender === "male" ? "乾" : "坤"}</span>
               <div>
-                <span className="section-kicker">命理罗盘 · 第一步</span>
-                <h2>填写出生信息</h2>
-                <p>原型使用公历与城市经度进行简化真太阳时校正。</p>
+                <span className="section-kicker">生辰入局 · 第一道</span>
+                <h2>请入生辰</h2>
+                <p>公历起盘，并依出生地经度校正真太阳时。</p>
               </div>
             </div>
 
@@ -235,20 +261,39 @@ export default function CompassExperience({
             {error && <p className="form-error" role="alert">{error}</p>}
 
             <button className="primary-button" type="submit" disabled={loading}>
-              <span>{loading ? "正在千股池中寻缘…" : "生成我的玄学缘分榜"}</span>
-              <b aria-hidden="true">→</b>
+              <small>敕</small>
+              <span>{loading ? "星盘运转 · 正在寻缘…" : "启盘 · 寻找我的缘分股"}</span>
+              <b aria-hidden="true">卜</b>
             </button>
-            <p className="privacy-note">🔒 出生信息仅在本次分析中使用，当前原型不写入数据库</p>
+            <p className="privacy-note">◌ 生辰只在此局推演，不留痕迹</p>
           </form>
 
           <section className={`compass-card ${result ? "has-result" : ""}`} aria-live="polite">
+            <div className="celestial-dust" aria-hidden="true" />
             <div className="compass-topline">
-              <span>{result ? "五行命格已生成" : "罗盘等待起局"}</span>
-              <small>{result ? result.riskProfile : "输入信息后开始推演"}</small>
+              <span>{result ? "天机已显 · 命盘成局" : "浑天未动 · 静候生辰"}</span>
+              <small>{result ? result.riskProfile : "输入生辰后启盘"}</small>
             </div>
 
             <div className="compass-visual" aria-label="五行命理罗盘">
               <div className="outer-ticks" />
+              <div className="branch-ring" aria-hidden="true">
+                {EARTHLY_BRANCHES.map((branch, index) => (
+                  <span
+                    key={branch}
+                    style={{ "--orbit-index": index } as CSSProperties}
+                  >{branch}</span>
+                ))}
+              </div>
+              <div className="trigram-ring" aria-hidden="true">
+                {TRIGRAMS.map((trigram, index) => (
+                  <span
+                    key={trigram.name}
+                    style={{ "--orbit-index": index } as CSSProperties}
+                  ><b>{trigram.symbol}</b><small>{trigram.name}</small></span>
+                ))}
+              </div>
+              <div className="heaven-needle" aria-hidden="true" />
               <div className="five-wheel">
                 <span className="wheel-label wood">木</span>
                 <span className="wheel-label fire">火</span>
@@ -256,9 +301,9 @@ export default function CompassExperience({
                 <span className="wheel-label metal">金</span>
                 <span className="wheel-label water">水</span>
                 <div className="compass-center">
-                  <small>{result ? "日主" : "命理"}</small>
+                  <small>{result ? "日主本命" : "太极之眼"}</small>
                   <strong>{result?.dayMaster ?? "玄"}</strong>
-                  <span>{result ? `喜${result.favorableElement}` : "五行平衡"}</span>
+                  <span>{result ? `喜用 · ${result.favorableElement}` : "待君启局"}</span>
                 </div>
               </div>
             </div>
@@ -274,8 +319,8 @@ export default function CompassExperience({
               </div>
             ) : (
               <div className="compass-empty-copy">
-                <strong>四柱定盘 · 星曜落位 · 千股寻缘</strong>
-                <span>命理共振主导 70%，每一份出生时空都对应不同的缘分榜。</span>
+                <strong>天地定位 · 山泽通气 · 雷风相薄</strong>
+                <span>四柱一落，星曜归宫，千股因缘自此显形</span>
               </div>
             )}
           </section>
