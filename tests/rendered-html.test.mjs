@@ -49,6 +49,9 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.match(html, /近5,000只A股玄学标签池/);
   assert.match(html, /本命 · 流日 · 反馈已连接/);
   assert.match(html, /生辰只在本机推演/);
+  assert.match(html, /全国县市 · 经度校正/);
+  assert.match(html, />男<\/button>/);
+  assert.match(html, />女<\/button>/);
   assert.doesNotMatch(html, /先守量化纪律|本产品原型不构成投资建议/);
 });
 

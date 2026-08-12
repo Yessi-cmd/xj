@@ -1,4 +1,5 @@
 import { loadMysticUniverse, rankMysticStocks, stableHash } from "@/app/lib/mystic-ranking";
+import { resolveLocationLongitude } from "@/app/lib/locations";
 import type {
   AffinityProfile,
   DailyContext,
@@ -44,14 +45,6 @@ export type AnalyzeOptions = {
   affinity?: AffinityProfile;
   recentPositiveCodes?: string[];
 };
-
-export const LOCATIONS = [
-  { name: "北京市", longitude: 116.4074 }, { name: "上海市", longitude: 121.4737 },
-  { name: "广州市", longitude: 113.2644 }, { name: "深圳市", longitude: 114.0579 },
-  { name: "杭州市", longitude: 120.1551 }, { name: "成都市", longitude: 104.0665 },
-  { name: "武汉市", longitude: 114.3054 }, { name: "西安市", longitude: 108.9398 },
-  { name: "乌鲁木齐市", longitude: 87.6168 },
-] as const;
 
 const STEM_ELEMENT: Record<string, ElementName> = {
   甲: "木", 乙: "木", 丙: "火", 丁: "火", 戊: "土", 己: "土", 庚: "金", 辛: "金", 壬: "水", 癸: "水",
@@ -128,8 +121,8 @@ function makeDailyFortune(profileKey: string, daily: DailyContext): DailyFortune
 }
 
 export async function analyzeProfile(profile: BirthProfile, options: AnalyzeOptions = {}): Promise<FortuneResult> {
-  const location = LOCATIONS.find((item) => item.name === profile.location) ?? LOCATIONS[0];
-  const adjusted = adjustClock(profile.birthDate, profile.birthTime, Math.round((location.longitude - 120) * 4));
+  const longitude = resolveLocationLongitude(profile.location);
+  const adjusted = adjustClock(profile.birthDate, profile.birthTime, Math.round((longitude - 120) * 4));
   const { Solar } = await import("lunar-javascript");
   const lunar = Solar.fromYmdHms(adjusted.year, adjusted.month, adjusted.day, adjusted.hour, adjusted.minute, 0).getLunar();
   const eightChar = lunar.getEightChar();

@@ -18,6 +18,7 @@
   - `app/lib/profile-crypto.ts`：`.xjprofile` 的 PBKDF2-SHA256 + AES-GCM 加解密。
   - `app/live/`：VPS 公网入口；`app/demo/`：免登录体验；`app/dashboard/`：登录保护入口。
 - `public/data/mystic-stocks.json`：生产运行时使用的静态股票标签池。
+- `app/data/china-locations.json`：随前端打包的全国县市与经度静态快照。
 - `scripts/`：交易所资料刷新、标签增强与 VPS 静态构建。
 - `tests/`：Node 测试和服务端渲染验收。
 - `deploy/`：`xj.norliva.top` 的 Caddy 配置。
@@ -41,6 +42,7 @@ npm run build:vps
 - `npm test` 会先执行生产构建，再运行页面渲染、排序、本地状态与加密测试。
 - `npm run build:vps` 生成被忽略的 `dist-vps/`，并验证 `/live` 可作为公开静态首页。
 - `npm run data:refresh` 需要 Python 与 AkShare，并会访问交易所数据源；不要在普通单元测试中调用网络。
+- `npm run data:locations` 使用民政部版本化行政区划和固定版本坐标源刷新地点快照；属于显式联网维护操作，不要在普通构建或测试中调用。
 - `dist/`、`dist-vps/`、`.next/`、`.vinext/`、`var/` 和 `*.tsbuildinfo` 都是生成状态，不要提交。
 
 ## Code style
@@ -84,6 +86,13 @@ npm run build:vps
 - 缺少上市日期时允许回退到代码灵数盘，不得编造日期或上市日柱。
 - 刷新标签后检查 `schemaVersion`、`stockCount`、`tagVersion`，并运行完整测试。
 - 网络数据刷新属于显式维护操作；不要在页面加载或生产运行时请求 AkShare。
+
+## Location data rules
+
+- `app/data/china-locations.json` 是需要提交的版本化静态快照，生产页面不得在运行时请求地图、定位或地名接口。
+- 地点选择应支持按省、市、县区名称搜索，并用完整路径区分重名区县。
+- 真太阳时校正优先使用所选县区中心经度；新设区划缺少坐标时允许回退到所属城市经度，不得编造坐标。
+- 刷新地点后检查 `schemaVersion`、`divisionVersion`、`locationCount`，并运行完整测试。
 
 ## Persistence and privacy
 

@@ -1,12 +1,12 @@
 "use client";
 
 import { ChangeEvent, CSSProperties, FormEvent, useEffect, useMemo, useState } from "react";
+import LocationPicker from "@/app/components/LocationPicker";
 import {
   analyzeProfile,
   createDailyContext,
   ELEMENTS,
   getShanghaiDateKey,
-  LOCATIONS,
   profileFingerprint,
   type BirthProfile,
   type FortuneResult,
@@ -399,10 +399,10 @@ export default function CompassExperience({
                 <div className="card-heading"><span className="heading-mark">{profile.gender === "male" ? "乾" : "坤"}</span><div><span className="section-kicker">生辰入局</span><h2>{state.profile ? "修订本命档案" : "请入生辰"}</h2><p>公历起盘，并依出生地经度校正真太阳时。</p></div></div>
                 <div className="form-grid">
                   <label className="field"><span>称呼 <small>可选</small></span><input value={profile.name} onChange={(event) => updateProfile("name", event.target.value)} placeholder="如何称呼你" autoComplete="name" /></label>
-                  <fieldset className="field gender-field"><legend>性别</legend><div className="segmented-control"><button type="button" className={profile.gender === "male" ? "selected" : ""} onClick={() => updateProfile("gender", "male")}>乾造</button><button type="button" className={profile.gender === "female" ? "selected" : ""} onClick={() => updateProfile("gender", "female")}>坤造</button></div></fieldset>
+                  <fieldset className="field gender-field"><legend>性别</legend><div className="segmented-control"><button type="button" aria-pressed={profile.gender === "male"} className={profile.gender === "male" ? "selected" : ""} onClick={() => updateProfile("gender", "male")}>男</button><button type="button" aria-pressed={profile.gender === "female"} className={profile.gender === "female" ? "selected" : ""} onClick={() => updateProfile("gender", "female")}>女</button></div></fieldset>
                   <label className="field"><span>出生日期 <small>公历</small></span><input type="date" required min="1920-01-01" max={todayKey} value={profile.birthDate} onChange={(event) => updateProfile("birthDate", event.target.value)} /></label>
                   <label className="field"><span>出生时间 <small>当地钟表时间</small></span><input type="time" required value={profile.birthTime} onChange={(event) => updateProfile("birthTime", event.target.value)} /></label>
-                  <label className="field field-wide"><span>出生地点 <small>经度校正</small></span><select value={profile.location} onChange={(event) => updateProfile("location", event.target.value)}>{LOCATIONS.map((location) => <option value={location.name} key={location.name}>{location.name}</option>)}</select></label>
+                  <div className="field field-wide"><span>出生地点 <small>全国县市 · 经度校正</small></span><LocationPicker value={profile.location} onChange={(location) => updateProfile("location", location)} /></div>
                 </div>
                 <button className="primary-button" type="submit" disabled={loading}><small>敕</small><span>{loading ? "星盘运转 · 正在寻缘…" : state.profile ? "重排本命 · 开启今日玄签" : "启盘 · 寻找我的缘分股"}</span><b>卜</b></button>
                 <p className="privacy-note">◌ 生辰只在本机推演，不上传云端</p>
