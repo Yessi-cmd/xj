@@ -39,4 +39,6 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
+/var/
+*.tsbuildinfo
 /.openai/devlogs/

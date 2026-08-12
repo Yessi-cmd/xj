@@ -31,8 +31,8 @@ test("server-renders the finished public landing page", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>玄鉴｜命理投研罗盘<\/title>/);
-  assert.match(html, /观五行之势/);
-  assert.match(html, /量化权重主导/);
+  assert.match(html, /一命一盘/);
+  assert.match(html, /命理共振/);
   assert.match(html, /产品演示/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
 });
@@ -45,10 +45,10 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.match(html, /一命一盘/);
   assert.match(html, /请入生辰/);
   assert.match(html, /启盘 · 寻找我的缘分股/);
-  assert.match(html, /命理共振/);
+  assert.match(html, /每日玄签/);
   assert.match(html, /近5,000只A股玄学标签池/);
-  assert.match(html, /小众探索/);
-  assert.match(html, /生辰只在此局推演，不留痕迹/);
+  assert.match(html, /本命 · 流日 · 反馈已连接/);
+  assert.match(html, /生辰只在本机推演/);
   assert.doesNotMatch(html, /先守量化纪律|本产品原型不构成投资建议/);
 });
 
@@ -60,7 +60,7 @@ test("renders a public standalone VPS entry without Sites authentication links",
   assert.match(html, /玄鉴命理投研罗盘/);
   assert.match(html, /公开测试版/);
   assert.match(html, /启盘 · 寻找我的缘分股/);
-  assert.match(html, /天地定位 · 山泽通气/);
+  assert.match(html, /一次填写，每日开签/);
   assert.doesNotMatch(html, /signin-with-chatgpt|signout-with-chatgpt/);
   assert.doesNotMatch(html, /方法说明|先守量化纪律|本产品原型不构成投资建议/);
 });

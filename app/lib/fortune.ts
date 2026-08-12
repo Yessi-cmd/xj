@@ -1,14 +1,13 @@
-import {
-  loadMysticUniverse,
-  rankMysticStocks,
-} from "@/app/lib/mystic-ranking";
+import { loadMysticUniverse, rankMysticStocks, stableHash } from "@/app/lib/mystic-ranking";
 import type {
+  AffinityProfile,
+  DailyContext,
+  DailyFortune,
+  DailyRecommendation,
   MysticSignature,
-  Recommendation,
 } from "@/app/lib/mystic-ranking";
 
 export const ELEMENTS = ["木", "火", "土", "金", "水"] as const;
-
 export type ElementName = (typeof ELEMENTS)[number];
 export type Gender = "male" | "female";
 
@@ -31,113 +30,62 @@ export type FortuneResult = {
   riskProfile: string;
   summary: string;
   elementPercentages: Record<ElementName, number>;
-  factorWeights: Array<{ name: string; label: string; weight: number }>;
-  recommendations: Recommendation[];
+  recommendations: DailyRecommendation[];
   mysticSignature: MysticSignature;
+  dailyContext: DailyContext;
+  dailyFortune: DailyFortune;
   universeSize: number;
   universeSnapshot: string;
   methodologyNote: string;
 };
 
+export type AnalyzeOptions = {
+  dailyContext?: DailyContext;
+  affinity?: AffinityProfile;
+  recentPositiveCodes?: string[];
+};
+
 export const LOCATIONS = [
-  { name: "北京市", longitude: 116.4074 },
-  { name: "上海市", longitude: 121.4737 },
-  { name: "广州市", longitude: 113.2644 },
-  { name: "深圳市", longitude: 114.0579 },
-  { name: "杭州市", longitude: 120.1551 },
-  { name: "成都市", longitude: 104.0665 },
-  { name: "武汉市", longitude: 114.3054 },
-  { name: "西安市", longitude: 108.9398 },
+  { name: "北京市", longitude: 116.4074 }, { name: "上海市", longitude: 121.4737 },
+  { name: "广州市", longitude: 113.2644 }, { name: "深圳市", longitude: 114.0579 },
+  { name: "杭州市", longitude: 120.1551 }, { name: "成都市", longitude: 104.0665 },
+  { name: "武汉市", longitude: 114.3054 }, { name: "西安市", longitude: 108.9398 },
   { name: "乌鲁木齐市", longitude: 87.6168 },
 ] as const;
 
 const STEM_ELEMENT: Record<string, ElementName> = {
-  甲: "木",
-  乙: "木",
-  丙: "火",
-  丁: "火",
-  戊: "土",
-  己: "土",
-  庚: "金",
-  辛: "金",
-  壬: "水",
-  癸: "水",
+  甲: "木", 乙: "木", 丙: "火", 丁: "火", 戊: "土", 己: "土", 庚: "金", 辛: "金", 壬: "水", 癸: "水",
 };
-
 const BRANCH_ELEMENT: Record<string, ElementName> = {
-  子: "水",
-  丑: "土",
-  寅: "木",
-  卯: "木",
-  辰: "土",
-  巳: "火",
-  午: "火",
-  未: "土",
-  申: "金",
-  酉: "金",
-  戌: "土",
-  亥: "水",
+  子: "水", 丑: "土", 寅: "木", 卯: "木", 辰: "土", 巳: "火", 午: "火", 未: "土", 申: "金", 酉: "金", 戌: "土", 亥: "水",
 };
-
-const MYSTIC_FACTORS = [
-  { name: "element", label: "五行喜用", weight: 1.3 },
-  { name: "star", label: "星曜同频", weight: 1.2 },
-  { name: "time", label: "时柱卦位", weight: 1.08 },
-  { name: "number", label: "灵数共振", weight: 0.96 },
-  { name: "yin_yang", label: "阴阳调和", weight: 0.88 },
-];
-
-const PRODUCER: Record<ElementName, ElementName> = {
-  木: "水",
-  火: "木",
-  土: "火",
-  金: "土",
-  水: "金",
-};
-
+const PRODUCER: Record<ElementName, ElementName> = { 木: "水", 火: "木", 土: "火", 金: "土", 水: "金" };
 const ARCHETYPES: Record<ElementName, string> = {
-  木: "青木拓荒客",
-  火: "离火追光者",
-  土: "厚土守局人",
-  金: "白金决断派",
-  水: "玄水游猎家",
+  木: "青木拓荒客", 火: "离火追光者", 土: "厚土守局人", 金: "白金决断派", 水: "玄水游猎家",
 };
+const FORTUNE_GRADES = ["灵光初现", "小吉可观", "青龙抬首", "上吉有缘", "紫气盈门"];
+const LUCKY_COLORS: Record<ElementName, string> = { 木: "松烟青", 火: "朱砂红", 土: "琥珀黄", 金: "月魄白", 水: "玄青蓝" };
+const LUCKY_HOURS = ["子时 23:00—01:00", "辰时 07:00—09:00", "巳时 09:00—11:00", "午时 11:00—13:00", "酉时 17:00—19:00", "亥时 21:00—23:00"];
 
-function adjustClock(
-  birthDate: string,
-  birthTime: string,
-  offsetMinutes: number,
-): { year: number; month: number; day: number; hour: number; minute: number } {
+function adjustClock(birthDate: string, birthTime: string, offsetMinutes: number) {
   const [year, month, day] = birthDate.split("-").map(Number);
   const [hour, minute] = birthTime.split(":").map(Number);
-  const adjusted = new Date(
-    Date.UTC(year, month - 1, day, hour, minute + offsetMinutes, 0),
-  );
-  return {
-    year: adjusted.getUTCFullYear(),
-    month: adjusted.getUTCMonth() + 1,
-    day: adjusted.getUTCDate(),
-    hour: adjusted.getUTCHours(),
-    minute: adjusted.getUTCMinutes(),
-  };
+  const adjusted = new Date(Date.UTC(year, month - 1, day, hour, minute + offsetMinutes));
+  return { year: adjusted.getUTCFullYear(), month: adjusted.getUTCMonth() + 1, day: adjusted.getUTCDate(), hour: adjusted.getUTCHours(), minute: adjusted.getUTCMinutes() };
 }
 
 function countElements(pillars: string[]): Record<ElementName, number> {
   const counts = Object.fromEntries(ELEMENTS.map((element) => [element, 0])) as Record<ElementName, number>;
   for (const pillar of pillars) {
-    const stemElement = STEM_ELEMENT[pillar[0]];
-    const branchElement = BRANCH_ELEMENT[pillar[1]];
-    if (stemElement) counts[stemElement] += 1;
-    if (branchElement) counts[branchElement] += 0.7;
+    if (STEM_ELEMENT[pillar[0]]) counts[STEM_ELEMENT[pillar[0]]] += 1;
+    if (BRANCH_ELEMENT[pillar[1]]) counts[BRANCH_ELEMENT[pillar[1]]] += 0.7;
   }
   return counts;
 }
 
 function toPercentages(counts: Record<ElementName, number>): Record<ElementName, number> {
   const total = Object.values(counts).reduce((sum, value) => sum + value, 0) || 1;
-  return Object.fromEntries(
-    ELEMENTS.map((element) => [element, Math.round((counts[element] / total) * 100)]),
-  ) as Record<ElementName, number>;
+  return Object.fromEntries(ELEMENTS.map((element) => [element, Math.round((counts[element] / total) * 100)])) as Record<ElementName, number>;
 }
 
 function destinyNumber(birthDate: string): number {
@@ -145,81 +93,78 @@ function destinyNumber(birthDate: string): number {
   return sum % 9 || 9;
 }
 
-export async function analyzeProfile(profile: BirthProfile): Promise<FortuneResult> {
-  const location = LOCATIONS.find((item) => item.name === profile.location) ?? LOCATIONS[0];
-  const trueSolarOffset = Math.round((location.longitude - 120) * 4);
-  const adjusted = adjustClock(profile.birthDate, profile.birthTime, trueSolarOffset);
+export function getShanghaiDateKey(date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(date);
+}
+
+export function profileFingerprint(profile: BirthProfile): string {
+  return stableHash([profile.gender, profile.birthDate, profile.birthTime, profile.location].join("|")).toString(36);
+}
+
+export async function createDailyContext(date = new Date(), drawVersion: 0 | 1 = 0): Promise<DailyContext> {
+  const dateKey = getShanghaiDateKey(date);
+  const [year, month, day] = dateKey.split("-").map(Number);
   const { Solar } = await import("lunar-javascript");
-  const solar = Solar.fromYmdHms(
-    adjusted.year,
-    adjusted.month,
-    adjusted.day,
-    adjusted.hour,
-    adjusted.minute,
-    0,
-  );
-  const lunar = solar.getLunar();
+  const lunar = Solar.fromYmdHms(year, month, day, 12, 0, 0).getLunar() as unknown as { getDayInGanZhi(): string };
+  const dayPillar = lunar.getDayInGanZhi();
+  return { dateKey, dayPillar, dayElement: STEM_ELEMENT[dayPillar[0]] ?? "土", drawVersion };
+}
+
+function makeDailyFortune(profileKey: string, daily: DailyContext): DailyFortune {
+  const key = `${profileKey}|${daily.dateKey}|${daily.drawVersion}`;
+  const luckyNumber = stableHash(`${key}|灵数`) % 9 || 9;
+  const grade = FORTUNE_GRADES[stableHash(`${key}|吉`) % FORTUNE_GRADES.length];
+  return {
+    grade,
+    title: `${daily.dayPillar}日 · ${daily.dayElement}气行运`,
+    luckyHour: LUCKY_HOURS[stableHash(`${key}|时`) % LUCKY_HOURS.length],
+    luckyColor: LUCKY_COLORS[daily.dayElement],
+    luckyNumber,
+    favorable: ["宜观冷门", "宜收一签", "宜午后复盘"],
+    avoid: ["忌追热", "忌凭签下注"],
+  };
+}
+
+export async function analyzeProfile(profile: BirthProfile, options: AnalyzeOptions = {}): Promise<FortuneResult> {
+  const location = LOCATIONS.find((item) => item.name === profile.location) ?? LOCATIONS[0];
+  const adjusted = adjustClock(profile.birthDate, profile.birthTime, Math.round((location.longitude - 120) * 4));
+  const { Solar } = await import("lunar-javascript");
+  const lunar = Solar.fromYmdHms(adjusted.year, adjusted.month, adjusted.day, adjusted.hour, adjusted.minute, 0).getLunar();
   const eightChar = lunar.getEightChar();
-  const pillarValues = [
-    eightChar.getYear(),
-    eightChar.getMonth(),
-    eightChar.getDay(),
-    eightChar.getTime(),
-  ];
-  const counts = countElements(pillarValues);
-  const percentages = toPercentages(counts);
+  const pillarValues = [eightChar.getYear(), eightChar.getMonth(), eightChar.getDay(), eightChar.getTime()];
+  const percentages = toPercentages(countElements(pillarValues));
   const ordered = [...ELEMENTS].sort((left, right) => percentages[left] - percentages[right]);
   const favorableElement = ordered[0];
   const dominantElement = ordered.at(-1) ?? "土";
   const dayMaster = STEM_ELEMENT[pillarValues[2][0]] ?? "土";
-  const resourceElement = PRODUCER[dayMaster];
-  const support = percentages[dayMaster] + percentages[resourceElement] * 0.55;
-  const strength = support >= 30 ? "身强" : "身偏弱";
-  const balanceSpread = percentages[dominantElement] - percentages[favorableElement];
+  const strength = percentages[dayMaster] + percentages[PRODUCER[dayMaster]] * 0.55 >= 30 ? "身强" : "身偏弱";
   const riskProfile = ARCHETYPES[favorableElement];
+  const profileKey = [profile.gender, profile.birthDate, profile.birthTime, profile.location, ...pillarValues].join("|");
+  const dailyContext = options.dailyContext ?? await createDailyContext();
   const universe = await loadMysticUniverse();
-  const profileKey = [
-    profile.gender,
-    profile.birthDate,
-    profile.birthTime,
-    profile.location,
-    ...pillarValues,
-  ].join("|");
   const ranked = rankMysticStocks(universe, {
-    profileKey,
-    favorableElement,
-    dayMaster,
-    dominantElement,
-    gender: profile.gender,
-    destinyNumber: destinyNumber(profile.birthDate),
+    profileKey, favorableElement, dayMaster, dominantElement, gender: profile.gender,
+    destinyNumber: destinyNumber(profile.birthDate), daily: dailyContext,
+    affinity: options.affinity, recentPositiveCodes: options.recentPositiveCodes,
   });
-
-  const genderLabel = profile.gender === "male" ? "乾造" : "坤造";
-  const pattern = `${genderLabel} · ${dayMaster}日主${strength} · ${dominantElement}气偏旺`;
-  const summary = balanceSpread <= 8
-    ? `五行分布相对均衡，本局以${dayMaster}日主和灵数共振寻找隐藏缘分。`
-    : `${dominantElement}元素相对集中，取${favorableElement}为调和之象，命盘化身为“${riskProfile}”。`;
-
+  const spread = percentages[dominantElement] - percentages[favorableElement];
   return {
-    pillars: ["年柱", "月柱", "日柱", "时柱"].map((label, index) => ({
-      label,
-      value: pillarValues[index],
-    })),
+    pillars: ["年柱", "月柱", "日柱", "时柱"].map((label, index) => ({ label, value: pillarValues[index] })),
     lunarDate: lunar.toString(),
     trueSolarTime: `${String(adjusted.hour).padStart(2, "0")}:${String(adjusted.minute).padStart(2, "0")}`,
-    dayMaster,
-    favorableElement,
-    dominantElement,
-    pattern,
+    dayMaster, favorableElement, dominantElement,
+    pattern: `${profile.gender === "male" ? "乾造" : "坤造"} · ${dayMaster}日主${strength} · ${dominantElement}气偏旺`,
     riskProfile,
-    summary,
+    summary: spread <= 8 ? `五行分布相对均衡，以${dayMaster}日主与流日寻缘。` : `${dominantElement}气相对集中，取${favorableElement}为调和之象，命盘化身为“${riskProfile}”。`,
     elementPercentages: percentages,
-    factorWeights: MYSTIC_FACTORS,
     recommendations: ranked.recommendations,
     mysticSignature: ranked.signature,
+    dailyContext,
+    dailyFortune: makeDailyFortune(profileKey, dailyContext),
     universeSize: universe.stockCount,
     universeSnapshot: universe.snapshotAt,
-    methodologyNote:
-      "缘分分 = 命理共振 70% + 小众探索 20% + 基础过滤 10%。小众探索是娱乐化玄学标签，不代表市值、流动性或投资价值。",
+    methodologyNote: "缘分分 = 本命共振45% + 今日流日25% + 小众探索15% + 用户缘分10% + 基础资格5%。仅作传统文化娱乐体验。",
   };
 }

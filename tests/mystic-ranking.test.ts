@@ -2,54 +2,75 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import {
-  rankMysticStocks,
-  type MysticUniverse,
-} from "../app/lib/mystic-ranking.ts";
+import { DAILY_ROLES, rankMysticStocks, type MysticContext, type MysticUniverse } from "../app/lib/mystic-ranking.ts";
 
-const universe = JSON.parse(
-  await readFile(new URL("../public/data/mystic-stocks.json", import.meta.url), "utf8"),
-) as MysticUniverse;
+const universe = JSON.parse(await readFile(new URL("../public/data/mystic-stocks.json", import.meta.url), "utf8")) as MysticUniverse;
 
-test("ranks the full tagged universe deterministically", () => {
-  const context = {
-    profileKey: "male|1990-06-15|08:30|北京市|庚午|壬午|辛亥|壬辰",
-    favorableElement: "木" as const,
-    dayMaster: "金" as const,
-    dominantElement: "水" as const,
-    gender: "male" as const,
-    destinyNumber: 4,
-  };
+const BASE_CONTEXT: MysticContext = {
+  profileKey: "male|1990-06-15|08:30|北京市|庚午|壬午|辛亥|壬辰",
+  favorableElement: "木",
+  dayMaster: "金",
+  dominantElement: "水",
+  gender: "male",
+  destinyNumber: 4,
+  daily: { dateKey: "2026-08-12", dayPillar: "戊午", dayElement: "土", drawVersion: 0 },
+};
 
-  const first = rankMysticStocks(universe, context);
-  const second = rankMysticStocks(universe, context);
-
+test("daily draw is deterministic, unique, and contains all six roles", () => {
+  const first = rankMysticStocks(universe, BASE_CONTEXT);
+  const second = rankMysticStocks(universe, BASE_CONTEXT);
   assert.ok(universe.stockCount >= 4500);
   assert.deepEqual(first, second);
-  assert.equal(first.recommendations.length, 6);
+  assert.deepEqual(first.recommendations.map((item) => item.role), DAILY_ROLES);
   assert.equal(new Set(first.recommendations.map((item) => item.code)).size, 6);
+  assert.equal(first.recommendations.find((item) => item.role === "clash")?.isPositive, false);
 });
 
-test("different birth profiles produce substantially different stock lists", () => {
-  const first = rankMysticStocks(universe, {
-    profileKey: "female|1974-01-02|01:15|上海市|甲寅|甲子|癸丑|癸丑",
-    favorableElement: "火",
-    dayMaster: "水",
-    dominantElement: "木",
-    gender: "female",
-    destinyNumber: 6,
+test("one reroll changes variable signs but preserves guardian and clash", () => {
+  const first = rankMysticStocks(universe, BASE_CONTEXT);
+  const rerolled = rankMysticStocks(universe, {
+    ...BASE_CONTEXT,
+    daily: { ...BASE_CONTEXT.daily, drawVersion: 1 },
   });
-  const second = rankMysticStocks(universe, {
-    profileKey: "male|2002-11-28|22:40|乌鲁木齐市|壬午|辛亥|庚子|丁亥",
-    favorableElement: "土",
-    dayMaster: "金",
-    dominantElement: "水",
-    gender: "male",
-    destinyNumber: 7,
-  });
+  const byRole = (role: string, result: typeof first) => result.recommendations.find((item) => item.role === role)?.code;
+  assert.equal(byRole("guardian", first), byRole("guardian", rerolled));
+  assert.equal(byRole("clash", first), byRole("clash", rerolled));
+  const changed = ["today", "hidden", "sameStar", "remedy"].filter((role) => byRole(role, first) !== byRole(role, rerolled));
+  assert.ok(changed.length >= 2, `expected at least two variable signs to change, got ${changed.length}`);
+});
 
-  const firstCodes = new Set(first.recommendations.map((item) => item.code));
-  const overlap = second.recommendations.filter((item) => firstCodes.has(item.code));
-  assert.ok(overlap.length <= 2, `expected at most 2 overlapping stocks, got ${overlap.length}`);
+test("different dates and profiles produce substantially different positive signs", () => {
+  const first = rankMysticStocks(universe, BASE_CONTEXT);
+  const second = rankMysticStocks(universe, {
+    profileKey: "female|1974-01-02|01:15|上海市|甲寅|甲子|癸丑|癸丑",
+    favorableElement: "火", dayMaster: "水", dominantElement: "木", gender: "female", destinyNumber: 6,
+    daily: { dateKey: "2026-08-13", dayPillar: "己未", dayElement: "土", drawVersion: 0 },
+  });
+  const firstCodes = new Set(first.recommendations.filter((item) => item.isPositive).map((item) => item.code));
+  const overlap = second.recommendations.filter((item) => item.isPositive && firstCodes.has(item.code));
+  assert.ok(overlap.length <= 2, `expected at most 2 overlapping positive stocks, got ${overlap.length}`);
   assert.notDeepEqual(first.signature, second.signature);
+});
+
+test("feedback stays within ten percent and avoidance/cooldown filters future positive signs", () => {
+  const baseline = rankMysticStocks(universe, BASE_CONTEXT);
+  for (const item of baseline.recommendations) {
+    assert.ok(item.affinityScore >= 0 && item.affinityScore <= 100);
+  }
+  const avoidedCode = baseline.recommendations.find((item) => item.role === "today")?.code as string;
+  const recentCode = baseline.recommendations.find((item) => item.role === "hidden")?.code as string;
+  const filtered = rankMysticStocks(universe, {
+    ...BASE_CONTEXT,
+    affinity: { tagWeights: { "element:木": 50 }, blockedCodes: [avoidedCode], suppressedCodes: [] },
+    recentPositiveCodes: [recentCode],
+  });
+  assert.ok(!filtered.recommendations.some((item) => item.code === avoidedCode));
+  assert.ok(!filtered.recommendations.some((item) => item.isPositive && item.code === recentCode));
+  assert.ok(filtered.recommendations.every((item) => item.affinityScore <= 100));
+});
+
+test("static universe v2 has listing pillars and does not invent placeholder industries", () => {
+  assert.equal(universe.schemaVersion, 2);
+  assert.ok(universe.stocks.every((stock) => stock.listingDate && stock.listingDayPillar && stock.tagVersion === "2.0"));
+  assert.ok(universe.stocks.every((stock) => stock.industry !== "玄学探索"));
 });

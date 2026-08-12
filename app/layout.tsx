@@ -15,19 +15,19 @@ export async function generateMetadata(): Promise<Metadata> {
       default: "玄鉴｜命理投研罗盘",
       template: "%s｜玄鉴",
     },
-    description: "一命一盘，千股寻缘。以五行、星曜、卦宫与灵数探索你的 A 股缘分签。",
+    description: "本命盘遇见今日流日。每天揭开六枚 A 股玄签，收藏缘分、回看星轨，仅作传统文化娱乐。",
     metadataBase: new URL(origin),
     openGraph: {
       type: "website",
       locale: "zh_CN",
-      title: "玄鉴｜一命一盘，千股寻缘",
-      description: "以生辰启局，让五行、星曜、卦宫与灵数穿过近五千只 A 股。",
+      title: "玄鉴｜一命一盘 · 每日寻缘",
+      description: "本命盘遇见今日流日，每天揭开六枚 A 股玄签。传统文化娱乐体验。",
       images: [{ url: socialImage, width: 1731, height: 909, alt: "玄鉴命理投研罗盘" }],
     },
     twitter: {
       card: "summary_large_image",
       title: "玄鉴｜命理投研罗盘",
-      description: "一命一盘，千股寻缘。",
+      description: "本命盘遇见今日流日，每天揭开六枚 A 股玄签。",
       images: [socialImage],
     },
   };
