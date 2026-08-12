@@ -24,7 +24,6 @@
 - `tests/`：Node 测试和服务端渲染验收。
 - `deploy/`：`xj.norliva.top` 的 Caddy 配置。
 - `docs/`：架构和产品边界文档。
-- `.openai/hosting.json`：Sites 项目绑定。保留现有 `project_id`，未使用的 D1/R2 继续设为 `null`。
 
 不要重新引入对 `D:\Code\AShare`、其 Python 包、数据库或目录结构的隐式依赖。若未来需要交换量化数据，使用明确的导出文件或版本化 API。
 
@@ -137,7 +136,6 @@ npm test
 - 不提交密钥、临时档案、构建目录或部署压缩包。
 - 只有用户明确要求发布时才修改生产环境。
 - VPS 发布先运行 `npm run build:vps`，再创建新的版本化 release；验证 `index.html` 和 `data/mystic-stocks.json` 后原子切换 `current` 符号链接。不要直接覆盖当前 release，并保留可回滚版本。
-- Sites 发布必须复用 `.openai/hosting.json` 中的现有项目，保存已验证且已推送的提交版本后再部署。
 - 发布后至少验证首页 HTTP 200、每日开签入口、CSP、安全头、标签池 `schemaVersion` 与股票数量。
 
 ## Documentation updates

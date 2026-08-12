@@ -52,6 +52,9 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.match(html, /每日玄签/);
   assert.match(html, /近5,000只A股玄学标签池/);
   assert.match(html, /本命 · 流日 · 反馈已连接/);
+  assert.match(html, /id="product-navigation"/);
+  assert.match(html, /aria-label="展开产品导航"/);
+  assert.match(html, /aria-label="打开功能导航"/);
   assert.match(html, /生辰只在本机推演/);
   assert.match(html, /全国县市 · 经度校正/);
   assert.match(html, /省级 \/ 市级 \/ 县区级/);
@@ -59,10 +62,12 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.match(html, /创业板指/);
   assert.match(html, />男<\/button>/);
   assert.match(html, />女<\/button>/);
+  assert.doesNotMatch(html, /生辰与反馈仅保存在这台设备/);
   assert.doesNotMatch(html, /先守量化纪律|本产品原型不构成投资建议/);
+  assert.doesNotMatch(html, /mobile-oracle-nav/);
 });
 
-test("renders a public standalone VPS entry without Sites authentication links", async () => {
+test("renders a public standalone VPS entry without hosted authentication links", async () => {
   const response = await render("/live");
   assert.equal(response.status, 200);
 
@@ -78,6 +83,9 @@ test("renders a public standalone VPS entry without Sites authentication links",
   assert.doesNotMatch(html, /小众探索\s*20%/);
   assert.doesNotMatch(html, /基础过滤\s*10%/);
   assert.doesNotMatch(html, /signin-with-chatgpt|signout-with-chatgpt/);
+  assert.match(html, /id="product-navigation"/);
+  assert.match(html, /aria-label="展开产品导航"/);
+  assert.doesNotMatch(html, /生辰与反馈仅保存在这台设备/);
   assert.doesNotMatch(html, /方法说明|先守量化纪律|本产品原型不构成投资建议/);
 });
 

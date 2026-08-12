@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, CSSProperties, FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, CSSProperties, FormEvent, TouchEvent as ReactTouchEvent, useEffect, useMemo, useRef, useState } from "react";
 import LocationPicker from "@/app/components/LocationPicker";
 import TodayOverview from "@/app/components/TodayOverview";
 import {
@@ -169,6 +169,10 @@ export default function CompassExperience({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [password, setPassword] = useState("");
+  const [railOpen, setRailOpen] = useState(false);
+  const touchStart = useRef<{ x: number; y: number; fromEdge: boolean } | null>(null);
+  const railCloseButton = useRef<HTMLButtonElement>(null);
+  const mobileMenuButton = useRef<HTMLButtonElement>(null);
 
   const todayKey = getShanghaiDateKey();
   const fingerprint = state.profile ? profileFingerprint(state.profile) : "";
@@ -248,6 +252,24 @@ export default function CompassExperience({
     // Initial hydration deliberately runs once; openDaily persists any new daily entry.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!railOpen) return;
+    const compactNavigation = window.matchMedia("(max-width: 900px)").matches;
+    const focusFrame = compactNavigation
+      ? window.requestAnimationFrame(() => railCloseButton.current?.focus())
+      : 0;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setRailOpen(false);
+      if (compactNavigation) window.requestAnimationFrame(() => mobileMenuButton.current?.focus());
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      if (focusFrame) window.cancelAnimationFrame(focusFrame);
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [railOpen]);
 
   const updateProfile = <Key extends keyof BirthProfile>(key: Key, value: BirthProfile[Key]) => {
     setProfile((current) => ({ ...current, [key]: value }));
@@ -348,15 +370,91 @@ export default function CompassExperience({
     { id: "profile" as const, glyph: "命", label: "本命档案" },
   ];
 
+  const usesDrawerNavigation = () => window.matchMedia("(max-width: 900px)").matches;
+
+  const selectView = (nextView: ViewName) => {
+    setView(nextView);
+    if (usesDrawerNavigation()) {
+      setRailOpen(false);
+      window.requestAnimationFrame(() => mobileMenuButton.current?.focus());
+    }
+  };
+
+  const handleTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
+    if (!usesDrawerNavigation()) return;
+    const touch = event.touches[0];
+    if (!touch || (!railOpen && touch.clientX > 32)) return;
+    touchStart.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      fromEdge: touch.clientX <= 32,
+    };
+  };
+
+  const handleTouchEnd = (event: ReactTouchEvent<HTMLDivElement>) => {
+    const start = touchStart.current;
+    touchStart.current = null;
+    if (!start || !usesDrawerNavigation()) return;
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 64 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.2) return;
+    if (!railOpen && start.fromEdge && deltaX > 0) setRailOpen(true);
+    if (railOpen && deltaX < 0) setRailOpen(false);
+  };
+
   return (
-    <div className="product-shell daily-shell mystic-shell">
-      <aside className="side-rail" aria-label="产品导航">
-        <button className="brand-lockup rail-brand-button" onClick={() => setView(result ? "today" : "profile")} aria-label="玄鉴首页">
+    <div
+      className={`product-shell daily-shell mystic-shell${railOpen ? " rail-expanded" : ""}`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={() => { touchStart.current = null; }}
+    >
+      <button
+        className="rail-edge-trigger"
+        type="button"
+        aria-label="展开产品导航"
+        aria-expanded={railOpen}
+        aria-controls="product-navigation"
+        onMouseEnter={() => setRailOpen(true)}
+        onFocus={() => setRailOpen(true)}
+        onClick={() => setRailOpen(true)}
+      >
+        <span aria-hidden="true">›</span>
+      </button>
+      <button
+        className="rail-backdrop"
+        type="button"
+        aria-label="关闭产品导航"
+        tabIndex={railOpen ? 0 : -1}
+        onClick={() => {
+          setRailOpen(false);
+          window.requestAnimationFrame(() => mobileMenuButton.current?.focus());
+        }}
+      />
+      <aside
+        className="side-rail"
+        id="product-navigation"
+        aria-label="产品导航"
+        aria-hidden={!railOpen}
+        onMouseEnter={() => setRailOpen(true)}
+        onMouseLeave={() => { if (!usesDrawerNavigation()) setRailOpen(false); }}
+        onFocusCapture={() => setRailOpen(true)}
+        onBlurCapture={(event) => {
+          if (!usesDrawerNavigation() && !event.currentTarget.contains(event.relatedTarget as Node)) setRailOpen(false);
+        }}
+      >
+        <button ref={railCloseButton} className="rail-close-button" type="button" aria-label="关闭产品导航" onClick={() => {
+          setRailOpen(false);
+          window.requestAnimationFrame(() => mobileMenuButton.current?.focus());
+        }}>×</button>
+        <button className="brand-lockup rail-brand-button" onClick={() => selectView(result ? "today" : "profile")} aria-label="玄鉴首页">
           <span className="brand-seal">玄</span><span><strong>玄鉴</strong><small>每日玄签 · AShare Lab</small></span>
         </button>
         <nav className="side-nav daily-side-nav">
           {nav.map((item) => (
-            <button key={item.id} className={view === item.id ? "active" : ""} disabled={item.id !== "profile" && !result} onClick={() => setView(item.id)}>
+            <button key={item.id} className={view === item.id ? "active" : ""} disabled={item.id !== "profile" && !result} onClick={() => selectView(item.id)}>
               <span>{item.glyph}</span>{item.label}
               {item.id === "collection" && collection.length > 0 && <b>{collection.length}</b>}
             </button>
@@ -374,9 +472,11 @@ export default function CompassExperience({
       </aside>
 
       <main className="product-main" id="top">
-        <header className="mobile-header"><button className="brand-lockup rail-brand-button" onClick={() => setView(result ? "today" : "profile")}><span className="brand-seal">玄</span><span><strong>玄鉴</strong><small>每日玄签</small></span></button><span className="mobile-user">{displayName}</span></header>
-        <nav className="mobile-oracle-nav" aria-label="移动端功能导航">{nav.map((item) => <button key={item.id} disabled={item.id !== "profile" && !result} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)}><span>{item.glyph}</span>{item.label.slice(0, 2)}</button>)}</nav>
-        {(demoMode || standaloneMode) && <div className="demo-banner">生辰与反馈仅保存在这台设备，可随时加密导出。<span>传统文化娱乐体验，不构成投资建议。</span></div>}
+        <header className="mobile-header">
+          <button ref={mobileMenuButton} className="mobile-menu-button" type="button" aria-label="打开功能导航" aria-expanded={railOpen} aria-controls="product-navigation" onClick={() => setRailOpen(true)}><span aria-hidden="true" /><span aria-hidden="true" /><span aria-hidden="true" /></button>
+          <button className="brand-lockup rail-brand-button" onClick={() => selectView(result ? "today" : "profile")}><span className="brand-seal">玄</span><span><strong>玄鉴</strong><small>每日玄签</small></span></button>
+          <span className="mobile-user">{displayName}</span>
+        </header>
         {notice && <div className="oracle-notice" role="status"><span>鉴</span>{notice}<button onClick={() => setNotice("")} aria-label="关闭提示">×</button></div>}
         {error && <div className="oracle-error" role="alert">{error}<button onClick={() => setError("")}>×</button></div>}
 
@@ -448,7 +548,7 @@ export default function CompassExperience({
                 <div className="daily-compass-rings"><span className="ring-one" /><span className="ring-two" /><span className="ring-three" /><div className="daily-core"><small>今日流日</small><strong>{result.dailyContext.dayPillar}</strong><span>{result.dailyContext.dayElement}气行运</span></div>{ELEMENTS.map((element, index) => <i key={element} style={{ "--daily-index": index } as React.CSSProperties}>{element}</i>)}</div>
                 <div className="daily-signature"><span>本命主星</span><strong>{result.mysticSignature.star}</strong><i /> <span>守局神兽</span><strong>{result.mysticSignature.beast}</strong><i /><span>灵数</span><strong>{result.mysticSignature.destinyNumber}</strong></div>
               </section>
-              <section className="omen-panel surface-card"><span className="fortune-grade">{result.dailyFortune.grade}</span><h2>{result.dailyFortune.title}</h2><div className="omen-grid"><div><small>幸运时辰</small><strong>{result.dailyFortune.luckyHour}</strong></div><div><small>幸运色</small><strong>{result.dailyFortune.luckyColor}</strong></div><div><small>今日灵数</small><strong>{result.dailyFortune.luckyNumber}</strong></div></div><div className="do-dont"><p><b>宜</b>{result.dailyFortune.favorable.join(" · ")}</p><p><b>忌</b>{result.dailyFortune.avoid.join(" · ")}</p></div><small className="method-note">{result.methodologyNote}</small></section>
+              <section className="omen-panel surface-card"><span className="fortune-grade">{result.dailyFortune.grade}</span><h2>{result.dailyFortune.title}</h2><div className="omen-grid"><div><small>幸运时辰</small><strong>{result.dailyFortune.luckyHour}</strong></div><div><small>幸运色</small><strong>{result.dailyFortune.luckyColor}</strong></div><div><small>今日灵数</small><strong>{result.dailyFortune.luckyNumber}</strong></div></div><div className="do-dont"><p><b>宜</b>{result.dailyFortune.favorable.join(" · ")}</p><p><b>忌</b>{result.dailyFortune.avoid.join(" · ")}</p></div></section>
             </div>
 
             <div className="sign-heading"><div><span>六签各司其职</span><h2>揭开今日股缘</h2></div><p>守护签按月稳定；相冲签只作警示；其余四签随流日与一次换卦变化。</p></div>

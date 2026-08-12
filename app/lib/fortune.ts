@@ -37,7 +37,6 @@ export type FortuneResult = {
   dailyFortune: DailyFortune;
   universeSize: number;
   universeSnapshot: string;
-  methodologyNote: string;
 };
 
 export type AnalyzeOptions = {
@@ -158,6 +157,5 @@ export async function analyzeProfile(profile: BirthProfile, options: AnalyzeOpti
     dailyFortune: makeDailyFortune(profileKey, dailyContext),
     universeSize: universe.stockCount,
     universeSnapshot: universe.snapshotAt,
-    methodologyNote: "缘分分 = 本命共振45% + 今日流日25% + 小众探索15% + 用户缘分10% + 基础资格5%。仅作传统文化娱乐体验。",
   };
 }
