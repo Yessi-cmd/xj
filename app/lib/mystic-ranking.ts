@@ -80,6 +80,8 @@ export type DailyRecommendation = {
   primaryElement: ElementName;
   star: string;
   beast: string;
+  palace: string;
+  number: number;
   tags: string[];
   rationale: string;
 };
@@ -140,6 +142,10 @@ export async function loadMysticUniverse(): Promise<MysticUniverse> {
         throw new Error("玄学标签池内容不完整");
       }
       return universe;
+    })
+    .catch((error) => {
+      universePromise = undefined; // 失败后重置缓存，让下一次调用可以重试，避免一次网络抖动锁死当日开签
+      throw error;
     });
   return universePromise;
 }
@@ -219,16 +225,16 @@ function scoreStock(stock: MysticStockTag, context: MysticContext, signature: My
     dailyScore,
     affinityScore,
     combinedScore,
-    fixedTie: stableHash(`${context.profileKey}|${stock.code}|${context.daily.dateKey.slice(0, 7)}|守`),
+    fixedTie: stableHash(`${context.profileKey}|${stock.code}|守`),
     dailyTie: stableHash(`${context.profileKey}|${stock.code}|${context.daily.dateKey}|${context.daily.drawVersion}|变`),
   };
 }
 
 function recommendation(stock: ScoredStock, role: DailyRole, context: MysticContext, signature: MysticSignature): DailyRecommendation {
   const roleCopy: Record<DailyRole, string> = {
-    guardian: `本月与你的${context.favorableElement}气本命最稳，宜长期放入观察册。`,
+    guardian: `与你的${context.favorableElement}气本命最稳，宜长期放入观察册。`,
     today: `${context.daily.dayPillar}${context.daily.dayElement}气与本命同振，是今日缘分最明的一签。`,
-    hidden: `探索度 ${stock.explorationScore}，冷门气息最足，适合满足今日好奇心。`,
+    hidden: `探索度 ${stock.explorationScore}，取小众探索之象，适合满足今日好奇心。`,
     sameStar: `${stock.star}与本命主星${signature.star}同曜，取“星照同宫”之象。`,
     remedy: `${stock.primaryElement}${stock.secondaryElement}双象补益喜用${context.favorableElement}，取调和之意。`,
     clash: `${stock.primaryElement}气与今日${context.daily.dayElement}象相制，今日宜远观，不作正向推荐。`,
@@ -249,6 +255,8 @@ function recommendation(stock: ScoredStock, role: DailyRole, context: MysticCont
     primaryElement: stock.primaryElement,
     star: stock.star,
     beast: stock.beast,
+    palace: stock.palace,
+    number: stock.number,
     tags: [
       `${stock.primaryElement}${stock.secondaryElement}双象`,
       stock.yinYang,
@@ -269,10 +277,12 @@ function choose(
   tie: (stock: ScoredStock) => number,
   predicate: (stock: ScoredStock) => boolean = () => true,
 ): ScoredStock {
-  const available = candidates
-    .filter((stock) => !used.has(stock.code) && predicate(stock))
+  const ranked = candidates
+    .filter((stock) => !used.has(stock.code))
     .sort((left, right) => score(right) - score(left) || tie(right) - tie(left));
-  const selected = available[0] ?? candidates.find((stock) => !used.has(stock.code)) ?? candidates[0];
+  // 候选充足时按职责谓词取最高分；谓词无匹配时退到最高分未用候选；
+  // 池完全耗尽才退回 candidates[0]（可能重复），生产标签池由 loadMysticUniverse 保证 >= 1000 只，不会走到该路径。
+  const selected = ranked.find(predicate) ?? ranked[0] ?? candidates[0];
   used.add(selected.code);
   return selected;
 }
@@ -286,13 +296,16 @@ export function rankMysticStocks(
   const suppressed = new Set(context.affinity?.suppressedCodes ?? []);
   const recent = new Set(context.recentPositiveCodes ?? []);
   const all = universe.stocks
+    // 当前标签池探索度下限为 55，此阈值防御未来数据回退，不改变现有候选范围。
     .filter((stock) => stock.explorationScore >= 55 && !blocked.has(stock.code))
     .map((stock) => scoreStock(stock, context, signature));
   const positivePool = all.filter((stock) => !suppressed.has(stock.code) && !recent.has(stock.code));
   const pool = positivePool.length >= 20 ? positivePool : all.filter((stock) => !suppressed.has(stock.code));
+  // 守护签尊重无感与避开名单，但不受七日冷却与换卦影响。
+  const guardianPool = all.filter((stock) => !suppressed.has(stock.code));
   const used = new Set<string>();
 
-  const guardian = choose(all, used, (stock) => stock.natalScore * 0.8 + stock.explorationScore * 0.2, (stock) => stock.fixedTie);
+  const guardian = choose(guardianPool, used, (stock) => stock.natalScore * 0.8 + stock.explorationScore * 0.2, (stock) => stock.fixedTie);
   const drawDrift = (stock: ScoredStock) => stock.dailyTie % 13;
   const today = choose(pool, used, (stock) => stock.combinedScore + drawDrift(stock), (stock) => stock.dailyTie);
   const hidden = choose(pool, used, (stock) => stock.combinedScore * 0.55 + stock.explorationScore * 0.45 + drawDrift(stock), (stock) => stock.dailyTie);

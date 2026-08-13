@@ -71,6 +71,26 @@ test("one reroll changes variable signs but preserves guardian and clash", () =>
   assert.ok(changed.length >= 2, `expected at least two variable signs to change, got ${changed.length}`);
 });
 
+test("guardian stays with the natal chart across a month boundary and is exempt from the seven-day cooldown", () => {
+  const byRole = (role: string, result: ReturnType<typeof rankMysticStocks>) => result.recommendations.find((item) => item.role === role)?.code;
+  const august = rankMysticStocks(universe, { ...BASE_CONTEXT, daily: { dateKey: "2026-08-31", dayPillar: "丁丑", dayElement: "火", drawVersion: 0 } });
+  const september = rankMysticStocks(universe, { ...BASE_CONTEXT, daily: { dateKey: "2026-09-01", dayPillar: "戊寅", dayElement: "土", drawVersion: 0 } });
+  assert.equal(byRole("guardian", august), byRole("guardian", september));
+  const guardianCode = byRole("guardian", august) as string;
+  const withCooldown = rankMysticStocks(universe, { ...BASE_CONTEXT, recentPositiveCodes: [guardianCode] });
+  assert.equal(byRole("guardian", withCooldown), guardianCode);
+});
+
+test("guardian respects neutral suppression and avoidance", () => {
+  const baseline = rankMysticStocks(universe, BASE_CONTEXT);
+  const guardianCode = baseline.recommendations.find((item) => item.role === "guardian")?.code as string;
+  const suppressed = rankMysticStocks(universe, {
+    ...BASE_CONTEXT,
+    affinity: { tagWeights: {}, blockedCodes: [], suppressedCodes: [guardianCode] },
+  });
+  assert.notEqual(suppressed.recommendations.find((item) => item.role === "guardian")?.code, guardianCode);
+});
+
 test("different dates and profiles produce substantially different positive signs", () => {
   const first = rankMysticStocks(universe, BASE_CONTEXT);
   const second = rankMysticStocks(universe, {

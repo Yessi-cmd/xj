@@ -116,8 +116,10 @@ export function buildAffinityProfile(state: PersistedMysticState, now = new Date
 
   for (const entry of Object.values(state.feedback)) {
     if (!entry || !Array.isArray(entry.tags)) continue;
+    const isRecent = new Date(entry.updatedAt).getTime() >= neutralCutoff;
     if (entry.action === "avoid") blockedCodes.push(entry.code);
-    if (entry.action === "neutral" && new Date(entry.updatedAt).getTime() >= neutralCutoff) suppressedCodes.push(entry.code);
+    if (entry.action === "neutral" && isRecent) suppressedCodes.push(entry.code);
+    if (entry.action === "neutral" && !isRecent) continue; // 过期无感退出画像，避免长期压低标签缘分分
     const direction = entry.action === "affinity" ? 1 : entry.action === "neutral" ? -0.45 : -1;
     for (const tag of entry.tags) tagWeights[tag] = (tagWeights[tag] ?? 0) + direction;
   }
@@ -130,8 +132,8 @@ export function affinityTags(recommendation: DailyRecommendation): string[] {
     `element:${recommendation.primaryElement}`,
     `star:${recommendation.star}`,
     `beast:${recommendation.beast}`,
-    ...recommendation.tags.filter((tag) => tag.endsWith("宫")).map((tag) => `palace:${tag.slice(0, -1)}`),
-    ...recommendation.tags.filter((tag) => tag.endsWith("号灵数")).map((tag) => `number:${tag.replace("号灵数", "")}`),
+    `palace:${recommendation.palace}`,
+    `number:${recommendation.number}`,
   ];
 }
 
