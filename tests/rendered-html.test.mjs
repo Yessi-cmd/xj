@@ -58,6 +58,13 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.match(html, /生辰只在本机推演/);
   assert.match(html, /全国县市 · 经度校正/);
   assert.match(html, /省级 \/ 市级 \/ 县区级/);
+  assert.match(html, /aria-label="出生日期，格式为年\/月\/日"/);
+  assert.match(html, /aria-label="打开出生日期日历"/);
+  assert.doesNotMatch(html, /type="date"/);
+  assert.match(html, /role="switch" aria-checked="false"/);
+  assert.match(html, /暂不提供/);
+  assert.match(html, /填写后，四柱测算会更准确/);
+  assert.doesNotMatch(html, /type="time"/);
   assert.match(html, /先看今日气象，再看大盘事实/);
   assert.match(html, /创业板指/);
   assert.match(html, />男<\/button>/);

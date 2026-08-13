@@ -2,6 +2,7 @@
 
 import { ChangeEvent, CSSProperties, FormEvent, TouchEvent as ReactTouchEvent, useEffect, useMemo, useRef, useState } from "react";
 import LocationPicker from "@/app/components/LocationPicker";
+import BirthDatePicker from "@/app/components/BirthDatePicker";
 import TodayOverview from "@/app/components/TodayOverview";
 import {
   analyzeProfile,
@@ -61,7 +62,7 @@ const TRIGRAMS = [
 const EARTHLY_BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"] as const;
 
 const INITIAL_PROFILE: BirthProfile = {
-  name: "", gender: "male", birthDate: "1990-06-15", birthTime: "08:30", location: "北京市",
+  name: "", gender: "male", birthDate: "1990-06-15", birthTime: "12:00", birthTimeKnown: false, location: "北京市",
 };
 
 function formatDate(dateKey: string): string {
@@ -552,8 +553,22 @@ export default function CompassExperience({
                 <div className="form-grid">
                   <label className="field"><span>称呼 <small>可选</small></span><input value={profile.name} onChange={(event) => updateProfile("name", event.target.value)} placeholder="如何称呼你" autoComplete="name" /></label>
                   <fieldset className="field gender-field"><legend>性别</legend><div className="segmented-control"><button type="button" aria-pressed={profile.gender === "male"} className={profile.gender === "male" ? "selected" : ""} onClick={() => updateProfile("gender", "male")}>男</button><button type="button" aria-pressed={profile.gender === "female"} className={profile.gender === "female" ? "selected" : ""} onClick={() => updateProfile("gender", "female")}>女</button></div></fieldset>
-                  <label className="field"><span>出生日期 <small>公历</small></span><input type="date" required min="1920-01-01" max={todayKey} value={profile.birthDate} onChange={(event) => updateProfile("birthDate", event.target.value)} /></label>
-                  <label className="field"><span>出生时间 <small>当地钟表时间</small></span><input type="time" required value={profile.birthTime} onChange={(event) => updateProfile("birthTime", event.target.value)} /></label>
+                  <div className="field"><span>出生日期 <small>公历</small></span><BirthDatePicker min="1920-01-01" max={todayKey} value={profile.birthDate} onChange={(value) => updateProfile("birthDate", value)} /></div>
+                  <fieldset className={`field birth-time-field${profile.birthTimeKnown !== false ? " enabled" : ""}`}>
+                    <legend>出生时间 <small>可选 · 填写后更准确</small></legend>
+                    <button
+                      className="birth-time-toggle"
+                      type="button"
+                      role="switch"
+                      aria-checked={profile.birthTimeKnown !== false}
+                      onClick={() => updateProfile("birthTimeKnown", profile.birthTimeKnown === false)}
+                    >
+                      <span><b>{profile.birthTimeKnown !== false ? "已知时辰" : "暂不提供"}</b><small>{profile.birthTimeKnown !== false ? "按出生地当地钟表时间填写" : "将按正午作中性估算"}</small></span>
+                      <i aria-hidden="true" />
+                    </button>
+                    {profile.birthTimeKnown !== false && <input aria-label="出生时间，当地钟表时间" type="time" required value={profile.birthTime} onChange={(event) => updateProfile("birthTime", event.target.value)} />}
+                    <p>若记得大致时辰，开启并填写后，四柱测算会更准确。</p>
+                  </fieldset>
                   <div className="field field-wide"><span>出生地点 <small>全国县市 · 经度校正</small></span><LocationPicker value={profile.location} onChange={(location) => updateProfile("location", location)} /></div>
                 </div>
                 <button className="primary-button" type="submit" disabled={loading}><small>敕</small><span>{loading ? "星盘运转 · 正在寻缘…" : !state.profile ? "启盘 · 寻找我的缘分股" : result ? "重排本命 · 开启今日玄签" : "开启今日玄签"}</span><b>卜</b></button>
