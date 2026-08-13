@@ -20,6 +20,7 @@ import {
   hasDailyEntry,
   loadMysticState,
   positiveCodesInLastDays,
+  prepareStateForDailyOpening,
   saveMysticState,
   type DailyHistoryEntry,
   type PersistedMysticState,
@@ -68,7 +69,7 @@ function formatDate(dateKey: string): string {
   return `${year}年${Number(month)}月${Number(day)}日`;
 }
 
-function historyEntry(result: FortuneResult, fingerprint: string): DailyHistoryEntry {
+function historyEntry(result: FortuneResult, fingerprint: string, openedByUser: boolean): DailyHistoryEntry {
   return {
     dateKey: result.dailyContext.dateKey,
     profileFingerprint: fingerprint,
@@ -78,6 +79,7 @@ function historyEntry(result: FortuneResult, fingerprint: string): DailyHistoryE
     recommendations: result.recommendations,
     archetype: result.riskProfile,
     openedAt: new Date().toISOString(),
+    openedByUser,
   };
 }
 
@@ -201,7 +203,7 @@ export default function CompassExperience({
     return saved;
   }
 
-  async function openDaily(nextProfile: BirthProfile, baseState: PersistedMysticState, drawVersion?: 0 | 1) {
+  async function openDaily(nextProfile: BirthProfile, baseState: PersistedMysticState, drawVersion?: 0 | 1, openedByUser = true) {
     setLoading(true);
     setError("");
     try {
@@ -221,7 +223,7 @@ export default function CompassExperience({
         nextResult.recommendations = existing.recommendations;
         nextResult.dailyFortune = existing.dailyFortune;
       }
-      const entry = historyEntry(nextResult, nextFingerprint);
+      const entry = historyEntry(nextResult, nextFingerprint, openedByUser || existing?.openedByUser === true);
       const nextState: PersistedMysticState = {
         ...baseState,
         profile: nextProfile,
@@ -244,16 +246,21 @@ export default function CompassExperience({
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const saved = loadMysticState();
-      setState(saved);
       if (saved.profile) {
         setProfile(saved.profile);
         const dateKey = getShanghaiDateKey();
-        if (hasDailyEntry(saved, dateKey, profileFingerprint(saved.profile))) {
-          void openDaily(saved.profile, saved);
+        const nextFingerprint = profileFingerprint(saved.profile);
+        const readyState = prepareStateForDailyOpening(saved, dateKey, nextFingerprint);
+        const restored = readyState === saved ? saved : saveMysticState(readyState);
+        setState(restored);
+        if (hasDailyEntry(restored, dateKey, nextFingerprint)) {
+          void openDaily(saved.profile, restored, undefined, false);
         } else {
           setResult(null);
           setView("profile");
         }
+      } else {
+        setState(saved);
       }
     }, 0);
     return () => window.clearTimeout(timer);
@@ -376,11 +383,19 @@ export default function CompassExperience({
     try {
       const imported = await decryptMysticState(await file.text(), password);
       if (!window.confirm("导入会覆盖当前浏览器里的本命档案、缘分册和星轨，确定继续吗？")) return;
-      const saved = commit(imported);
+      let saved = commit(imported);
       setPassword("");
       if (saved.profile) {
         setProfile(saved.profile);
-        await openDaily(saved.profile, saved);
+        const dateKey = getShanghaiDateKey();
+        const nextFingerprint = profileFingerprint(saved.profile);
+        const readyState = prepareStateForDailyOpening(saved, dateKey, nextFingerprint);
+        if (readyState !== saved) saved = commit(readyState);
+        if (hasDailyEntry(saved, dateKey, nextFingerprint)) await openDaily(saved.profile, saved, undefined, false);
+        else {
+          setResult(null);
+          setView("profile");
+        }
       } else {
         setResult(null);
         setView("profile");
