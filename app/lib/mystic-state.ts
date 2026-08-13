@@ -144,6 +144,10 @@ export function positiveCodesInLastDays(state: PersistedMysticState, dateKey: st
     .flatMap((entry) => entry.recommendations.filter((item) => item.isPositive).map((item) => item.code)))];
 }
 
+export function hasDailyEntry(state: PersistedMysticState, dateKey: string, profileFingerprint: string): boolean {
+  return state.history.some((entry) => entry.dateKey === dateKey && entry.profileFingerprint === profileFingerprint);
+}
+
 export function calculateStreak(history: DailyHistoryEntry[], todayKey: string): number {
   const days = new Set(history.map((entry) => entry.dateKey));
   let cursor = new Date(`${todayKey}T12:00:00+08:00`);

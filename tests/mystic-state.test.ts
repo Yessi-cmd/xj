@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildAffinityProfile, calculateStreak, createEmptyMysticState, normalizeMysticState, positiveCodesInLastDays } from "../app/lib/mystic-state.ts";
+import { buildAffinityProfile, calculateStreak, createEmptyMysticState, hasDailyEntry, normalizeMysticState, positiveCodesInLastDays } from "../app/lib/mystic-state.ts";
 import type { DailyHistoryEntry, PersistedMysticState } from "../app/lib/mystic-state.ts";
 
 const recommendation = (code: string, isPositive = true) => ({
@@ -45,4 +45,11 @@ test("seven-day cooldown and streak calculations use distinct Shanghai dates", (
   const state = { ...createEmptyMysticState(), history: [history("2026-08-12", ["a"]), history("2026-08-11", ["b"]), history("2026-08-10", ["c"])] };
   assert.equal(calculateStreak(state.history, "2026-08-12"), 3);
   assert.deepEqual(new Set(positiveCodesInLastDays(state, "2026-08-12")), new Set(["b", "c"]));
+});
+
+test("a saved profile must reopen the draw screen when the Shanghai date changes", () => {
+  const state = { ...createEmptyMysticState(), history: [history("2026-08-12", ["a"])] };
+  assert.equal(hasDailyEntry(state, "2026-08-12", "p1"), true);
+  assert.equal(hasDailyEntry(state, "2026-08-13", "p1"), false);
+  assert.equal(hasDailyEntry(state, "2026-08-12", "another-profile"), false);
 });
