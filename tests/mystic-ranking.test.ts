@@ -30,6 +30,15 @@ test("daily draw is deterministic, unique, and contains all six roles", () => {
   assert.equal(first.recommendations.find((item) => item.role === "clash")?.isPositive, false);
 });
 
+test("recommendations carry stock facts and detailed rationale copy", () => {
+  const first = rankMysticStocks(universe, BASE_CONTEXT);
+  assert.ok(first.recommendations.every((item) => ["SH", "SZ", "BJ"].includes(item.exchange)));
+  assert.ok(first.recommendations.every((item) => item.listingDate && item.exchangeDirection));
+  assert.ok(first.recommendations.every((item) => item.industry !== "玄学探索"));
+  assert.ok(first.recommendations.every((item) => item.rationale.length >= 28));
+  assert.ok(first.recommendations.every((item) => item.rationale.includes("。") && item.rationale.includes("，")));
+});
+
 test("unknown birth time uses a deterministic neutral estimate until the user opts in", () => {
   const unknownMorning: BirthProfile = { name: "", gender: "male", birthDate: "1990-06-15", birthTime: "08:30", birthTimeKnown: false, location: "北京市" };
   const unknownEvening: BirthProfile = { ...unknownMorning, birthTime: "20:45" };

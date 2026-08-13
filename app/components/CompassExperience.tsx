@@ -71,6 +71,16 @@ function formatDate(dateKey: string): string {
   return `${year}年${Number(month)}月${Number(day)}日`;
 }
 
+const EXCHANGE_LABELS: Record<DailyRecommendation["exchange"], string> = { SH: "沪市", SZ: "深市", BJ: "北交所" };
+
+function stockIndustry(item: DailyRecommendation): string {
+  return item.industry?.replace(/^[A-Z]\s*/, "") || "—";
+}
+
+function stockBoard(item: DailyRecommendation): string {
+  return item.exchangeDirection ? `${EXCHANGE_LABELS[item.exchange]} · ${item.exchangeDirection}` : EXCHANGE_LABELS[item.exchange];
+}
+
 function historyEntry(result: FortuneResult, fingerprint: string, openedByUser: boolean): DailyHistoryEntry {
   return {
     dateKey: result.dailyContext.dateKey,
@@ -626,6 +636,12 @@ export default function CompassExperience({
                   <div className="stock-identity"><span>{item.kind}</span><h3>{item.name}</h3><small>{item.code} · {item.theme}</small></div>
                   <p>{item.rationale}</p>
                   <div className="mystic-tags">{item.tags.slice(0, 5).map((tag) => <span key={tag}>{tag}</span>)}</div>
+                  <div className="stock-facts">
+                    <span><small>行业</small>{stockIndustry(item)}</span>
+                    <span><small>板块</small>{stockBoard(item)}</span>
+                    <span><small>上市</small>{item.listingDate ?? "—"}</span>
+                    <span><small>探索度</small>{item.explorationScore}</span>
+                  </div>
                   <div className="score-script"><span>本命 {item.natalScore}</span><span>流日 {item.dailyScore}</span><span>缘感 {item.affinityScore}</span></div>
                   <div className="feedback-row" aria-label={`${item.name}缘分反馈`}><button className={feedbackFor(item.code) === "affinity" ? "selected" : ""} onClick={() => setFeedback(item, "affinity")}>♡ 有缘</button><button className={feedbackFor(item.code) === "neutral" ? "selected" : ""} onClick={() => setFeedback(item, "neutral")}>○ 无感</button><button className={feedbackFor(item.code) === "avoid" ? "selected avoid" : ""} onClick={() => setFeedback(item, "avoid")}>× 避开</button></div>
                 </article>

@@ -82,6 +82,10 @@ export type DailyRecommendation = {
   beast: string;
   palace: string;
   number: number;
+  industry?: string;
+  exchange: "SH" | "SZ" | "BJ";
+  exchangeDirection?: string;
+  listingDate?: string | null;
   tags: string[];
   rationale: string;
 };
@@ -244,12 +248,12 @@ function scoreStock(stock: MysticStockTag, context: MysticContext, signature: My
 
 function recommendation(stock: ScoredStock, role: DailyRole, context: MysticContext, signature: MysticSignature): DailyRecommendation {
   const roleCopy: Record<DailyRole, string> = {
-    guardian: `与你的${context.favorableElement}气本命最稳，宜长期放入观察册。`,
-    today: `${context.daily.dayPillar}${context.daily.dayElement}气与本命同振，是今日缘分最明的一签。`,
-    hidden: `探索度 ${stock.explorationScore}，取小众探索之象，适合满足今日好奇心。`,
-    sameStar: `${stock.star}与本命主星${signature.star}同曜，取“星照同宫”之象。`,
-    remedy: `${stock.primaryElement}${stock.secondaryElement}双象补益喜用${context.favorableElement}，取调和之意。`,
-    clash: `${stock.primaryElement}气与今日${context.daily.dayElement}象相制，今日宜远观，不作正向推荐。`,
+    guardian: `${stock.primaryElement}${stock.secondaryElement}双象承${context.favorableElement}气喜用，${stock.beast}守${stock.palace}宫，${stock.yinYang}性${stock.number}数与本命同盘；此签随本命恒定，宜长期放入观察册。`,
+    today: `${context.daily.dayPillar}日${context.daily.dayElement}气当值，与${stock.primaryElement}${stock.secondaryElement}双象同振；${stock.star}星借今日气象流转，缘分最明，宜今日观之。`,
+    hidden: `探索度 ${stock.explorationScore}，${stock.listingDayPillar ? `上市日柱${stock.listingDayPillar}，` : ""}气息藏于${stock.palace}宫少为人知；冷门取象，适合满足今日好奇心。`,
+    sameStar: `${stock.star}与本命主星${signature.star}同曜，取“星照同宫”之象；${stock.beast}加护${stock.palace}宫，${stock.number}数灵光相映，同气相求。`,
+    remedy: `${stock.primaryElement}${stock.secondaryElement}双象补益喜用${context.favorableElement}，${stock.yinYang}性入局调和；${stock.listingDayPillar ? `上市日柱${stock.listingDayPillar}作引，` : ""}取补运之意。`,
+    clash: `${stock.primaryElement}气与今日${context.daily.dayElement}象相制，${stock.beast}居${stock.palace}宫更添冲势；今日宜远观，不作正向推荐。`,
   };
   return {
     code: stock.code,
@@ -269,6 +273,10 @@ function recommendation(stock: ScoredStock, role: DailyRole, context: MysticCont
     beast: stock.beast,
     palace: stock.palace,
     number: stock.number,
+    industry: stock.industry,
+    exchange: stock.exchange,
+    exchangeDirection: stock.exchangeDirection,
+    listingDate: stock.listingDate,
     tags: [
       `${stock.primaryElement}${stock.secondaryElement}双象`,
       stock.yinYang,
