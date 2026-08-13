@@ -3342,6 +3342,7 @@ select:focus-visible {
     background: rgba(1, 8, 9, 0.74);
     content: "";
     backdrop-filter: blur(4px);
+    touch-action: none;
   }
 
   .location-cascade-panel {
@@ -3361,36 +3362,70 @@ select:focus-visible {
 }
 
 @media (max-width: 640px) {
+  /* 手机端改为底部抽屉：整宽升起，省/市/县三列并排，各自整列滚动 */
   .location-cascade-panel {
-    inset: 18px 10px max(76px, calc(env(safe-area-inset-bottom) + 56px));
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    inset: auto 0 0 0;
+    width: 100%;
+    height: 88vh;
+    height: min(88dvh, 720px);
+    padding-bottom: env(safe-area-inset-bottom);
+    overflow: hidden;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 14px 14px 0 0;
+    animation: location-sheet-up 200ms ease;
   }
 
   .location-cascade-panel > header,
   .location-cascade-panel > footer {
-    position: sticky;
-    z-index: 2;
-    background: #071617;
+    position: static;
+    flex: 0 0 auto;
   }
-
-  .location-cascade-panel > header { top: 0; }
-  .location-cascade-panel > footer { bottom: 0; }
 
   .location-cascade-columns {
     height: auto;
-    grid-template-columns: 1fr;
+    min-height: 0;
+    flex: 1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .location-level {
-    height: 190px;
-    border-right: 0;
-    border-bottom: 1px solid rgba(210, 170, 87, 0.14);
+    height: auto;
+    min-height: 0;
+    padding: 10px 8px;
+    border-right: 1px solid rgba(210, 170, 87, 0.14);
+    border-bottom: 0;
+  }
+
+  .location-level:last-child { border-right: 0; }
+
+  .location-level-options {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .location-level-options > button {
+    min-height: 44px;
+    font-size: 11px;
+    padding: 7px 6px;
   }
 
   .location-cascade-panel > footer > small {
     width: 100%;
     margin-left: 0;
   }
+}
+
+@keyframes location-sheet-up {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .location-cascade-panel { animation: none; }
 }
 
 .mystic-shell .compass-card {
