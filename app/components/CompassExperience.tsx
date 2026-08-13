@@ -185,7 +185,7 @@ export default function CompassExperience({
   const streak = calculateStreak(currentHistory, todayKey);
   const collection = state.collection.map((code) => state.feedback[code]).filter(Boolean);
   const avoided = Object.values(state.feedback).filter((entry) => entry.action === "avoid");
-  const rerollUsed = state.rerolls[todayKey] === 1;
+  const rerollCount = state.rerolls[todayKey] ?? 0;
 
   const topSigns = useMemo(() => {
     const counts = new Map<string, { item: DailyRecommendation; count: number }>();
@@ -204,7 +204,7 @@ export default function CompassExperience({
     return saved;
   }
 
-  async function openDaily(nextProfile: BirthProfile, baseState: PersistedMysticState, drawVersion?: 0 | 1, openedByUser = true) {
+  async function openDaily(nextProfile: BirthProfile, baseState: PersistedMysticState, drawVersion?: number, openedByUser = true) {
     setLoading(true);
     setError("");
     try {
@@ -318,12 +318,13 @@ export default function CompassExperience({
   };
 
   const reroll = async () => {
-    if (!result || rerollUsed) return;
-    if (!window.confirm("换签后今日不可再问。守护签与相冲签不变，确定换一卦吗？")) return;
-    const withReroll: PersistedMysticState = { ...state, rerolls: { ...state.rerolls, [todayKey]: 1 } };
+    if (!result || loading) return;
+    if (!window.confirm("换卦不改变守护签与相冲签，确定再换一卦吗？")) return;
+    const nextVersion = (state.rerolls[todayKey] ?? 0) + 1;
+    const withReroll: PersistedMysticState = { ...state, rerolls: { ...state.rerolls, [todayKey]: nextVersion } };
     const saved = commit(withReroll);
-    await openDaily(profile, saved, 1);
-    setNotice("天机再转，今日四枚变签已锁定。明日可重新开签。");
+    await openDaily(profile, saved, nextVersion);
+    setNotice(`天机再转，今日四枚变签已更新（第 ${nextVersion} 卦）。仍可随时再换。`);
   };
 
   const feedbackFor = (code: string) => state.feedback[code]?.action;
@@ -600,7 +601,7 @@ export default function CompassExperience({
           </section>
         ) : view === "today" && result ? (
           <section className="daily-workspace" id="daily-oracle">
-            <header className="daily-heading"><div><span className="oracle-date">{formatDate(result.dailyContext.dateKey)} · 北京时间</span><h1>今日玄签，<em>{result.dailyFortune.grade}</em></h1><p>{result.dailyFortune.title}。本命「{result.riskProfile}」今日宜观象，不宜因签下注。</p></div><div className="daily-actions"><button onClick={share}>生成分享卡</button><button className="reroll-button" disabled={rerollUsed || loading} onClick={reroll}>{loading ? "天机运转中" : rerollUsed ? "今日已换签" : "换一卦 · 余1次"}</button></div></header>
+            <header className="daily-heading"><div><span className="oracle-date">{formatDate(result.dailyContext.dateKey)} · 北京时间</span><h1>今日玄签，<em>{result.dailyFortune.grade}</em></h1><p>{result.dailyFortune.title}。本命「{result.riskProfile}」今日宜观象，不宜因签下注。</p></div><div className="daily-actions"><button onClick={share}>生成分享卡</button><button className="reroll-button" disabled={loading} onClick={reroll}>{loading ? "天机运转中" : rerollCount ? `再换一卦 · 今日第${rerollCount}卦` : "换一卦 · 每日不限"}</button></div></header>
             <div className="daily-oracle-grid">
               <section className="daily-compass surface-card">
                 <div className="daily-compass-rings"><span className="ring-one" /><span className="ring-two" /><span className="ring-three" /><div className="daily-core"><small>今日流日</small><strong>{result.dailyContext.dayPillar}</strong><span>{result.dailyContext.dayElement}气行运</span></div>{ELEMENTS.map((element, index) => <i key={element} style={{ "--daily-index": index } as React.CSSProperties}>{element}</i>)}</div>
@@ -609,7 +610,7 @@ export default function CompassExperience({
               <section className="omen-panel surface-card"><span className="fortune-grade">{result.dailyFortune.grade}</span><h2>{result.dailyFortune.title}</h2><div className="omen-grid"><div><small>幸运时辰</small><strong>{result.dailyFortune.luckyHour}</strong></div><div><small>幸运色</small><strong>{result.dailyFortune.luckyColor}</strong></div><div><small>今日灵数</small><strong>{result.dailyFortune.luckyNumber}</strong></div></div><div className="do-dont"><p><b>宜</b>{result.dailyFortune.favorable.join(" · ")}</p><p><b>忌</b>{result.dailyFortune.avoid.join(" · ")}</p></div></section>
             </div>
 
-            <div className="sign-heading"><div><span>六签各司其职</span><h2>揭开今日股缘</h2></div><p>守护签按月稳定；相冲签只作警示；其余四签随流日与一次换卦变化。</p></div>
+            <div className="sign-heading"><div><span>六签各司其职</span><h2>揭开今日股缘</h2></div><p>守护签随本命恒定；相冲签只作警示；其余四签随流日与换卦变化。</p></div>
             <div className="daily-sign-grid">
               {result.recommendations.map((item, index) => (
                 <article className={`daily-sign-card ${item.isPositive ? "" : "clash-sign"}`} key={`${item.role}-${item.code}`} style={{ "--reveal-index": index } as React.CSSProperties}>
@@ -626,7 +627,7 @@ export default function CompassExperience({
         ) : view === "collection" ? (
           <section className="subpage collection-page"><header className="subpage-heading"><span>缘分册 · 你的私藏</span><h1>有缘之签，留待回看</h1><p>收藏会轻微影响未来命签，最多占总缘分分的10%。</p></header>{collection.length ? <div className="collection-grid">{collection.map((entry) => <article className="collection-card" key={entry.code}><span>缘</span><div><small>{entry.code}</small><h2>{entry.name}</h2><p>{entry.tags.slice(0, 3).map((tag) => tag.replace(/^\w+:/, "")).join(" · ")}</p></div><button onClick={() => { const feedback = { ...state.feedback }; delete feedback[entry.code]; commit({ ...state, feedback, collection: state.collection.filter((code) => code !== entry.code) }); }}>移出缘分册</button></article>)}</div> : <div className="empty-oracle"><strong>缘分册尚空</strong><p>在今日命签中点“有缘”，它会在这里留下印记。</p><button onClick={() => setView("today")}>去看今日玄签</button></div>}</section>
         ) : (
-          <section className="subpage history-page"><header className="subpage-heading"><span>星轨回看 · 最近30日</span><h1>{streak ? `已连续开签 ${streak} 日` : "星轨尚待点亮"}</h1><p>回看每日流日、上签与换卦痕迹。历史只保留30天。</p></header><div className="history-layout"><div className="history-timeline">{currentHistory.length ? currentHistory.map((entry) => { const top = entry.recommendations.find((item) => item.role === "today"); return <article key={`${entry.dateKey}-${entry.profileFingerprint}`}><span className="history-dot" /><time>{formatDate(entry.dateKey)}</time><div><small>{entry.dailyContext.dayPillar}日 · {entry.dailyFortune.grade}{entry.drawVersion ? " · 已换卦" : ""}</small><h2>{top?.name ?? "当日玄签"}</h2><p>{top?.code} · {top?.theme}</p></div><strong>{top?.combinedScore}</strong></article>; }) : <div className="empty-oracle"><strong>还没有星轨</strong><p>完成首次开签后，这里会记录每日上签。</p></div>}</div><aside className="history-aside surface-card"><span className="section-kicker">历史上上签</span>{topSigns.length ? topSigns.map(({ item, count }) => <div key={item.code}><span><strong>{item.name}</strong><small>{item.code}</small></span><b>{count}次</b></div>) : <p>连续开签后，与你最常共振的股票会在这里显现。</p>}</aside></div></section>
+          <section className="subpage history-page"><header className="subpage-heading"><span>星轨回看 · 最近30日</span><h1>{streak ? `已连续开签 ${streak} 日` : "星轨尚待点亮"}</h1><p>回看每日流日、上签与换卦痕迹。历史只保留30天。</p></header><div className="history-layout"><div className="history-timeline">{currentHistory.length ? currentHistory.map((entry) => { const top = entry.recommendations.find((item) => item.role === "today"); return <article key={`${entry.dateKey}-${entry.profileFingerprint}`}><span className="history-dot" /><time>{formatDate(entry.dateKey)}</time><div><small>{entry.dailyContext.dayPillar}日 · {entry.dailyFortune.grade}{entry.drawVersion ? ` · 换卦${entry.drawVersion}次` : ""}</small><h2>{top?.name ?? "当日玄签"}</h2><p>{top?.code} · {top?.theme}</p></div><strong>{top?.combinedScore}</strong></article>; }) : <div className="empty-oracle"><strong>还没有星轨</strong><p>完成首次开签后，这里会记录每日上签。</p></div>}</div><aside className="history-aside surface-card"><span className="section-kicker">历史上上签</span>{topSigns.length ? topSigns.map(({ item, count }) => <div key={item.code}><span><strong>{item.name}</strong><small>{item.code}</small></span><b>{count}次</b></div>) : <p>连续开签后，与你最常共振的股票会在这里显现。</p>}</aside></div></section>
         )}
       </main>
     </div>

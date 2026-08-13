@@ -27,6 +27,19 @@ test("corrupt and legacy-like state normalizes safely without dropping a collect
   assert.equal(migrated.version, 1);
 });
 
+test("reroll counters normalize as non-negative integers and survive beyond the old single-reroll limit", () => {
+  const state = {
+    ...createEmptyMysticState(),
+    history: [history("2026-08-12", ["a"]), history("2026-08-13", ["b"])],
+    rerolls: { "2026-08-12": 5, "2026-08-13": 0, "2026-08-14": -2, "2026-08-15": "x" } as unknown as Record<string, number>,
+  };
+  const normalized = normalizeMysticState(state);
+  assert.equal(normalized.rerolls["2026-08-12"], 5);
+  assert.equal(normalized.rerolls["2026-08-13"], 0);
+  assert.equal(normalized.rerolls["2026-08-14"], undefined);
+  assert.equal(normalized.rerolls["2026-08-15"], undefined);
+});
+
 test("feedback produces bounded tag preferences, suppression, and avoidance", () => {
   const state: PersistedMysticState = {
     ...createEmptyMysticState(),

@@ -103,7 +103,7 @@ export function profileFingerprint(profile: BirthProfile): string {
   return stableHash([profile.gender, profile.birthDate, birthTime.estimated ? "unknown-noon" : birthTime.time, profile.location].join("|")).toString(36);
 }
 
-export async function createDailyContext(date = new Date(), drawVersion: 0 | 1 = 0): Promise<DailyContext> {
+export async function createDailyContext(date = new Date(), drawVersion: number = 0): Promise<DailyContext> {
   const dateKey = getShanghaiDateKey(date);
   const [year, month, day] = dateKey.split("-").map(Number);
   const { Solar } = await import("lunar-javascript");

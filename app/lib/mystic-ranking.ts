@@ -45,7 +45,7 @@ export type DailyContext = {
   dateKey: string;
   dayPillar: string;
   dayElement: ElementName;
-  drawVersion: 0 | 1;
+  drawVersion: number;
 };
 
 export type DailyFortune = {

@@ -21,7 +21,7 @@ export type FeedbackEntry = {
 export type DailyHistoryEntry = {
   dateKey: string;
   profileFingerprint: string;
-  drawVersion: 0 | 1;
+  drawVersion: number;
   dailyContext: DailyContext;
   dailyFortune: DailyFortune;
   recommendations: DailyRecommendation[];
@@ -36,7 +36,7 @@ export type PersistedMysticState = {
   feedback: Record<string, FeedbackEntry>;
   collection: string[];
   history: DailyHistoryEntry[];
-  rerolls: Record<string, 0 | 1>;
+  rerolls: Record<string, number>;
   updatedAt: string;
 };
 
@@ -69,7 +69,9 @@ export function normalizeMysticState(value: unknown): PersistedMysticState {
   const feedback = source.feedback && typeof source.feedback === "object" ? source.feedback : {};
   const history = Array.isArray(source.history) ? source.history.filter((entry) => entry && typeof entry === "object") as DailyHistoryEntry[] : [];
   const collection = Array.isArray(source.collection) ? source.collection.filter((code): code is string => typeof code === "string") : [];
-  const rerolls = source.rerolls && typeof source.rerolls === "object" ? source.rerolls as Record<string, 0 | 1> : {};
+  const rerolls = source.rerolls && typeof source.rerolls === "object"
+    ? Object.fromEntries(Object.entries(source.rerolls).filter(([, count]) => Number.isSafeInteger(count) && (count as number) >= 0)) as Record<string, number>
+    : {};
 
   return pruneMysticState({
     ...base,
@@ -105,7 +107,7 @@ export function pruneMysticState(state: PersistedMysticState, now = new Date()):
     .slice(0, 30);
   const visibleDates = new Set(history.map((entry) => entry.dateKey));
   const rerolls = Object.fromEntries(Object.entries(state.rerolls).filter(([dateKey]) => visibleDates.has(dateKey)));
-  return { ...state, history, rerolls: rerolls as Record<string, 0 | 1> };
+  return { ...state, history, rerolls: rerolls as Record<string, number> };
 }
 
 export function buildAffinityProfile(state: PersistedMysticState, now = new Date()): AffinityProfile {

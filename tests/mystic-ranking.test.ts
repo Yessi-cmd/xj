@@ -71,6 +71,20 @@ test("one reroll changes variable signs but preserves guardian and clash", () =>
   assert.ok(changed.length >= 2, `expected at least two variable signs to change, got ${changed.length}`);
 });
 
+test("unlimited rerolls stay deterministic and keep guardian and clash fixed", () => {
+  const byRole = (role: string, result: ReturnType<typeof rankMysticStocks>) => result.recommendations.find((item) => item.role === role)?.code;
+  const draws = [0, 1, 2, 3].map((drawVersion) => rankMysticStocks(universe, {
+    ...BASE_CONTEXT,
+    daily: { ...BASE_CONTEXT.daily, drawVersion },
+  }));
+  const repeated = rankMysticStocks(universe, { ...BASE_CONTEXT, daily: { ...BASE_CONTEXT.daily, drawVersion: 2 } });
+  assert.deepEqual(draws[2], repeated);
+  for (const draw of draws) {
+    assert.equal(byRole("guardian", draws[0]), byRole("guardian", draw));
+    assert.equal(byRole("clash", draws[0]), byRole("clash", draw));
+  }
+});
+
 test("guardian stays with the natal chart across a month boundary and is exempt from the seven-day cooldown", () => {
   const byRole = (role: string, result: ReturnType<typeof rankMysticStocks>) => result.recommendations.find((item) => item.role === role)?.code;
   const august = rankMysticStocks(universe, { ...BASE_CONTEXT, daily: { dateKey: "2026-08-31", dayPillar: "丁丑", dayElement: "火", drawVersion: 0 } });
