@@ -1,5 +1,5 @@
-import { loadMysticUniverse, rankMysticStocks, stableHash } from "@/app/lib/mystic-ranking";
-import { resolveLocationLongitude } from "@/app/lib/locations";
+import { loadMysticUniverse, rankMysticStocks, stableHash } from "./mystic-ranking.ts";
+import { resolveLocationLongitude } from "./locations.ts";
 import type {
   AffinityProfile,
   DailyContext,
@@ -17,6 +17,7 @@ export type BirthProfile = {
   gender: Gender;
   birthDate: string;
   birthTime: string;
+  birthTimeKnown?: boolean;
   location: string;
 };
 
@@ -44,6 +45,12 @@ export type AnalyzeOptions = {
   affinity?: AffinityProfile;
   recentPositiveCodes?: string[];
 };
+
+export function resolveBirthTimeInput(profile: BirthProfile): { time: string; estimated: boolean } {
+  return profile.birthTimeKnown === false
+    ? { time: "12:00", estimated: true }
+    : { time: profile.birthTime, estimated: false };
+}
 
 const STEM_ELEMENT: Record<string, ElementName> = {
   甲: "木", 乙: "木", 丙: "火", 丁: "火", 戊: "土", 己: "土", 庚: "金", 辛: "金", 壬: "水", 癸: "水",
@@ -92,7 +99,8 @@ export function getShanghaiDateKey(date = new Date()): string {
 }
 
 export function profileFingerprint(profile: BirthProfile): string {
-  return stableHash([profile.gender, profile.birthDate, profile.birthTime, profile.location].join("|")).toString(36);
+  const birthTime = resolveBirthTimeInput(profile);
+  return stableHash([profile.gender, profile.birthDate, birthTime.estimated ? "unknown-noon" : birthTime.time, profile.location].join("|")).toString(36);
 }
 
 export async function createDailyContext(date = new Date(), drawVersion: 0 | 1 = 0): Promise<DailyContext> {
@@ -121,7 +129,9 @@ function makeDailyFortune(profileKey: string, daily: DailyContext): DailyFortune
 
 export async function analyzeProfile(profile: BirthProfile, options: AnalyzeOptions = {}): Promise<FortuneResult> {
   const longitude = resolveLocationLongitude(profile.location);
-  const adjusted = adjustClock(profile.birthDate, profile.birthTime, Math.round((longitude - 120) * 4));
+  const birthTime = resolveBirthTimeInput(profile);
+  const birthTimeKnown = !birthTime.estimated;
+  const adjusted = adjustClock(profile.birthDate, birthTime.time, Math.round((longitude - 120) * 4));
   const { Solar } = await import("lunar-javascript");
   const lunar = Solar.fromYmdHms(adjusted.year, adjusted.month, adjusted.day, adjusted.hour, adjusted.minute, 0).getLunar();
   const eightChar = lunar.getEightChar();
@@ -133,7 +143,7 @@ export async function analyzeProfile(profile: BirthProfile, options: AnalyzeOpti
   const dayMaster = STEM_ELEMENT[pillarValues[2][0]] ?? "土";
   const strength = percentages[dayMaster] + percentages[PRODUCER[dayMaster]] * 0.55 >= 30 ? "身强" : "身偏弱";
   const riskProfile = ARCHETYPES[favorableElement];
-  const profileKey = [profile.gender, profile.birthDate, profile.birthTime, profile.location, ...pillarValues].join("|");
+  const profileKey = [profile.gender, profile.birthDate, birthTime.estimated ? "unknown-noon" : birthTime.time, profile.location, ...pillarValues].join("|");
   const dailyContext = options.dailyContext ?? await createDailyContext();
   const universe = await loadMysticUniverse();
   const ranked = rankMysticStocks(universe, {
@@ -143,11 +153,11 @@ export async function analyzeProfile(profile: BirthProfile, options: AnalyzeOpti
   });
   const spread = percentages[dominantElement] - percentages[favorableElement];
   return {
-    pillars: ["年柱", "月柱", "日柱", "时柱"].map((label, index) => ({ label, value: pillarValues[index] })),
+    pillars: ["年柱", "月柱", "日柱", birthTimeKnown ? "时柱" : "时柱（估）"].map((label, index) => ({ label, value: pillarValues[index] })),
     lunarDate: lunar.toString(),
-    trueSolarTime: `${String(adjusted.hour).padStart(2, "0")}:${String(adjusted.minute).padStart(2, "0")}`,
+    trueSolarTime: `${birthTimeKnown ? "" : "约 "}${String(adjusted.hour).padStart(2, "0")}:${String(adjusted.minute).padStart(2, "0")}`,
     dayMaster, favorableElement, dominantElement,
-    pattern: `${profile.gender === "male" ? "乾造" : "坤造"} · ${dayMaster}日主${strength} · ${dominantElement}气偏旺`,
+    pattern: `${profile.gender === "male" ? "乾造" : "坤造"} · ${birthTimeKnown ? "真太阳时校正" : "时辰未录，以正午估算"} · ${dayMaster}日主${strength} · ${dominantElement}气偏旺`,
     riskProfile,
     summary: spread <= 8 ? `五行分布相对均衡，以${dayMaster}日主与流日寻缘。` : `${dominantElement}气相对集中，取${favorableElement}为调和之象，命盘化身为“${riskProfile}”。`,
     elementPercentages: percentages,

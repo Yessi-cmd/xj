@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { buildDailyFengShuiOverview } from "../app/lib/daily-overview.ts";
+import { profileFingerprint, resolveBirthTimeInput, type BirthProfile } from "../app/lib/fortune.ts";
 import { summarizeMarket, type MarketSnapshot } from "../app/lib/market-overview.ts";
 import { DAILY_ROLES, rankMysticStocks, type MysticContext, type MysticUniverse } from "../app/lib/mystic-ranking.ts";
 
@@ -27,6 +28,15 @@ test("daily draw is deterministic, unique, and contains all six roles", () => {
   assert.deepEqual(first.recommendations.map((item) => item.role), DAILY_ROLES);
   assert.equal(new Set(first.recommendations.map((item) => item.code)).size, 6);
   assert.equal(first.recommendations.find((item) => item.role === "clash")?.isPositive, false);
+});
+
+test("unknown birth time uses a deterministic neutral estimate until the user opts in", () => {
+  const unknownMorning: BirthProfile = { name: "", gender: "male", birthDate: "1990-06-15", birthTime: "08:30", birthTimeKnown: false, location: "北京市" };
+  const unknownEvening: BirthProfile = { ...unknownMorning, birthTime: "20:45" };
+  assert.equal(profileFingerprint(unknownMorning), profileFingerprint(unknownEvening));
+  assert.deepEqual(resolveBirthTimeInput(unknownMorning), { time: "12:00", estimated: true });
+  assert.deepEqual(resolveBirthTimeInput({ ...unknownMorning, birthTimeKnown: true }), { time: "08:30", estimated: false });
+  assert.deepEqual(resolveBirthTimeInput({ ...unknownMorning, birthTimeKnown: undefined }), { time: "08:30", estimated: false });
 });
 
 test("daily feng shui overview is deterministic and only follows the Beijing-time daily element", () => {
