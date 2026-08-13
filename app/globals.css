@@ -4633,8 +4633,32 @@ select:focus-visible {
 .sign-card-top > div { display: grid; gap: 3px; }
 .sign-card-top small { color: var(--ink); font-family: var(--serif); font-size: 15px; }
 .sign-card-top strong { color: #9a958a; font-size: 8px; letter-spacing: 0.12em; }
-.sign-card-top > b { margin-left: auto; color: var(--purple); font-family: var(--serif); font-size: 27px; font-weight: 500; }
-.clash-sign .sign-card-top > b { color: var(--oracle-red); }
+.score-badge {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 1px;
+  margin-left: auto;
+  min-width: 64px;
+  min-height: 64px;
+  padding: 6px 8px;
+  border: 1px solid rgba(201, 149, 25, 0.35);
+  background: rgba(218, 173, 48, 0.07);
+}
+.score-badge em { font-style: normal; font-family: var(--serif); font-size: 28px; font-weight: 700; line-height: 1; color: var(--gold); }
+.score-badge b { font-family: var(--serif); font-size: 20px; font-weight: 600; line-height: 1; color: var(--ink); }
+.score-badge small { font-size: 7px; letter-spacing: 0.16em; color: #9a958a; }
+
+.score-badge.grade-S { border-color: rgba(201, 149, 25, 0.62); background: rgba(218, 173, 48, 0.13); }
+.score-badge.grade-S em { color: #b47e0e; text-shadow: 0 0 14px rgba(237, 190, 38, 0.55); }
+.score-badge.grade-A { border-color: rgba(183, 67, 56, 0.45); background: rgba(183, 67, 56, 0.07); }
+.score-badge.grade-A em { color: #b74338; }
+.score-badge.grade-B { border-color: rgba(47, 157, 105, 0.42); background: rgba(47, 157, 105, 0.06); }
+.score-badge.grade-B em { color: #2f9d69; }
+.score-badge.grade-C { border-color: rgba(185, 134, 31, 0.4); background: rgba(185, 134, 31, 0.06); }
+.score-badge.grade-C em { color: #b9861f; }
+.score-badge.grade-D { border-color: rgba(21, 26, 54, 0.18); background: rgba(21, 26, 54, 0.04); }
+.score-badge.grade-D em { color: #8b8578; }
 
 .stock-identity { margin: 22px 0 15px; }
 .stock-identity > span { display: inline-block; padding: 3px 7px; background: var(--ink); color: #fff; font-size: 8px; }
@@ -5129,6 +5153,23 @@ select:focus-visible {
 .daily-shell.mystic-shell .sign-card-top {
   border-color: rgba(210, 170, 87, 0.14);
 }
+
+.daily-shell.mystic-shell .score-badge {
+  border-color: rgba(210, 170, 87, 0.3);
+  background: rgba(210, 170, 87, 0.05);
+}
+.daily-shell.mystic-shell .score-badge b { color: #eee5cd; }
+.daily-shell.mystic-shell .score-badge small { color: #77857f; }
+.daily-shell.mystic-shell .score-badge.grade-S { border-color: rgba(240, 211, 138, 0.55); background: rgba(240, 211, 138, 0.08); }
+.daily-shell.mystic-shell .score-badge.grade-S em { color: #f0d38a; text-shadow: 0 0 16px rgba(240, 211, 138, 0.45); }
+.daily-shell.mystic-shell .score-badge.grade-A { border-color: rgba(232, 138, 114, 0.4); background: rgba(232, 138, 114, 0.06); }
+.daily-shell.mystic-shell .score-badge.grade-A em { color: #e88a72; }
+.daily-shell.mystic-shell .score-badge.grade-B { border-color: rgba(111, 191, 154, 0.35); background: rgba(111, 191, 154, 0.05); }
+.daily-shell.mystic-shell .score-badge.grade-B em { color: #6fbf9a; }
+.daily-shell.mystic-shell .score-badge.grade-C { border-color: rgba(216, 169, 79, 0.35); background: rgba(216, 169, 79, 0.05); }
+.daily-shell.mystic-shell .score-badge.grade-C em { color: #d8a94f; }
+.daily-shell.mystic-shell .score-badge.grade-D { border-color: rgba(119, 133, 127, 0.35); background: rgba(119, 133, 127, 0.06); }
+.daily-shell.mystic-shell .score-badge.grade-D em { color: #77857f; }
 
 .daily-shell.mystic-shell .role-seal {
   border-color: rgba(240, 211, 138, 0.5);

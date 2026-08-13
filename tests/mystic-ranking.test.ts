@@ -5,7 +5,7 @@ import test from "node:test";
 import { buildDailyFengShuiOverview } from "../app/lib/daily-overview.ts";
 import { profileFingerprint, resolveBirthTimeInput, type BirthProfile } from "../app/lib/fortune.ts";
 import { summarizeMarket, type MarketSnapshot } from "../app/lib/market-overview.ts";
-import { DAILY_ROLES, rankMysticStocks, type MysticContext, type MysticUniverse } from "../app/lib/mystic-ranking.ts";
+import { DAILY_ROLES, rankMysticStocks, scoreGrade, type MysticContext, type MysticUniverse } from "../app/lib/mystic-ranking.ts";
 
 const universe = JSON.parse(await readFile(new URL("../public/data/mystic-stocks.json", import.meta.url), "utf8")) as MysticUniverse;
 const marketSnapshot = JSON.parse(await readFile(new URL("../app/data/market-snapshot.json", import.meta.url), "utf8")) as MarketSnapshot;
@@ -133,6 +133,19 @@ test("feedback stays within ten percent and avoidance/cooldown filters future po
   assert.ok(!filtered.recommendations.some((item) => item.code === avoidedCode));
   assert.ok(!filtered.recommendations.some((item) => item.isPositive && item.code === recentCode));
   assert.ok(filtered.recommendations.every((item) => item.affinityScore <= 100));
+});
+
+test("combined scores map to the S/A/B/C/D display tiers", () => {
+  assert.equal(scoreGrade(100), "S");
+  assert.equal(scoreGrade(80), "S");
+  assert.equal(scoreGrade(79), "A");
+  assert.equal(scoreGrade(70), "A");
+  assert.equal(scoreGrade(69), "B");
+  assert.equal(scoreGrade(60), "B");
+  assert.equal(scoreGrade(59), "C");
+  assert.equal(scoreGrade(50), "C");
+  assert.equal(scoreGrade(49), "D");
+  assert.equal(scoreGrade(0), "D");
 });
 
 test("static universe v2 has listing pillars and does not invent placeholder industries", () => {

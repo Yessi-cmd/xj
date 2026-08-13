@@ -88,6 +88,18 @@ export type DailyRecommendation = {
 
 export type Recommendation = DailyRecommendation;
 
+export const SCORE_GRADES = ["S", "A", "B", "C", "D"] as const;
+export type ScoreGrade = (typeof SCORE_GRADES)[number];
+
+/** 缘分分固定阈值映射为 S/A/B/C/D 展示评级；评级只作展示层级，不参与排序。 */
+export function scoreGrade(combinedScore: number): ScoreGrade {
+  if (combinedScore >= 80) return "S";
+  if (combinedScore >= 70) return "A";
+  if (combinedScore >= 60) return "B";
+  if (combinedScore >= 50) return "C";
+  return "D";
+}
+
 export type MysticContext = {
   profileKey: string;
   favorableElement: ElementName;

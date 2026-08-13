@@ -29,6 +29,7 @@ import {
 import { decryptMysticState, encryptMysticState } from "@/app/lib/profile-crypto";
 import type { DailyFengShuiOverview } from "@/app/lib/daily-overview";
 import type { MarketSnapshot } from "@/app/lib/market-overview";
+import { scoreGrade } from "@/app/lib/mystic-ranking";
 import type { DailyRecommendation, FeedbackAction } from "@/app/lib/mystic-ranking";
 
 type CompassExperienceProps = {
@@ -140,7 +141,7 @@ async function createShareImage(result: FortuneResult): Promise<Blob> {
     context.textAlign = "right";
     context.fillStyle = "rgba(255,255,255,.6)";
     context.font = "25px Microsoft YaHei, sans-serif";
-    context.fillText(`${item.code} · 缘分 ${item.combinedScore}`, 930, y + 88);
+    context.fillText(`${item.code} · ${scoreGrade(item.combinedScore)}级 · 缘分 ${item.combinedScore}`, 930, y + 88);
   });
   context.textAlign = "center";
   context.fillStyle = "#d55245";
@@ -614,7 +615,7 @@ export default function CompassExperience({
             <div className="daily-sign-grid">
               {result.recommendations.map((item, index) => (
                 <article className={`daily-sign-card ${item.isPositive ? "" : "clash-sign"}`} key={`${item.role}-${item.code}`} style={{ "--reveal-index": index } as React.CSSProperties}>
-                  <div className="sign-card-top"><span className="role-seal">{ROLE_GLYPHS[item.role]}</span><div><small>{item.roleLabel}</small><strong>{item.isPositive ? "此签可观" : "今日宜远观"}</strong></div><b>{item.combinedScore}</b></div>
+                  <div className="sign-card-top"><span className="role-seal">{ROLE_GLYPHS[item.role]}</span><div><small>{item.roleLabel}</small><strong>{item.isPositive ? "此签可观" : "今日宜远观"}</strong></div><span className={`score-badge grade-${scoreGrade(item.combinedScore)}`} aria-label={`缘分分 ${item.combinedScore}，评级 ${scoreGrade(item.combinedScore)} 级`}><em>{scoreGrade(item.combinedScore)}</em><b>{item.combinedScore}</b><small>缘分分</small></span></div>
                   <div className="stock-identity"><span>{item.kind}</span><h3>{item.name}</h3><small>{item.code} · {item.theme}</small></div>
                   <p>{item.rationale}</p>
                   <div className="mystic-tags">{item.tags.slice(0, 5).map((tag) => <span key={tag}>{tag}</span>)}</div>
@@ -627,7 +628,7 @@ export default function CompassExperience({
         ) : view === "collection" ? (
           <section className="subpage collection-page"><header className="subpage-heading"><span>缘分册 · 你的私藏</span><h1>有缘之签，留待回看</h1><p>收藏会轻微影响未来命签，最多占总缘分分的10%。</p></header>{collection.length ? <div className="collection-grid">{collection.map((entry) => <article className="collection-card" key={entry.code}><span>缘</span><div><small>{entry.code}</small><h2>{entry.name}</h2><p>{entry.tags.slice(0, 3).map((tag) => tag.replace(/^\w+:/, "")).join(" · ")}</p></div><button onClick={() => { const feedback = { ...state.feedback }; delete feedback[entry.code]; commit({ ...state, feedback, collection: state.collection.filter((code) => code !== entry.code) }); }}>移出缘分册</button></article>)}</div> : <div className="empty-oracle"><strong>缘分册尚空</strong><p>在今日命签中点“有缘”，它会在这里留下印记。</p><button onClick={() => setView("today")}>去看今日玄签</button></div>}</section>
         ) : (
-          <section className="subpage history-page"><header className="subpage-heading"><span>星轨回看 · 最近30日</span><h1>{streak ? `已连续开签 ${streak} 日` : "星轨尚待点亮"}</h1><p>回看每日流日、上签与换卦痕迹。历史只保留30天。</p></header><div className="history-layout"><div className="history-timeline">{currentHistory.length ? currentHistory.map((entry) => { const top = entry.recommendations.find((item) => item.role === "today"); return <article key={`${entry.dateKey}-${entry.profileFingerprint}`}><span className="history-dot" /><time>{formatDate(entry.dateKey)}</time><div><small>{entry.dailyContext.dayPillar}日 · {entry.dailyFortune.grade}{entry.drawVersion ? ` · 换卦${entry.drawVersion}次` : ""}</small><h2>{top?.name ?? "当日玄签"}</h2><p>{top?.code} · {top?.theme}</p></div><strong>{top?.combinedScore}</strong></article>; }) : <div className="empty-oracle"><strong>还没有星轨</strong><p>完成首次开签后，这里会记录每日上签。</p></div>}</div><aside className="history-aside surface-card"><span className="section-kicker">历史上上签</span>{topSigns.length ? topSigns.map(({ item, count }) => <div key={item.code}><span><strong>{item.name}</strong><small>{item.code}</small></span><b>{count}次</b></div>) : <p>连续开签后，与你最常共振的股票会在这里显现。</p>}</aside></div></section>
+          <section className="subpage history-page"><header className="subpage-heading"><span>星轨回看 · 最近30日</span><h1>{streak ? `已连续开签 ${streak} 日` : "星轨尚待点亮"}</h1><p>回看每日流日、上签与换卦痕迹。历史只保留30天。</p></header><div className="history-layout"><div className="history-timeline">{currentHistory.length ? currentHistory.map((entry) => { const top = entry.recommendations.find((item) => item.role === "today"); return <article key={`${entry.dateKey}-${entry.profileFingerprint}`}><span className="history-dot" /><time>{formatDate(entry.dateKey)}</time><div><small>{entry.dailyContext.dayPillar}日 · {entry.dailyFortune.grade}{entry.drawVersion ? ` · 换卦${entry.drawVersion}次` : ""}</small><h2>{top?.name ?? "当日玄签"}</h2><p>{top?.code} · {top?.theme}</p></div><strong>{top ? `${scoreGrade(top.combinedScore)} · ${top.combinedScore}` : ""}</strong></article>; }) : <div className="empty-oracle"><strong>还没有星轨</strong><p>完成首次开签后，这里会记录每日上签。</p></div>}</div><aside className="history-aside surface-card"><span className="section-kicker">历史上上签</span>{topSigns.length ? topSigns.map(({ item, count }) => <div key={item.code}><span><strong>{item.name}</strong><small>{item.code}</small></span><b>{count}次</b></div>) : <p>连续开签后，与你最常共振的股票会在这里显现。</p>}</aside></div></section>
         )}
       </main>
     </div>
