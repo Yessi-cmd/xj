@@ -533,7 +533,6 @@ export default function CompassExperience({
             <header className="workspace-hero profile-oracle-hero">
               <div className="mystic-hero-copy">
                 <div className="oracle-eyebrow"><span>玄鉴 · 千股命盘</span><i /><b>{result?.dailyContext.dayPillar ?? "静候入局"}</b></div>
-                <h1>一命一盘，<em>千股寻缘</em></h1>
                 <p>以生辰启局，以流日定象。让星曜、神兽、卦宫与灵数穿过近五千只 A 股，揭开今日六枚玄签。</p>
                 <div className="hero-omens" aria-label="命理标签维度"><span><b>本命</b>定底色</span><span><b>流日</b>转天机</span><span><b>反馈</b>养缘感</span></div>
               </div>

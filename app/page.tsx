@@ -36,7 +36,6 @@ export default async function Home() {
       <section className="landing-hero" id="top">
         <div className="hero-copy">
           <span className="eyebrow"><i />本命盘 × 今日流日 × 股票出生盘</span>
-          <h1>一命一盘，<br />每日寻<em>缘</em></h1>
           <p>
             每日揭开六枚不同职责的 A 股玄签，让本命、流日与股票标签相遇。
             收藏有缘之签，回看三十日星轨；主打传统文化趣味，不预测涨跌。

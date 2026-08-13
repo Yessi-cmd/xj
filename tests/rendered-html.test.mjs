@@ -31,7 +31,8 @@ test("server-renders the finished public landing page", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>玄鉴｜命理投研罗盘<\/title>/);
-  assert.match(html, /一命一盘/);
+  assert.match(html, /每日揭开六枚不同职责/);
+  assert.doesNotMatch(html, /一命一盘|千股寻缘/);
   assert.match(html, /命理共振/);
   assert.match(html, /产品演示/);
   assert.match(html, /先看今日气象，再看大盘事实/);
@@ -46,7 +47,7 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.equal(response.status, 200);
 
   const html = await response.text();
-  assert.match(html, /一命一盘/);
+  assert.match(html, /以生辰启局，以流日定象/);
   assert.match(html, /请入生辰/);
   assert.match(html, /启盘 · 寻找我的缘分股/);
   assert.match(html, /每日玄签/);
@@ -82,7 +83,8 @@ test("renders a public standalone VPS entry without hosted authentication links"
   assert.match(html, /玄鉴命理投研罗盘/);
   assert.match(html, /公开测试版/);
   assert.match(html, /启盘 · 寻找我的缘分股/);
-  assert.match(html, /一命一盘/);
+  assert.match(html, /以生辰启局，以流日定象/);
+  assert.doesNotMatch(html, /一命一盘|千股寻缘/);
   assert.match(html, /流日风水/);
   assert.match(html, /最近大盘快照|今日大盘/);
   assert.doesNotMatch(html, /本局取象/);

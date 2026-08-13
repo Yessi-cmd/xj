@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       locale: "zh_CN",
-      title: "玄鉴｜一命一盘 · 每日寻缘",
+      title: "玄鉴｜命理投研罗盘",
       description: "本命盘遇见今日流日，每天揭开六枚 A 股玄签。传统文化娱乐体验。",
       images: [{ url: socialImage, width: 1731, height: 909, alt: "玄鉴命理投研罗盘" }],
     },
