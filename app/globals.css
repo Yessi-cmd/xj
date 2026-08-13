@@ -4315,35 +4315,132 @@ select:focus-visible {
   color: #716c61;
 }
 
-.oracle-loading > span {
+.oracle-dial {
+  position: relative;
   display: grid;
-  width: 110px;
-  height: 110px;
-  margin-bottom: 24px;
+  width: 132px;
+  height: 132px;
+  margin-bottom: 26px;
   place-items: center;
-  border: 1px solid rgba(201, 149, 25, 0.6);
   border-radius: 50%;
-  background: repeating-conic-gradient(from 0deg, rgba(201, 149, 25, 0.14) 0 1deg, transparent 1deg 15deg);
-  color: var(--ink);
-  font-family: var(--serif);
-  font-size: 43px;
-  animation: oracle-turn 9s linear infinite;
+  background: radial-gradient(circle at 50% 42%, rgba(201, 149, 25, 0.1), transparent 64%);
+  box-shadow: 0 0 0 1px rgba(201, 149, 25, 0.28), 0 0 44px rgba(201, 149, 25, 0.12);
+}
+
+.oracle-dial::before {
+  position: absolute;
+  inset: 7px;
+  border: 1px dashed rgba(201, 149, 25, 0.3);
+  border-radius: 50%;
+  content: "";
+}
+
+.dial-ring {
+  position: absolute;
+  border: 1px solid rgba(201, 149, 25, 0.5);
+  border-radius: 50%;
+}
+
+.dial-ring-outer {
+  inset: -8px;
+  border-top-color: transparent;
+  border-bottom-color: rgba(201, 149, 25, 0.16);
+  animation: oracle-spin 3.6s linear infinite;
+}
+
+.dial-ring-inner {
+  inset: 13px;
+  border-right-color: transparent;
+  border-left-color: rgba(201, 149, 25, 0.18);
+  animation: oracle-spin 2.4s linear infinite reverse;
+}
+
+.dial-ring::after {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  width: 7px;
+  height: 7px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--gold-bright);
+  box-shadow: 0 0 12px rgba(237, 190, 38, 0.85);
+  content: "";
+}
+
+.oracle-dial > span {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 78px;
+  height: 78px;
+  place-items: center;
+  border: 1px solid rgba(201, 149, 25, 0.35);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 36%, #fffefb, #efe9da);
+  box-shadow: 0 8px 22px rgba(84, 63, 18, 0.16);
+  animation: oracle-breathe 2.6s ease-in-out infinite;
+}
+
+.oracle-dial > span::before {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: linear-gradient(
+    to bottom,
+    var(--gold-bright) 0 46%,
+    var(--gold) 46% 54%,
+    transparent 54% 62%,
+    rgba(201, 149, 25, 0.7) 62% 100%
+  );
+  box-shadow: 0 0 10px rgba(237, 190, 38, 0.45);
+  content: "";
+}
+
+.oracle-dial > span::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--gold-bright);
+  box-shadow: 0 0 8px rgba(237, 190, 38, 0.7);
+  content: "";
+}
+
+@keyframes oracle-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes oracle-breathe {
+  0%, 100% { transform: scale(1); text-shadow: 0 0 0 rgba(237, 190, 38, 0); }
+  50% { transform: scale(1.05); text-shadow: 0 0 20px rgba(237, 190, 38, 0.6); }
 }
 
 .oracle-loading strong {
   margin-bottom: 8px;
   color: var(--ink);
   font-family: var(--serif);
-  font-size: 23px;
-  letter-spacing: 0.08em;
+  font-size: 22px;
+  letter-spacing: 0.1em;
 }
 
 .oracle-loading small {
+  color: #8b8578;
   font-size: 12px;
+  letter-spacing: 0.06em;
 }
 
-@keyframes oracle-turn {
-  to { transform: rotate(360deg); }
+@media (max-width: 640px) {
+  .oracle-loading { min-height: calc(100dvh - 150px); }
+  .oracle-dial { width: 112px; height: 112px; margin-bottom: 22px; }
+  .oracle-dial > span { width: 68px; height: 68px; }
 }
 
 .daily-workspace,
@@ -4617,8 +4714,10 @@ select:focus-visible {
 .daily-sign-card {
   --reveal-delay: calc(var(--reveal-index) * 80ms);
   position: relative;
+  display: flex;
   overflow: hidden;
   min-height: 390px;
+  flex-direction: column;
   padding: 22px;
   border: 1px solid rgba(201, 149, 25, 0.19);
   background:
@@ -4717,13 +4816,11 @@ select:focus-visible {
 }
 
 .feedback-row {
-  position: absolute;
-  right: 20px;
-  bottom: 19px;
-  left: 20px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 5px;
+  margin-top: auto;
+  padding-top: 18px;
 }
 
 .feedback-row button {
@@ -4904,7 +5001,8 @@ select:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .oracle-loading > span,
+  .oracle-dial > span,
+  .dial-ring,
   .daily-compass-rings .ring-one,
   .daily-sign-card { animation: none; }
 }
@@ -4989,10 +5087,33 @@ select:focus-visible {
   color: #74817c;
 }
 
-.daily-shell.mystic-shell .oracle-loading > span {
-  border-color: rgba(210, 170, 87, 0.55);
-  background: repeating-conic-gradient(from 0deg, rgba(210, 170, 87, 0.12) 0 1deg, transparent 1deg 15deg);
-  color: var(--mystic-gold-bright);
+.daily-shell.mystic-shell .oracle-dial {
+  background: radial-gradient(circle at 50% 42%, rgba(210, 170, 87, 0.1), transparent 64%);
+  box-shadow: 0 0 0 1px rgba(210, 170, 87, 0.34), 0 0 48px rgba(210, 170, 87, 0.1);
+}
+
+.daily-shell.mystic-shell .oracle-dial::before {
+  border-color: rgba(210, 170, 87, 0.26);
+}
+
+.daily-shell.mystic-shell .dial-ring {
+  border-color: rgba(210, 170, 87, 0.45);
+}
+
+.daily-shell.mystic-shell .dial-ring-outer {
+  border-top-color: transparent;
+  border-bottom-color: rgba(210, 170, 87, 0.14);
+}
+
+.daily-shell.mystic-shell .dial-ring-inner {
+  border-right-color: transparent;
+  border-left-color: rgba(210, 170, 87, 0.16);
+}
+
+.daily-shell.mystic-shell .oracle-dial > span {
+  border-color: rgba(210, 170, 87, 0.4);
+  background: radial-gradient(circle at 50% 34%, #12302d, #081a1b 72%);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
 }
 
 .daily-shell.mystic-shell .oracle-loading strong {

@@ -527,7 +527,15 @@ export default function CompassExperience({
         {error && <div className="oracle-error" role="alert">{error}<button onClick={() => setError("")}>×</button></div>}
 
         {loading && !result ? (
-          <section className="oracle-loading"><span>玄</span><strong>浑天运转，正在排布今日星轨</strong><small>本命与近五千只股票标签合盘中</small></section>
+          <section className="oracle-loading" role="status" aria-live="polite">
+            <div className="oracle-dial" aria-hidden="true">
+              <i className="dial-ring dial-ring-outer" />
+              <i className="dial-ring dial-ring-inner" />
+              <span />
+            </div>
+            <strong>浑天运转，正在排布今日星轨</strong>
+            <small>本命与近五千只股票标签合盘中</small>
+          </section>
         ) : view === "profile" ? (
           <section className="profile-workspace">
             <header className="workspace-hero profile-oracle-hero">
@@ -583,7 +591,7 @@ export default function CompassExperience({
                   <div className="outer-ticks" /><div className="branch-ring" aria-hidden="true">{EARTHLY_BRANCHES.map((branch, index) => <span key={branch} style={{ "--orbit-index": index } as CSSProperties}>{branch}</span>)}</div>
                   <div className="trigram-ring" aria-hidden="true">{TRIGRAMS.map((trigram, index) => <span key={trigram.name} style={{ "--orbit-index": index } as CSSProperties}><b>{trigram.symbol}</b><small>{trigram.name}</small></span>)}</div>
                   <div className="heaven-needle" aria-hidden="true" />
-                  <div className="five-wheel"><span className="wheel-label wood">木</span><span className="wheel-label fire">火</span><span className="wheel-label earth">土</span><span className="wheel-label metal">金</span><span className="wheel-label water">水</span><div className="compass-center"><small>{result ? "日主本命" : "太极之眼"}</small><strong>{result?.dayMaster ?? "玄"}</strong><span>{result ? `喜用 · ${result.favorableElement}` : "待君启局"}</span></div></div>
+                  <div className="five-wheel"><span className="wheel-label wood">木</span><span className="wheel-label fire">火</span><span className="wheel-label earth">土</span><span className="wheel-label metal">金</span><span className="wheel-label water">水</span><div className="compass-center"><small>{result ? "日主本命" : "太极之眼"}</small><strong>{result?.dayMaster ?? "未"}</strong><span>{result ? `喜用 · ${result.favorableElement}` : "待君启局"}</span></div></div>
                 </div>
                 {result ? <div className="pillar-row">{result.pillars.map((pillar) => <div key={pillar.label}><small>{pillar.label}</small><strong>{pillar.value}</strong></div>)}</div> : <div className="compass-empty-copy"><strong>天地定位 · 山泽通气 · 雷风相薄</strong><span>四柱一落，星曜归宫，千股因缘自此显形</span></div>}
               </section>
