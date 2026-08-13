@@ -34,7 +34,13 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
 
   useEffect(() => {
     const closeOnOutsidePointer = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      if (!rootRef.current?.contains(target)) {
+        setOpen(false);
+        return;
+      }
+      // 移动端遮罩是容器的伪元素，点击会解析到容器自身，同样视为“面板之外”
+      if (target === rootRef.current) setOpen(false);
     };
     document.addEventListener("pointerdown", closeOnOutsidePointer);
     return () => document.removeEventListener("pointerdown", closeOnOutsidePointer);
@@ -93,7 +99,8 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
       className={`location-picker location-cascade ${open ? "open" : ""}`}
       ref={rootRef}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+        // iOS Safari 点击不可聚焦元素时 relatedTarget 为 null，不能据此关闭面板
+        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) setOpen(false);
       }}
     >
       <button
