@@ -31,6 +31,7 @@ test("server-renders the finished public landing page", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>玄鉴｜命理投研罗盘<\/title>/);
+  assert.match(html, /viewport-fit=cover/);
   assert.match(html, /每日揭开六枚不同职责/);
   assert.doesNotMatch(html, /一命一盘|千股寻缘/);
   assert.match(html, /命理共振/);

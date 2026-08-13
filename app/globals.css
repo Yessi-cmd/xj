@@ -23,6 +23,8 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -47,6 +49,7 @@ select {
 button,
 a {
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 button:focus-visible,
@@ -1940,6 +1943,8 @@ select:focus-visible {
 
   .nav-cta {
     gap: 9px;
+    min-height: 44px;
+    align-items: center;
     padding: 8px 9px 8px 15px;
     font-size: 11px;
   }
@@ -3342,7 +3347,7 @@ select:focus-visible {
   .location-cascade-panel {
     position: fixed;
     z-index: 101;
-    inset: 44px 16px 82px;
+    inset: 44px 16px max(82px, calc(env(safe-area-inset-bottom) + 62px));
     width: auto;
   }
 
@@ -3357,7 +3362,7 @@ select:focus-visible {
 
 @media (max-width: 640px) {
   .location-cascade-panel {
-    inset: 18px 10px 76px;
+    inset: 18px 10px max(76px, calc(env(safe-area-inset-bottom) + 56px));
     overflow-y: auto;
   }
 
@@ -3962,8 +3967,8 @@ select:focus-visible {
   }
 
   .mystic-shell .product-main {
-    width: min(100% - 28px, 760px);
-    padding-top: 14px;
+    width: 100%;
+    padding: 14px max(14px, env(safe-area-inset-right)) 80px max(14px, env(safe-area-inset-left));
   }
 
   .mystic-shell .mobile-header {
@@ -4001,7 +4006,9 @@ select:focus-visible {
 
 @media (max-width: 640px) {
   .mystic-shell .product-main {
-    width: min(100% - 20px, 520px);
+    width: 100%;
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
   }
 
   .mystic-shell .workspace-hero h1 {
@@ -4823,13 +4830,13 @@ select:focus-visible {
 }
 
 @media (max-width: 640px) {
-  .daily-shell .mobile-header { padding: 11px 15px; }
+  .daily-shell .mobile-header { padding: 11px max(15px, env(safe-area-inset-right)) 11px max(15px, env(safe-area-inset-left)); }
   .daily-heading h1,
   .subpage-heading h1 { font-size: 38px; }
   .daily-heading p,
   .subpage-heading p { font-size: 11px; }
   .daily-actions { grid-template-columns: 1fr 1fr; display: grid; }
-  .daily-actions button { padding: 0 9px; font-size: 10px; }
+  .daily-actions button { padding: 0 9px; font-size: 11px; }
   .daily-sign-grid,
   .collection-grid { grid-template-columns: 1fr; }
   .daily-sign-card { min-height: 380px; }
@@ -4851,6 +4858,14 @@ select:focus-visible {
   .collection-card button { grid-column: 2; justify-self: start; margin: 0; }
   .history-timeline > article { grid-template-columns: 1fr auto; padding-left: 28px; }
   .history-timeline time { grid-column: 1 / -1; padding: 0; }
+  /* iOS 会在聚焦字号小于 16px 的输入框时自动放大页面，移动端统一抬到 16px */
+  .field input,
+  .field select,
+  .mystic-shell .location-level > input {
+    font-size: 16px;
+  }
+  .mystic-shell .location-level > input { height: 42px; }
+  .feedback-row button { min-height: 44px; font-size: 11px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -5885,8 +5900,8 @@ select:focus-visible {
     top: max(13px, env(safe-area-inset-top));
     right: 13px;
     display: grid;
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     place-items: center;
     padding: 0;
     border: 1px solid rgba(210, 170, 87, 0.28);
@@ -5906,8 +5921,8 @@ select:focus-visible {
 
   .mobile-menu-button {
     display: grid;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     place-content: center;
     gap: 5px;
     padding: 0;
