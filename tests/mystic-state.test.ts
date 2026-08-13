@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildAffinityProfile, calculateStreak, createEmptyMysticState, hasDailyEntry, normalizeMysticState, positiveCodesInLastDays } from "../app/lib/mystic-state.ts";
+import { buildAffinityProfile, calculateStreak, createEmptyMysticState, hasDailyEntry, normalizeMysticState, positiveCodesInLastDays, prepareStateForDailyOpening } from "../app/lib/mystic-state.ts";
 import type { DailyHistoryEntry, PersistedMysticState } from "../app/lib/mystic-state.ts";
 
 const recommendation = (code: string, isPositive = true) => ({
@@ -17,6 +17,7 @@ const history = (dateKey: string, codes: string[]): DailyHistoryEntry => ({
   dailyFortune: { grade: "上吉有缘", title: "测试", luckyHour: "辰时", luckyColor: "琥珀黄", luckyNumber: 3, favorable: [], avoid: [] },
   recommendations: [...codes.map((code) => recommendation(code)), recommendation("clash", false)],
   archetype: "青木拓荒客", openedAt: `${dateKey}T00:00:00.000Z`,
+  openedByUser: true,
 });
 
 test("corrupt and legacy-like state normalizes safely without dropping a collection", () => {
@@ -52,4 +53,12 @@ test("a saved profile must reopen the draw screen when the Shanghai date changes
   assert.equal(hasDailyEntry(state, "2026-08-12", "p1"), true);
   assert.equal(hasDailyEntry(state, "2026-08-13", "p1"), false);
   assert.equal(hasDailyEntry(state, "2026-08-12", "another-profile"), false);
+});
+
+test("legacy auto-generated entries do not count as today's explicit draw", () => {
+  const legacy = { ...history("2026-08-13", ["a"]), openedByUser: undefined };
+  const state = { ...createEmptyMysticState(), history: [legacy, history("2026-08-12", ["b"])], rerolls: { "2026-08-13": 1 as const } };
+  assert.equal(hasDailyEntry(state, "2026-08-13", "p1"), false);
+  assert.equal(calculateStreak(state.history, "2026-08-13"), 0);
+  assert.deepEqual(prepareStateForDailyOpening(state, "2026-08-13", "p1").rerolls, {});
 });

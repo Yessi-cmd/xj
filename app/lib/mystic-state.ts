@@ -27,6 +27,7 @@ export type DailyHistoryEntry = {
   recommendations: DailyRecommendation[];
   archetype: string;
   openedAt: string;
+  openedByUser?: boolean;
 };
 
 export type PersistedMysticState = {
@@ -145,11 +146,22 @@ export function positiveCodesInLastDays(state: PersistedMysticState, dateKey: st
 }
 
 export function hasDailyEntry(state: PersistedMysticState, dateKey: string, profileFingerprint: string): boolean {
-  return state.history.some((entry) => entry.dateKey === dateKey && entry.profileFingerprint === profileFingerprint);
+  return state.history.some((entry) => entry.dateKey === dateKey
+    && entry.profileFingerprint === profileFingerprint
+    && entry.openedByUser === true);
+}
+
+export function prepareStateForDailyOpening(state: PersistedMysticState, dateKey: string, profileFingerprint: string): PersistedMysticState {
+  if (hasDailyEntry(state, dateKey, profileFingerprint) || !(dateKey in state.rerolls)) return state;
+  const rerolls = { ...state.rerolls };
+  delete rerolls[dateKey];
+  return { ...state, rerolls };
 }
 
 export function calculateStreak(history: DailyHistoryEntry[], todayKey: string): number {
-  const days = new Set(history.map((entry) => entry.dateKey));
+  const days = new Set(history
+    .filter((entry) => entry.dateKey !== todayKey || entry.openedByUser === true)
+    .map((entry) => entry.dateKey));
   let cursor = new Date(`${todayKey}T12:00:00+08:00`);
   let streak = 0;
   while (days.has(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).format(cursor))) {
