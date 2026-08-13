@@ -19,7 +19,6 @@ export default async function Home() {
     <main className="landing-page">
       <header className="landing-nav">
         <a className="brand-lockup" href="#top" aria-label="玄鉴首页">
-          <span className="brand-seal">玄</span>
           <span>
             <strong>玄鉴</strong>
             <small>命理投研 · AShare Lab</small>

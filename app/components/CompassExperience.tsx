@@ -17,6 +17,7 @@ import {
   buildAffinityProfile,
   calculateStreak,
   createEmptyMysticState,
+  hasDailyEntry,
   loadMysticState,
   positiveCodesInLastDays,
   saveMysticState,
@@ -174,7 +175,8 @@ export default function CompassExperience({
   const railCloseButton = useRef<HTMLButtonElement>(null);
   const mobileMenuButton = useRef<HTMLButtonElement>(null);
 
-  const todayKey = getShanghaiDateKey();
+  const [todayKey, setTodayKey] = useState(getShanghaiDateKey);
+  const activeDateKey = useRef(todayKey);
   const fingerprint = state.profile ? profileFingerprint(state.profile) : "";
   const currentHistory = state.history.filter((entry) => !fingerprint || entry.profileFingerprint === fingerprint);
   const streak = calculateStreak(currentHistory, todayKey);
@@ -245,12 +247,38 @@ export default function CompassExperience({
       setState(saved);
       if (saved.profile) {
         setProfile(saved.profile);
-        void openDaily(saved.profile, saved);
+        const dateKey = getShanghaiDateKey();
+        if (hasDailyEntry(saved, dateKey, profileFingerprint(saved.profile))) {
+          void openDaily(saved.profile, saved);
+        } else {
+          setResult(null);
+          setView("profile");
+        }
       }
     }, 0);
     return () => window.clearTimeout(timer);
     // Initial hydration deliberately runs once; openDaily persists any new daily entry.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const refreshShanghaiDate = () => {
+      const nextDateKey = getShanghaiDateKey();
+      if (nextDateKey === activeDateKey.current) return;
+      activeDateKey.current = nextDateKey;
+      setTodayKey(nextDateKey);
+      setResult(null);
+      setView("profile");
+      setNotice("北京时间已进入新的一日，请重新开启今日玄签。");
+    };
+    const timer = window.setInterval(refreshShanghaiDate, 60_000);
+    window.addEventListener("focus", refreshShanghaiDate);
+    document.addEventListener("visibilitychange", refreshShanghaiDate);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshShanghaiDate);
+      document.removeEventListener("visibilitychange", refreshShanghaiDate);
+    };
   }, []);
 
   useEffect(() => {
@@ -450,7 +478,7 @@ export default function CompassExperience({
           window.requestAnimationFrame(() => mobileMenuButton.current?.focus());
         }}>×</button>
         <button className="brand-lockup rail-brand-button" onClick={() => selectView(result ? "today" : "profile")} aria-label="玄鉴首页">
-          <span className="brand-seal">玄</span><span><strong>玄鉴</strong><small>每日玄签 · AShare Lab</small></span>
+          <span><strong>玄鉴</strong><small>每日玄签 · AShare Lab</small></span>
         </button>
         <nav className="side-nav daily-side-nav">
           {nav.map((item) => (
@@ -474,7 +502,7 @@ export default function CompassExperience({
       <main className="product-main" id="top">
         <header className="mobile-header">
           <button ref={mobileMenuButton} className="mobile-menu-button" type="button" aria-label="打开功能导航" aria-expanded={railOpen} aria-controls="product-navigation" onClick={() => setRailOpen(true)}><span aria-hidden="true" /><span aria-hidden="true" /><span aria-hidden="true" /></button>
-          <button className="brand-lockup rail-brand-button" onClick={() => selectView(result ? "today" : "profile")}><span className="brand-seal">玄</span><span><strong>玄鉴</strong><small>每日玄签</small></span></button>
+          <button className="brand-lockup rail-brand-button" onClick={() => selectView(result ? "today" : "profile")}><span><strong>玄鉴</strong><small>每日玄签</small></span></button>
           <span className="mobile-user">{displayName}</span>
         </header>
         {notice && <div className="oracle-notice" role="status"><span>鉴</span>{notice}<button onClick={() => setNotice("")} aria-label="关闭提示">×</button></div>}
@@ -513,7 +541,7 @@ export default function CompassExperience({
                   <label className="field"><span>出生时间 <small>当地钟表时间</small></span><input type="time" required value={profile.birthTime} onChange={(event) => updateProfile("birthTime", event.target.value)} /></label>
                   <div className="field field-wide"><span>出生地点 <small>全国县市 · 经度校正</small></span><LocationPicker value={profile.location} onChange={(location) => updateProfile("location", location)} /></div>
                 </div>
-                <button className="primary-button" type="submit" disabled={loading}><small>敕</small><span>{loading ? "星盘运转 · 正在寻缘…" : state.profile ? "重排本命 · 开启今日玄签" : "启盘 · 寻找我的缘分股"}</span><b>卜</b></button>
+                <button className="primary-button" type="submit" disabled={loading}><small>敕</small><span>{loading ? "星盘运转 · 正在寻缘…" : !state.profile ? "启盘 · 寻找我的缘分股" : result ? "重排本命 · 开启今日玄签" : "开启今日玄签"}</span><b>卜</b></button>
                 <p className="privacy-note">◌ 生辰只在本机推演，不上传云端</p>
               </form>
 

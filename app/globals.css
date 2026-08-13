@@ -81,20 +81,6 @@ select:focus-visible {
   letter-spacing: 0.05em;
 }
 
-.brand-seal {
-  display: grid;
-  width: 46px;
-  height: 46px;
-  place-items: center;
-  border: 1px solid rgba(225, 177, 40, 0.45);
-  border-radius: 13px;
-  background: var(--ink);
-  color: var(--gold-bright);
-  box-shadow: 0 8px 20px rgba(21, 26, 54, 0.2);
-  font-family: var(--serif);
-  font-size: 23px;
-}
-
 .eyebrow,
 .section-kicker {
   color: var(--purple);
@@ -1912,13 +1898,6 @@ select:focus-visible {
     border-bottom: 1px solid var(--line);
   }
 
-  .mobile-header .brand-seal {
-    width: 37px;
-    height: 37px;
-    border-radius: 10px;
-    font-size: 18px;
-  }
-
   .mobile-header .brand-lockup strong {
     font-size: 19px;
   }
@@ -1957,12 +1936,6 @@ select:focus-visible {
 
   .brand-lockup strong {
     font-size: 20px;
-  }
-
-  .brand-seal {
-    width: 39px;
-    height: 39px;
-    font-size: 18px;
   }
 
   .nav-cta {
@@ -2210,16 +2183,6 @@ select:focus-visible {
 .mystic-shell .brand-lockup small {
   color: #77837d;
   letter-spacing: 0.13em;
-}
-
-.mystic-shell .brand-seal {
-  position: relative;
-  border-color: rgba(240, 211, 138, 0.5);
-  border-radius: 2px;
-  background: var(--mystic-cinnabar);
-  color: #f7df9c;
-  box-shadow: 0 0 0 4px rgba(210, 170, 87, 0.08), 0 12px 28px rgba(0, 0, 0, 0.35);
-  transform: rotate(-3deg);
 }
 
 .mystic-shell .side-nav {
