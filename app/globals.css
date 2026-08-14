@@ -1280,6 +1280,8 @@ select:focus-visible {
   position: absolute;
   z-index: 5;
   inset: 0;
+  display: grid;
+  place-items: center;
   border-radius: 50%;
   cursor: grab;
   touch-action: none;
