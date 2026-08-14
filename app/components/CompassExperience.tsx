@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, CSSProperties, FormEvent, TouchEvent as ReactTouchEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, CSSProperties, FormEvent, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent, TouchEvent as ReactTouchEvent, useEffect, useMemo, useRef, useState } from "react";
 import LocationPicker from "@/app/components/LocationPicker";
 import BirthDatePicker from "@/app/components/BirthDatePicker";
 import TodayOverview from "@/app/components/TodayOverview";
@@ -216,9 +216,14 @@ export default function CompassExperience({
   const [password, setPassword] = useState("");
   const [railOpen, setRailOpen] = useState(false);
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
+  const [wheelRotation, setWheelRotation] = useState(0);
   const touchStart = useRef<{ x: number; y: number; fromEdge: boolean } | null>(null);
   const railCloseButton = useRef<HTMLButtonElement>(null);
   const mobileMenuButton = useRef<HTMLButtonElement>(null);
+  const wheelRef = useRef<HTMLDivElement>(null);
+  const wheelRotationRef = useRef(0);
+  const wheelDrag = useRef<{ pointerId: number; lastAngle: number; lastTime: number; velocity: number } | null>(null);
+  const wheelInertiaFrame = useRef<number | null>(null);
 
   const [todayKey, setTodayKey] = useState(getShanghaiDateKey);
   const activeDateKey = useRef(todayKey);
@@ -246,6 +251,86 @@ export default function CompassExperience({
     setState(saved);
     return saved;
   }
+
+  function wheelAngle(event: { clientX: number; clientY: number }): number {
+    const rect = wheelRef.current?.getBoundingClientRect();
+    if (!rect) return 0;
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    return (Math.atan2(event.clientY - centerY, event.clientX - centerX) * 180) / Math.PI;
+  }
+
+  function applyWheelRotation(next: number) {
+    wheelRotationRef.current = next;
+    setWheelRotation(next);
+  }
+
+  function stopWheelInertia() {
+    if (wheelInertiaFrame.current !== null) {
+      cancelAnimationFrame(wheelInertiaFrame.current);
+      wheelInertiaFrame.current = null;
+    }
+  }
+
+  function spinWheelInertia() {
+    const drag = wheelDrag.current;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!drag || reduced) {
+      wheelDrag.current = null;
+      wheelInertiaFrame.current = null;
+      return;
+    }
+    if (Math.abs(drag.velocity) < 0.02) {
+      wheelDrag.current = null;
+      wheelInertiaFrame.current = null;
+      return;
+    }
+    applyWheelRotation(wheelRotationRef.current + drag.velocity * 16);
+    drag.velocity *= 0.94;
+    wheelInertiaFrame.current = requestAnimationFrame(spinWheelInertia);
+  }
+
+  const wheelPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    stopWheelInertia();
+    wheelDrag.current = { pointerId: event.pointerId, lastAngle: wheelAngle(event), lastTime: performance.now(), velocity: 0 };
+  };
+
+  const wheelPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = wheelDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const angle = wheelAngle(event);
+    const delta = ((angle - drag.lastAngle + 540) % 360) - 180;
+    const now = performance.now();
+    const elapsed = Math.max(now - drag.lastTime, 1);
+    drag.velocity = drag.velocity * 0.5 + (delta / elapsed) * 16 * 0.5;
+    drag.lastAngle = angle;
+    drag.lastTime = now;
+    applyWheelRotation(wheelRotationRef.current + delta);
+  };
+
+  const wheelPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = wheelDrag.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    stopWheelInertia();
+    spinWheelInertia();
+  };
+
+  const wheelKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+      event.preventDefault();
+      stopWheelInertia();
+      wheelDrag.current = null;
+      applyWheelRotation(wheelRotationRef.current + (event.key === "ArrowLeft" ? -15 : 15));
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      stopWheelInertia();
+      wheelDrag.current = null;
+      applyWheelRotation(0);
+    }
+  };
+
+  const wheelRotationDegrees = ((Math.round(wheelRotation) % 360) + 360) % 360;
 
   async function openDaily(nextProfile: BirthProfile, baseState: PersistedMysticState, drawVersion?: number, openedByUser = true) {
     setLoading(true);
@@ -692,8 +777,25 @@ export default function CompassExperience({
                   <div className="outer-ticks" /><div className="branch-ring" aria-hidden="true">{EARTHLY_BRANCHES.map((branch, index) => <span key={branch} style={{ "--orbit-index": index } as CSSProperties}>{branch}</span>)}</div>
                   <div className="trigram-ring" aria-hidden="true">{TRIGRAMS.map((trigram, index) => <span key={trigram.name} style={{ "--orbit-index": index } as CSSProperties}><b>{trigram.symbol}</b><small>{trigram.name}</small></span>)}</div>
                   <div className="heaven-needle" aria-hidden="true" />
-                  <div className="five-wheel"><span className="wheel-label wood">木</span><span className="wheel-label fire">火</span><span className="wheel-label earth">土</span><span className="wheel-label metal">金</span><span className="wheel-label water">水</span><div className="compass-center"><small>{result ? "日主本命" : "太极之眼"}</small><strong>{result?.dayMaster ?? "未"}</strong><span>{result ? `喜用 · ${result.favorableElement}` : "待君启局"}</span></div></div>
+                  <div
+                    ref={wheelRef}
+                    className="five-wheel"
+                    role="slider"
+                    tabIndex={0}
+                    aria-label="可转动的五行罗盘"
+                    aria-valuemin={0}
+                    aria-valuemax={360}
+                    aria-valuenow={wheelRotationDegrees}
+                    aria-valuetext={`当前转动 ${wheelRotationDegrees} 度`}
+                    style={{ "--wheel-rotation": `${wheelRotation}deg` } as CSSProperties}
+                    onPointerDown={wheelPointerDown}
+                    onPointerMove={wheelPointerMove}
+                    onPointerUp={wheelPointerEnd}
+                    onPointerCancel={wheelPointerEnd}
+                    onKeyDown={wheelKeyDown}
+                  ><span className="wheel-label wood">木</span><span className="wheel-label fire">火</span><span className="wheel-label earth">土</span><span className="wheel-label metal">金</span><span className="wheel-label water">水</span><div className="compass-center"><small>{result ? "日主本命" : "太极之眼"}</small><strong>{result?.dayMaster ?? "未"}</strong><span>{result ? `喜用 · ${result.favorableElement}` : "待君启局"}</span></div></div>
                 </div>
+                <div className="wheel-hint" aria-hidden="true">拖动圆盘可转动 · 方向键微调 · Home 复位</div>
                 {result ? <div className="pillar-row">{result.pillars.map((pillar) => <div key={pillar.label}><small>{pillar.label}</small><strong>{pillar.value}</strong></div>)}</div> : <div className="compass-empty-copy"><strong>天地定位 · 山泽通气 · 雷风相薄</strong><span>四柱一落，星曜归宫，千股因缘自此显形</span></div>}
               </section>
             </section>

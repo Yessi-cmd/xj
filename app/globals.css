@@ -1274,6 +1274,20 @@ select:focus-visible {
   border-radius: 50%;
   background: conic-gradient(from -18deg, #397db2 0 72deg, #39a96b 72deg 144deg, #ef6a5b 144deg 216deg, #c4933f 216deg 288deg, #8b7eb8 288deg 360deg);
   box-shadow: 0 10px 32px rgba(28, 25, 38, 0.17);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  transform: rotate(var(--wheel-rotation, 0deg));
+  will-change: transform;
+}
+
+.five-wheel:active {
+  cursor: grabbing;
+}
+
+.five-wheel:focus-visible {
+  outline: 3px solid rgba(201, 149, 25, 0.42);
+  outline-offset: 7px;
 }
 
 .five-wheel::before {
@@ -1299,6 +1313,7 @@ select:focus-visible {
   font-family: var(--serif);
   font-size: 13px;
   box-shadow: 0 4px 12px rgba(21, 26, 54, 0.18);
+  transform: rotate(calc(var(--wheel-rotation, 0deg) * -1));
 }
 
 .wheel-label.wood { top: 26px; right: 21px; }
@@ -1316,7 +1331,18 @@ select:focus-visible {
   align-content: center;
   border-radius: 50%;
   text-align: center;
+  transform: rotate(calc(var(--wheel-rotation, 0deg) * -1));
 }
+
+.wheel-hint {
+  margin-top: 16px;
+  color: #8e8576;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.daily-shell.mystic-shell .wheel-hint { color: #5f726c; }
 
 .compass-center small,
 .compass-center span {
