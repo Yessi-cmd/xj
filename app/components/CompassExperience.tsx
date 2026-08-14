@@ -6,6 +6,7 @@ import BirthDatePicker from "@/app/components/BirthDatePicker";
 import TodayOverview from "@/app/components/TodayOverview";
 import {
   analyzeProfile,
+  BLOOD_TYPES,
   createDailyContext,
   ELEMENTS,
   getShanghaiDateKey,
@@ -29,7 +30,7 @@ import {
 import { decryptMysticState, encryptMysticState } from "@/app/lib/profile-crypto";
 import type { DailyFengShuiOverview } from "@/app/lib/daily-overview";
 import type { MarketSnapshot } from "@/app/lib/market-overview";
-import { scoreGrade } from "@/app/lib/mystic-ranking";
+import { BEASTS, scoreGrade } from "@/app/lib/mystic-ranking";
 import type { DailyRecommendation, FeedbackAction } from "@/app/lib/mystic-ranking";
 
 type CompassExperienceProps = {
@@ -72,6 +73,21 @@ function formatDate(dateKey: string): string {
 }
 
 const EXCHANGE_LABELS: Record<DailyRecommendation["exchange"], string> = { SH: "沪市", SZ: "深市", BJ: "北交所" };
+
+const LUCKY_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+const INDUSTRY_PREFERENCES = [
+  { id: "金" as const, label: "金融资本" },
+  { id: "木" as const, label: "医药农林" },
+  { id: "水" as const, label: "运输消费" },
+  { id: "火" as const, label: "科技信息" },
+  { id: "土" as const, label: "地产制造" },
+];
+
+const DAY_NIGHT_PREFERENCES = [
+  { id: "sun" as const, label: "向阳 · 日出而作" },
+  { id: "moon" as const, label: "向阴 · 夜行而思" },
+];
 
 function stockIndustry(item: DailyRecommendation): string {
   const csrc = item.industryCsrc?.split("-");
@@ -619,6 +635,51 @@ export default function CompassExperience({
                       <i aria-hidden="true" />
                     </button>
                   </div>
+                  <details className="field field-wide advanced-fields">
+                    <summary>进阶本命信息 <small>可选 · 增缘添趣</small></summary>
+                    <div className="advanced-grid">
+                      <div className="field field-wide">
+                        <span>幸运数字 <small>1-9 选一 · 合数之签加分</small></span>
+                        <div className="chip-row" role="group" aria-label="选择幸运数字">
+                          {LUCKY_NUMBERS.map((number) => (
+                            <button key={number} type="button" className={`chip${profile.luckyNumber === number ? " selected" : ""}`} aria-pressed={profile.luckyNumber === number} onClick={() => updateProfile("luckyNumber", profile.luckyNumber === number ? undefined : number)}>{number}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="field field-wide">
+                        <span>行业偏好 <small>五行行业 · 同气之签加分</small></span>
+                        <div className="chip-row" role="group" aria-label="选择行业偏好">
+                          {INDUSTRY_PREFERENCES.map((preference) => (
+                            <button key={preference.id} type="button" className={`chip${profile.industryPreference === preference.id ? " selected" : ""}`} aria-pressed={profile.industryPreference === preference.id} onClick={() => updateProfile("industryPreference", profile.industryPreference === preference.id ? undefined : preference.id)}>{preference.label}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="field field-wide">
+                        <span>守护神兽 <small>六选一 · 直接成为本命神兽</small></span>
+                        <div className="chip-row" role="group" aria-label="选择守护神兽">
+                          {BEASTS.map((beast) => (
+                            <button key={beast} type="button" className={`chip${profile.guardianBeast === beast ? " selected" : ""}`} aria-pressed={profile.guardianBeast === beast} onClick={() => updateProfile("guardianBeast", profile.guardianBeast === beast ? undefined : beast)}>{beast}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="field">
+                        <span>晨昏偏好 <small>决定本命阴阳</small></span>
+                        <div className="chip-row" role="group" aria-label="选择晨昏偏好">
+                          {DAY_NIGHT_PREFERENCES.map((preference) => (
+                            <button key={preference.id} type="button" className={`chip${profile.dayNight === preference.id ? " selected" : ""}`} aria-pressed={profile.dayNight === preference.id} onClick={() => updateProfile("dayNight", profile.dayNight === preference.id ? undefined : preference.id)}>{preference.label}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="field">
+                        <span>血型 <small>参与本命主星分配</small></span>
+                        <div className="chip-row" role="group" aria-label="选择血型">
+                          {BLOOD_TYPES.map((bloodType) => (
+                            <button key={bloodType} type="button" className={`chip${profile.bloodType === bloodType ? " selected" : ""}`} aria-pressed={profile.bloodType === bloodType} onClick={() => updateProfile("bloodType", profile.bloodType === bloodType ? undefined : bloodType)}>{bloodType}</button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </details>
                 </div>
                 <button className="primary-button" type="submit" disabled={loading}><small>敕</small><span>{loading ? "星盘运转 · 正在寻缘…" : !state.profile ? "启盘 · 寻找我的缘分股" : result ? "重排本命 · 开启今日玄签" : "开启今日玄签"}</span><b>卜</b></button>
                 <p className="privacy-note">◌ 生辰只在本机推演，不上传云端</p>

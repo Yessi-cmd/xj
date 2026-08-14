@@ -5,7 +5,7 @@ import test from "node:test";
 import { buildDailyFengShuiOverview } from "../app/lib/daily-overview.ts";
 import { profileFingerprint, resolveBirthTimeInput, type BirthProfile } from "../app/lib/fortune.ts";
 import { summarizeMarket, type MarketSnapshot } from "../app/lib/market-overview.ts";
-import { DAILY_ROLES, rankMysticStocks, scoreGrade, type MysticContext, type MysticUniverse } from "../app/lib/mystic-ranking.ts";
+import { DAILY_ROLES, rankMysticStocks, scoreGrade, type MysticContext, type MysticStockTag, type MysticUniverse } from "../app/lib/mystic-ranking.ts";
 
 const universe = JSON.parse(await readFile(new URL("../public/data/mystic-stocks.json", import.meta.url), "utf8")) as MysticUniverse;
 const marketSnapshot = JSON.parse(await readFile(new URL("../app/data/market-snapshot.json", import.meta.url), "utf8")) as MarketSnapshot;
@@ -50,6 +50,52 @@ test("unknown birth time uses a deterministic neutral estimate until the user op
   assert.deepEqual(resolveBirthTimeInput(unknownMorning), { time: "12:00", estimated: true });
   assert.deepEqual(resolveBirthTimeInput({ ...unknownMorning, birthTimeKnown: true }), { time: "08:30", estimated: false });
   assert.deepEqual(resolveBirthTimeInput({ ...unknownMorning, birthTimeKnown: undefined }), { time: "08:30", estimated: false });
+});
+
+test("advanced inputs personalize the signature and remain deterministic", () => {
+  const advanced: MysticContext = {
+    ...BASE_CONTEXT,
+    guardianBeast: "玄武",
+    yinYangPreference: "阳",
+    bloodType: "AB",
+    luckyNumber: 7,
+  };
+  const first = rankMysticStocks(universe, advanced);
+  const second = rankMysticStocks(universe, advanced);
+  assert.deepEqual(first, second);
+  assert.equal(first.signature.beast, "玄武");
+  assert.equal(first.signature.yinYang, "阳");
+  const differentBlood = rankMysticStocks(universe, { ...advanced, bloodType: "O" });
+  assert.equal(differentBlood.signature.beast, "玄武");
+  assert.equal(differentBlood.signature.yinYang, "阳");
+  assert.notEqual(differentBlood.signature.star, first.signature.star);
+});
+
+test("lucky number and industry preference shift natal scoring deterministically", () => {
+  const twin = (overrides: Partial<MysticStockTag>) => ({
+    ...universe.stocks[0],
+    ...overrides,
+  });
+  const twinUniverse: MysticUniverse = {
+    ...universe,
+    stocks: [
+      twin({ code: "600001", name: "试一", number: 3, industryElement: "金" }),
+      twin({ code: "600002", name: "试二", number: 7, industryElement: "木" }),
+    ],
+  };
+  const guardian = (context: MysticContext) => rankMysticStocks(twinUniverse, context).recommendations.find((item) => item.role === "guardian");
+  assert.equal(guardian({ ...BASE_CONTEXT, luckyNumber: 3 })?.code, "600001");
+  assert.equal(guardian({ ...BASE_CONTEXT, luckyNumber: 7 })?.code, "600002");
+  assert.equal(guardian({ ...BASE_CONTEXT, industryPreference: "金" })?.code, "600001");
+  assert.equal(guardian({ ...BASE_CONTEXT, industryPreference: "木" })?.code, "600002");
+});
+
+test("advanced inputs change the profile fingerprint", () => {
+  const base: BirthProfile = { name: "", gender: "male", birthDate: "1990-06-15", birthTime: "08:30", location: "北京市" };
+  assert.equal(profileFingerprint(base), profileFingerprint({ ...base, luckyNumber: undefined }));
+  assert.notEqual(profileFingerprint(base), profileFingerprint({ ...base, luckyNumber: 7 }));
+  assert.notEqual(profileFingerprint(base), profileFingerprint({ ...base, guardianBeast: "青龙" }));
+  assert.notEqual(profileFingerprint(base), profileFingerprint({ ...base, bloodType: "AB" }));
 });
 
 test("daily feng shui overview is deterministic and only follows the Beijing-time daily element", () => {

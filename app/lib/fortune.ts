@@ -1,4 +1,4 @@
-import { loadMysticUniverse, rankMysticStocks, stableHash } from "./mystic-ranking.ts";
+import { BEASTS, loadMysticUniverse, rankMysticStocks, stableHash } from "./mystic-ranking.ts";
 import { resolveLocationLongitude } from "./locations.ts";
 import type {
   AffinityProfile,
@@ -12,6 +12,11 @@ export const ELEMENTS = ["木", "火", "土", "金", "水"] as const;
 export type ElementName = (typeof ELEMENTS)[number];
 export type Gender = "male" | "female";
 
+export const INDUSTRY_PREFERENCE_IDS = ELEMENTS;
+export const BLOOD_TYPES = ["A", "B", "AB", "O"] as const;
+export type BloodType = (typeof BLOOD_TYPES)[number];
+export type DayNightPreference = "sun" | "moon";
+
 export type BirthProfile = {
   name: string;
   gender: Gender;
@@ -19,7 +24,22 @@ export type BirthProfile = {
   birthTime: string;
   birthTimeKnown?: boolean;
   location: string;
+  luckyNumber?: number;
+  industryPreference?: ElementName;
+  guardianBeast?: string;
+  dayNight?: DayNightPreference;
+  bloodType?: BloodType;
 };
+
+/** 进阶输入的确定性键：仅包含通过校验的值，未设置或非法值一律落为空串。 */
+export function advancedInputKey(profile: Pick<BirthProfile, "luckyNumber" | "industryPreference" | "guardianBeast" | "dayNight" | "bloodType">): string {
+  const luckyNumber = Number.isInteger(profile.luckyNumber) && (profile.luckyNumber as number) >= 1 && (profile.luckyNumber as number) <= 9 ? String(profile.luckyNumber) : "";
+  const industry = INDUSTRY_PREFERENCE_IDS.includes(profile.industryPreference as ElementName) ? String(profile.industryPreference) : "";
+  const beast = (BEASTS as readonly string[]).includes(profile.guardianBeast ?? "") ? String(profile.guardianBeast) : "";
+  const dayNight = profile.dayNight === "sun" || profile.dayNight === "moon" ? profile.dayNight : "";
+  const bloodType = BLOOD_TYPES.includes(profile.bloodType as BloodType) ? String(profile.bloodType) : "";
+  return `${luckyNumber}|${industry}|${beast}|${dayNight}|${bloodType}`;
+}
 
 export type FortuneResult = {
   pillars: Array<{ label: string; value: string }>;
@@ -100,7 +120,7 @@ export function getShanghaiDateKey(date = new Date()): string {
 
 export function profileFingerprint(profile: BirthProfile): string {
   const birthTime = resolveBirthTimeInput(profile);
-  return stableHash([profile.gender, profile.birthDate, birthTime.estimated ? "unknown-noon" : birthTime.time, profile.location].join("|")).toString(36);
+  return stableHash([profile.gender, profile.birthDate, birthTime.estimated ? "unknown-noon" : birthTime.time, profile.location, advancedInputKey(profile)].join("|")).toString(36);
 }
 
 export async function createDailyContext(date = new Date(), drawVersion: number = 0): Promise<DailyContext> {
@@ -143,12 +163,17 @@ export async function analyzeProfile(profile: BirthProfile, options: AnalyzeOpti
   const dayMaster = STEM_ELEMENT[pillarValues[2][0]] ?? "土";
   const strength = percentages[dayMaster] + percentages[PRODUCER[dayMaster]] * 0.55 >= 30 ? "身强" : "身偏弱";
   const riskProfile = ARCHETYPES[favorableElement];
-  const profileKey = [profile.gender, profile.birthDate, birthTime.estimated ? "unknown-noon" : birthTime.time, profile.location, ...pillarValues].join("|");
+  const profileKey = [profile.gender, profile.birthDate, birthTime.estimated ? "unknown-noon" : birthTime.time, profile.location, advancedInputKey(profile), ...pillarValues].join("|");
   const dailyContext = options.dailyContext ?? await createDailyContext();
   const universe = await loadMysticUniverse();
   const ranked = rankMysticStocks(universe, {
     profileKey, favorableElement, dayMaster, dominantElement, gender: profile.gender,
     destinyNumber: destinyNumber(profile.birthDate), daily: dailyContext,
+    luckyNumber: Number.isInteger(profile.luckyNumber) && (profile.luckyNumber as number) >= 1 && (profile.luckyNumber as number) <= 9 ? profile.luckyNumber : undefined,
+    industryPreference: INDUSTRY_PREFERENCE_IDS.includes(profile.industryPreference as ElementName) ? profile.industryPreference : undefined,
+    guardianBeast: (BEASTS as readonly string[]).includes(profile.guardianBeast ?? "") ? profile.guardianBeast : undefined,
+    yinYangPreference: profile.dayNight === "sun" ? "阳" : profile.dayNight === "moon" ? "阴" : undefined,
+    bloodType: BLOOD_TYPES.includes(profile.bloodType as BloodType) ? profile.bloodType : undefined,
     affinity: options.affinity, recentPositiveCodes: options.recentPositiveCodes,
   });
   const spread = percentages[dominantElement] - percentages[favorableElement];

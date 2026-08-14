@@ -140,12 +140,18 @@ export type MysticContext = {
   gender: Gender;
   destinyNumber: number;
   daily: DailyContext;
+  luckyNumber?: number;
+  industryPreference?: ElementName;
+  guardianBeast?: string;
+  yinYangPreference?: "阴" | "阳";
+  bloodType?: string;
   affinity?: AffinityProfile;
   recentPositiveCodes?: string[];
 };
 
 const STARS = ["紫微", "天机", "太阳", "武曲", "天同", "廉贞", "天府", "太阴", "贪狼", "巨门", "天相", "天梁", "七杀", "破军"];
-const BEASTS = ["青龙", "朱雀", "勾陈", "腾蛇", "白虎", "玄武"];
+export const BEASTS = ["青龙", "朱雀", "勾陈", "腾蛇", "白虎", "玄武"] as const;
+export type BeastName = (typeof BEASTS)[number];
 const PALACES = ["坎", "坤", "震", "巽", "中", "乾", "兑", "艮", "离"];
 const PRODUCES: Record<ElementName, ElementName> = { 木: "火", 火: "土", 土: "金", 金: "水", 水: "木" };
 const CONTROLS: Record<ElementName, ElementName> = { 木: "土", 火: "金", 土: "水", 金: "木", 水: "火" };
@@ -194,13 +200,16 @@ export async function loadMysticUniverse(): Promise<MysticUniverse> {
   return universePromise;
 }
 
-export function deriveSignature(context: Pick<MysticContext, "profileKey" | "gender" | "destinyNumber">): MysticSignature {
+export function deriveSignature(context: Pick<MysticContext, "profileKey" | "gender" | "destinyNumber" | "guardianBeast" | "yinYangPreference" | "bloodType">): MysticSignature {
+  const salt = `|${context.bloodType ?? ""}`;
   return {
-    star: pick(STARS, `${context.profileKey}|star`),
-    beast: pick(BEASTS, `${context.profileKey}|beast`),
-    palace: pick(PALACES, `${context.profileKey}|palace`),
+    star: pick(STARS, `${context.profileKey}|star${salt}`),
+    // 用户选定的守护神兽直接成为本命神兽；未选时按本命哈希确定性分配
+    beast: context.guardianBeast ?? pick(BEASTS, `${context.profileKey}|beast${salt}`),
+    palace: pick(PALACES, `${context.profileKey}|palace${salt}`),
     destinyNumber: context.destinyNumber,
-    yinYang: pick(
+    // 晨昏偏好决定本命阴阳；未选时按性别与本命哈希确定性分配
+    yinYang: context.yinYangPreference ?? pick(
       [context.gender === "male" ? "阳" : "阴", context.gender === "male" ? "阴" : "阳"] as const,
       `${context.profileKey}|yin-yang`,
     ),
@@ -242,6 +251,8 @@ function scoreStock(stock: MysticStockTag, context: MysticContext, signature: My
   if (stock.palace === signature.palace) natal += 6;
   if (stock.number === signature.destinyNumber) natal += 8;
   if (stock.yinYang === signature.yinYang) natal += 5;
+  if (context.luckyNumber && stock.number === context.luckyNumber) natal += 6;
+  if (context.industryPreference && stock.industryElement === context.industryPreference) natal += 4;
   natal += stableHash(`${context.profileKey}|${stock.code}|本命`) % 7;
 
   let daily = 38;
