@@ -74,11 +74,25 @@ function formatDate(dateKey: string): string {
 const EXCHANGE_LABELS: Record<DailyRecommendation["exchange"], string> = { SH: "沪市", SZ: "深市", BJ: "北交所" };
 
 function stockIndustry(item: DailyRecommendation): string {
+  const csrc = item.industryCsrc?.split("-");
+  if (csrc && csrc.length > 1 && csrc[1]) return csrc[1];
+  if (item.industryCsrc) return item.industryCsrc;
   return item.industry?.replace(/^[A-Z]\s*/, "") || "—";
 }
 
 function stockBoard(item: DailyRecommendation): string {
   return item.exchangeDirection ? `${EXCHANGE_LABELS[item.exchange]} · ${item.exchangeDirection}` : EXCHANGE_LABELS[item.exchange];
+}
+
+function formatYi(value: number | null | undefined): string {
+  if (value == null) return "—";
+  if (value >= 10000) return `${(value / 10000).toFixed(2)}万亿`;
+  return `${value >= 100 ? value.toFixed(0) : value.toFixed(1)}亿`;
+}
+
+function formatSigned(value: number | null | undefined): string {
+  if (value == null) return "—";
+  return `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
 
 function historyEntry(result: FortuneResult, fingerprint: string, openedByUser: boolean): DailyHistoryEntry {
@@ -628,7 +642,7 @@ export default function CompassExperience({
               <section className="omen-panel surface-card"><span className="fortune-grade">{result.dailyFortune.grade}</span><h2>{result.dailyFortune.title}</h2><div className="omen-grid"><div><small>幸运时辰</small><strong>{result.dailyFortune.luckyHour}</strong></div><div><small>幸运色</small><strong>{result.dailyFortune.luckyColor}</strong></div><div><small>今日灵数</small><strong>{result.dailyFortune.luckyNumber}</strong></div></div><div className="do-dont"><p><b>宜</b>{result.dailyFortune.favorable.join(" · ")}</p><p><b>忌</b>{result.dailyFortune.avoid.join(" · ")}</p></div></section>
             </div>
 
-            <div className="sign-heading"><div><span>六签各司其职</span><h2>揭开今日股缘</h2></div><p>守护签随本命恒定；相冲签只作警示；其余四签随流日与换卦变化。</p></div>
+            <div className="sign-heading"><div><span>六签各司其职</span><h2>揭开今日股缘</h2></div><p>守护签随本命恒定；相冲签只作警示；其余四签随流日与换卦变化。{result.recommendations[0]?.factsDate ? <small className="facts-note">基本面快照 · {result.recommendations[0].factsDate} · 数据仅供文化娱乐参考，不构成投资建议</small> : null}</p></div>
             <div className="daily-sign-grid">
               {result.recommendations.map((item, index) => (
                 <article className={`daily-sign-card ${item.isPositive ? "" : "clash-sign"}`} key={`${item.role}-${item.code}`} style={{ "--reveal-index": index } as React.CSSProperties}>
@@ -639,8 +653,13 @@ export default function CompassExperience({
                   <div className="stock-facts">
                     <span><small>行业</small>{stockIndustry(item)}</span>
                     <span><small>板块</small>{stockBoard(item)}</span>
+                    <span><small>市值</small>{formatYi(item.marketCap)}</span>
+                    <span><small>营收</small>{item.revenue != null ? `${formatYi(item.revenue)} · ${item.revenueReportDate?.slice(0, 4) ?? "最近"}报` : "—"}</span>
+                    <span><small>当日涨跌</small>{formatSigned(item.changePercent)}</span>
+                    <span><small>5日涨跌</small>{formatSigned(item.change5Percent)}</span>
                     <span><small>上市</small>{item.listingDate ?? "—"}</span>
                     <span><small>探索度</small>{item.explorationScore}</span>
+                    {item.businessProfile && <p className="stock-facts-profile">{item.businessProfile}</p>}
                   </div>
                   <div className="score-script"><span>本命 {item.natalScore}</span><span>流日 {item.dailyScore}</span><span>缘感 {item.affinityScore}</span></div>
                   <div className="feedback-row" aria-label={`${item.name}缘分反馈`}><button className={feedbackFor(item.code) === "affinity" ? "selected" : ""} onClick={() => setFeedback(item, "affinity")}>♡ 有缘</button><button className={feedbackFor(item.code) === "neutral" ? "selected" : ""} onClick={() => setFeedback(item, "neutral")}>○ 无感</button><button className={feedbackFor(item.code) === "avoid" ? "selected avoid" : ""} onClick={() => setFeedback(item, "avoid")}>× 避开</button></div>

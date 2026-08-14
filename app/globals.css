@@ -4839,6 +4839,26 @@ select:focus-visible {
   color: #a39d8f;
 }
 
+.stock-facts-profile {
+  display: -webkit-box;
+  overflow: hidden;
+  grid-column: 1 / -1;
+  margin: 2px 0 0;
+  color: #7d7a71;
+  font-size: 9px;
+  line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.facts-note {
+  display: block;
+  margin-top: 6px;
+  color: #8b8578;
+  font-size: 9px;
+  font-weight: 400;
+}
+
 .feedback-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -5399,6 +5419,14 @@ select:focus-visible {
 }
 
 .daily-shell.mystic-shell .stock-facts small {
+  color: #5f726c;
+}
+
+.daily-shell.mystic-shell .stock-facts-profile {
+  color: #77857f;
+}
+
+.daily-shell.mystic-shell .facts-note {
   color: #5f726c;
 }
 

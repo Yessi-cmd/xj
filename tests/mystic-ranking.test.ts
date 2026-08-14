@@ -37,6 +37,10 @@ test("recommendations carry stock facts and detailed rationale copy", () => {
   assert.ok(first.recommendations.every((item) => item.industry !== "玄学探索"));
   assert.ok(first.recommendations.every((item) => item.rationale.length >= 28));
   assert.ok(first.recommendations.every((item) => item.rationale.includes("。") && item.rationale.includes("，")));
+  assert.ok(first.recommendations.some((item) => item.marketCap != null));
+  assert.ok(first.recommendations.some((item) => item.revenue != null));
+  assert.ok(first.recommendations.some((item) => item.businessProfile));
+  assert.ok(first.recommendations.every((item) => item.factsDate));
 });
 
 test("unknown birth time uses a deterministic neutral estimate until the user opts in", () => {
@@ -157,8 +161,11 @@ test("combined scores map to the S/A/B/C/D display tiers", () => {
   assert.equal(scoreGrade(0), "D");
 });
 
-test("static universe v2 has listing pillars and does not invent placeholder industries", () => {
-  assert.equal(universe.schemaVersion, 2);
-  assert.ok(universe.stocks.every((stock) => stock.listingDate && stock.listingDayPillar && stock.tagVersion === "2.0"));
+test("static universe v3 carries listing pillars and fundamental snapshots", () => {
+  assert.equal(universe.schemaVersion, 3);
+  assert.ok(universe.stocks.every((stock) => stock.listingDate && stock.listingDayPillar && stock.tagVersion === "3.0"));
   assert.ok(universe.stocks.every((stock) => stock.industry !== "玄学探索"));
+  const withFacts = universe.stocks.filter((stock) => stock.marketCap != null && stock.businessProfile && stock.revenue != null);
+  assert.ok(withFacts.length >= 4000, `expected most stocks to carry fundamental facts, got ${withFacts.length}`);
+  assert.match(universe.factsSnapshot?.tradingDate ?? "", /^\d{8}$/);
 });

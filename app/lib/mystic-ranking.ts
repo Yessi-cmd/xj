@@ -22,6 +22,19 @@ export type MysticStockTag = {
   listingDayPillar?: string | null;
   exchangeDirection?: string;
   industryElement?: ElementName | null;
+  marketCap?: number | null;
+  floatMarketCap?: number | null;
+  pe?: number | null;
+  changePercent?: number | null;
+  change5Percent?: number | null;
+  businessProfile?: string;
+  businessScope?: string;
+  industryCsrc?: string;
+  employeeCount?: string;
+  chairman?: string;
+  revenue?: number | null;
+  revenueItem?: string;
+  revenueReportDate?: string;
   tagVersion?: string;
 };
 
@@ -31,6 +44,11 @@ export type MysticUniverse = {
   source: string;
   stockCount: number;
   stocks: MysticStockTag[];
+  factsSnapshot?: {
+    tradingDate: string;
+    capturedAt: string;
+    source: string;
+  };
 };
 
 export type MysticSignature = {
@@ -86,6 +104,16 @@ export type DailyRecommendation = {
   exchange: "SH" | "SZ" | "BJ";
   exchangeDirection?: string;
   listingDate?: string | null;
+  marketCap?: number | null;
+  pe?: number | null;
+  changePercent?: number | null;
+  change5Percent?: number | null;
+  revenue?: number | null;
+  revenueItem?: string;
+  revenueReportDate?: string;
+  industryCsrc?: string;
+  businessProfile?: string;
+  factsDate?: string;
   tags: string[];
   rationale: string;
 };
@@ -277,6 +305,15 @@ function recommendation(stock: ScoredStock, role: DailyRole, context: MysticCont
     exchange: stock.exchange,
     exchangeDirection: stock.exchangeDirection,
     listingDate: stock.listingDate,
+    marketCap: stock.marketCap ?? null,
+    pe: stock.pe ?? null,
+    changePercent: stock.changePercent ?? null,
+    change5Percent: stock.change5Percent ?? null,
+    revenue: stock.revenue ?? null,
+    revenueItem: stock.revenueItem,
+    revenueReportDate: stock.revenueReportDate,
+    industryCsrc: stock.industryCsrc,
+    businessProfile: stock.businessProfile,
     tags: [
       `${stock.primaryElement}${stock.secondaryElement}双象`,
       stock.yinYang,
@@ -346,6 +383,8 @@ export function rankMysticStocks(
     recommendation(remedy, "remedy", context, signature),
     recommendation(clash, "clash", context, signature),
   ];
+  const factsDate = universe.factsSnapshot?.tradingDate;
+  for (const item of recommendations) item.factsDate = factsDate;
 
   return { signature, recommendations };
 }

@@ -12,6 +12,7 @@
     "data:locations": "node scripts/build-china-locations.mjs",
     "data:market": "node scripts/refresh-market-snapshot.mjs",
     "data:refresh": "python scripts/fetch-stock-listings.py && node scripts/enrich-mystic-stocks.mjs",
+    "data:facts:merge": "node scripts/merge-stock-facts.mjs var/stock-facts.json",
     "start": "vinext start",
     "test": "npm run build && node --test tests/rendered-html.test.mjs && node --experimental-strip-types --test tests/*.test.ts",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern dist-vps --ignore-pattern .next --ignore-pattern var"
