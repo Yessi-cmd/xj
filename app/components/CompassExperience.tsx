@@ -490,7 +490,9 @@ export default function CompassExperience({
     try {
       const blob = await createShareImage(result);
       const file = new File([blob], `玄鉴-${result.dailyContext.dateKey}.png`, { type: "image/png" });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+      // 系统分享面板只适合触屏设备；桌面端直接保存 PNG，避免 Windows 分享面板无目标可用
+      const preferNativeSheet = typeof navigator.share === "function" && window.matchMedia("(pointer: coarse)").matches;
+      if (preferNativeSheet && navigator.canShare?.({ files: [file] })) {
         try {
           await navigator.share({ title: "我的玄鉴每日玄签", text: `${result.dailyFortune.grade} · ${result.riskProfile}`, files: [file] });
           return;
