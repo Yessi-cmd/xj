@@ -130,8 +130,15 @@ function downloadBlob(blob: Blob, filename: string) {
   const anchor = document.createElement("a");
   anchor.href = url;
   anchor.download = filename;
+  anchor.rel = "noopener";
+  anchor.style.display = "none";
+  // iOS Safari 要求锚点必须在文档内才会触发下载；延迟回收避免下载开始前 blob 被销毁
+  document.body.appendChild(anchor);
   anchor.click();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => {
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }, 1000);
 }
 
 async function createShareImage(result: FortuneResult): Promise<Blob> {
@@ -484,13 +491,18 @@ export default function CompassExperience({
       const blob = await createShareImage(result);
       const file = new File([blob], `玄鉴-${result.dailyContext.dateKey}.png`, { type: "image/png" });
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: "我的玄鉴每日玄签", text: `${result.dailyFortune.grade} · ${result.riskProfile}`, files: [file] });
-      } else {
-        downloadBlob(blob, file.name);
-        setNotice("分享卡已保存为图片。");
+        try {
+          await navigator.share({ title: "我的玄鉴每日玄签", text: `${result.dailyFortune.grade} · ${result.riskProfile}`, files: [file] });
+          return;
+        } catch (shareError) {
+          // 用户主动关闭分享面板不算失败；其余情况回退为保存图片
+          if ((shareError as Error).name === "AbortError") return;
+        }
       }
+      downloadBlob(blob, file.name);
+      setNotice("分享卡已保存为图片。");
     } catch (shareError) {
-      if ((shareError as Error).name !== "AbortError") setError((shareError as Error).message);
+      setError((shareError as Error).message);
     }
   };
 
