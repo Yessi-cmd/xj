@@ -1274,6 +1274,13 @@ select:focus-visible {
   border-radius: 50%;
   background: conic-gradient(from -18deg, #397db2 0 72deg, #39a96b 72deg 144deg, #ef6a5b 144deg 216deg, #c4933f 216deg 288deg, #8b7eb8 288deg 360deg);
   box-shadow: 0 10px 32px rgba(28, 25, 38, 0.17);
+}
+
+.compass-dial {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  border-radius: 50%;
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -1281,11 +1288,11 @@ select:focus-visible {
   will-change: transform;
 }
 
-.five-wheel:active {
+.compass-dial:active {
   cursor: grabbing;
 }
 
-.five-wheel:focus-visible {
+.compass-dial:focus-visible {
   outline: 3px solid rgba(201, 149, 25, 0.42);
   outline-offset: 7px;
 }
@@ -3684,7 +3691,7 @@ select:focus-visible {
   place-items: center;
   color: #a99662;
   font-family: var(--serif);
-  transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 30deg)) translateY(-182px) rotate(calc(var(--orbit-index) * -30deg));
+  transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 30deg)) translateY(-182px) rotate(calc(var(--orbit-index) * -30deg)) rotate(calc(var(--wheel-rotation, 0deg) * -1));
 }
 
 .branch-ring > span {
@@ -3697,7 +3704,7 @@ select:focus-visible {
   width: 42px;
   gap: 0;
   color: #bdaa74;
-  transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 45deg)) translateY(-141px) rotate(calc(var(--orbit-index) * -45deg));
+  transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 45deg)) translateY(-141px) rotate(calc(var(--orbit-index) * -45deg)) rotate(calc(var(--wheel-rotation, 0deg) * -1));
 }
 
 .trigram-ring b {
@@ -4082,11 +4089,11 @@ select:focus-visible {
   }
 
   .mystic-shell .branch-ring > span {
-    transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 30deg)) translateY(-169px) rotate(calc(var(--orbit-index) * -30deg));
+    transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 30deg)) translateY(-169px) rotate(calc(var(--orbit-index) * -30deg)) rotate(calc(var(--wheel-rotation, 0deg) * -1));
   }
 
   .mystic-shell .trigram-ring > span {
-    transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 45deg)) translateY(-130px) rotate(calc(var(--orbit-index) * -45deg));
+    transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 45deg)) translateY(-130px) rotate(calc(var(--orbit-index) * -45deg)) rotate(calc(var(--wheel-rotation, 0deg) * -1));
   }
 
   .mystic-shell .security-card {
@@ -4220,11 +4227,11 @@ select:focus-visible {
   }
 
   .mystic-shell .branch-ring > span {
-    transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 30deg)) translateY(-139px) rotate(calc(var(--orbit-index) * -30deg));
+    transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 30deg)) translateY(-139px) rotate(calc(var(--orbit-index) * -30deg)) rotate(calc(var(--wheel-rotation, 0deg) * -1));
   }
 
   .mystic-shell .trigram-ring > span {
-    transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 45deg)) translateY(-107px) rotate(calc(var(--orbit-index) * -45deg));
+    transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 45deg)) translateY(-107px) rotate(calc(var(--orbit-index) * -45deg)) rotate(calc(var(--wheel-rotation, 0deg) * -1));
   }
 
   .mystic-shell .five-wheel {

@@ -774,12 +774,10 @@ export default function CompassExperience({
                 <div className="celestial-dust" aria-hidden="true" />
                 <div className="compass-topline"><span>{result ? "天机已显 · 命盘成局" : "浑天未动 · 静候生辰"}</span><small>{result ? result.riskProfile : "输入生辰后启盘"}</small></div>
                 <div className="compass-visual" aria-label="五行命理罗盘">
-                  <div className="outer-ticks" /><div className="branch-ring" aria-hidden="true">{EARTHLY_BRANCHES.map((branch, index) => <span key={branch} style={{ "--orbit-index": index } as CSSProperties}>{branch}</span>)}</div>
-                  <div className="trigram-ring" aria-hidden="true">{TRIGRAMS.map((trigram, index) => <span key={trigram.name} style={{ "--orbit-index": index } as CSSProperties}><b>{trigram.symbol}</b><small>{trigram.name}</small></span>)}</div>
-                  <div className="heaven-needle" aria-hidden="true" />
+                  <div className="outer-ticks" />
                   <div
                     ref={wheelRef}
-                    className="five-wheel"
+                    className="compass-dial"
                     role="slider"
                     tabIndex={0}
                     aria-label="可转动的五行罗盘"
@@ -793,7 +791,12 @@ export default function CompassExperience({
                     onPointerUp={wheelPointerEnd}
                     onPointerCancel={wheelPointerEnd}
                     onKeyDown={wheelKeyDown}
-                  ><span className="wheel-label wood">木</span><span className="wheel-label fire">火</span><span className="wheel-label earth">土</span><span className="wheel-label metal">金</span><span className="wheel-label water">水</span><div className="compass-center"><small>{result ? "日主本命" : "太极之眼"}</small><strong>{result?.dayMaster ?? "未"}</strong><span>{result ? `喜用 · ${result.favorableElement}` : "待君启局"}</span></div></div>
+                  >
+                    <div className="branch-ring" aria-hidden="true">{EARTHLY_BRANCHES.map((branch, index) => <span key={branch} style={{ "--orbit-index": index } as CSSProperties}>{branch}</span>)}</div>
+                    <div className="trigram-ring" aria-hidden="true">{TRIGRAMS.map((trigram, index) => <span key={trigram.name} style={{ "--orbit-index": index } as CSSProperties}><b>{trigram.symbol}</b><small>{trigram.name}</small></span>)}</div>
+                    <div className="heaven-needle" aria-hidden="true" />
+                    <div className="five-wheel"><span className="wheel-label wood">木</span><span className="wheel-label fire">火</span><span className="wheel-label earth">土</span><span className="wheel-label metal">金</span><span className="wheel-label water">水</span><div className="compass-center"><small>{result ? "日主本命" : "太极之眼"}</small><strong>{result?.dayMaster ?? "未"}</strong><span>{result ? `喜用 · ${result.favorableElement}` : "待君启局"}</span></div></div>
+                  </div>
                 </div>
                 <div className="wheel-hint" aria-hidden="true">拖动圆盘可转动 · 方向键微调 · Home 复位</div>
                 {result ? <div className="pillar-row">{result.pillars.map((pillar) => <div key={pillar.label}><small>{pillar.label}</small><strong>{pillar.value}</strong></div>)}</div> : <div className="compass-empty-copy"><strong>天地定位 · 山泽通气 · 雷风相薄</strong><span>四柱一落，星曜归宫，千股因缘自此显形</span></div>}
