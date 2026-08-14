@@ -199,6 +199,7 @@ export default function CompassExperience({
   const [notice, setNotice] = useState("");
   const [password, setPassword] = useState("");
   const [railOpen, setRailOpen] = useState(false);
+  const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const touchStart = useRef<{ x: number; y: number; fromEdge: boolean } | null>(null);
   const railCloseButton = useRef<HTMLButtonElement>(null);
   const mobileMenuButton = useRef<HTMLButtonElement>(null);
@@ -211,6 +212,7 @@ export default function CompassExperience({
   const collection = state.collection.map((code) => state.feedback[code]).filter(Boolean);
   const avoided = Object.values(state.feedback).filter((entry) => entry.action === "avoid");
   const rerollCount = state.rerolls[todayKey] ?? 0;
+  const flipOn = state.flipReveal === true && result !== null;
 
   const topSigns = useMemo(() => {
     const counts = new Map<string, { item: DailyRecommendation; count: number }>();
@@ -258,6 +260,7 @@ export default function CompassExperience({
       const saved = commit(nextState);
       setProfile(nextProfile);
       setResult(nextResult);
+      setRevealed(new Set());
       setView("today");
       return saved;
     } catch (analysisError) {
@@ -603,6 +606,19 @@ export default function CompassExperience({
                     <p>若记得大致时辰，开启并填写后，四柱测算会更准确。</p>
                   </fieldset>
                   <div className="field field-wide"><span>出生地点 <small>全国县市 · 经度校正</small></span><LocationPicker value={profile.location} onChange={(location) => updateProfile("location", location)} /></div>
+                  <div className="field field-wide">
+                    <span>开签方式 <small>可选</small></span>
+                    <button
+                      className="birth-time-toggle"
+                      type="button"
+                      role="switch"
+                      aria-checked={state.flipReveal === true}
+                      onClick={() => commit({ ...state, flipReveal: state.flipReveal !== true })}
+                    >
+                      <span><b>{state.flipReveal ? "翻牌开签" : "直接开签"}</b><small>{state.flipReveal ? "先见六张牌背，逐张翻启" : "开签后直接展示六签牌面"}</small></span>
+                      <i aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
                 <button className="primary-button" type="submit" disabled={loading}><small>敕</small><span>{loading ? "星盘运转 · 正在寻缘…" : !state.profile ? "启盘 · 寻找我的缘分股" : result ? "重排本命 · 开启今日玄签" : "开启今日玄签"}</span><b>卜</b></button>
                 <p className="privacy-note">◌ 生辰只在本机推演，不上传云端</p>
@@ -643,28 +659,44 @@ export default function CompassExperience({
             </div>
 
             <div className="sign-heading"><div><span>六签各司其职</span><h2>揭开今日股缘</h2></div><p>守护签随本命恒定；相冲签只作警示；其余四签随流日与换卦变化。{result.recommendations[0]?.factsDate ? <small className="facts-note">基本面快照 · {result.recommendations[0].factsDate} · 数据仅供文化娱乐参考，不构成投资建议</small> : null}</p></div>
-            <div className="daily-sign-grid">
-              {result.recommendations.map((item, index) => (
-                <article className={`daily-sign-card ${item.isPositive ? "" : "clash-sign"}`} key={`${item.role}-${item.code}`} style={{ "--reveal-index": index } as React.CSSProperties}>
-                  <div className="sign-card-top"><span className="role-seal">{ROLE_GLYPHS[item.role]}</span><div><small>{item.roleLabel}</small><strong>{item.isPositive ? "此签可观" : "今日宜远观"}</strong></div><span className={`score-badge grade-${scoreGrade(item.combinedScore)}`} aria-label={`缘分分 ${item.combinedScore}，评级 ${scoreGrade(item.combinedScore)} 级`}><em>{scoreGrade(item.combinedScore)}</em><b>{item.combinedScore}</b><small>缘分分</small></span></div>
-                  <div className="stock-identity"><span>{item.kind}</span><h3>{item.name}</h3><small>{item.code} · {item.theme}</small></div>
-                  <p>{item.rationale}</p>
-                  <div className="mystic-tags">{item.tags.slice(0, 5).map((tag) => <span key={tag}>{tag}</span>)}</div>
-                  <div className="stock-facts">
-                    <span><small>行业</small>{stockIndustry(item)}</span>
-                    <span><small>板块</small>{stockBoard(item)}</span>
-                    <span><small>市值</small>{formatYi(item.marketCap)}</span>
-                    <span><small>营收</small>{item.revenue != null ? `${formatYi(item.revenue)} · ${item.revenueReportDate?.slice(0, 4) ?? "最近"}报` : "—"}</span>
-                    <span><small>当日涨跌</small>{formatSigned(item.changePercent)}</span>
-                    <span><small>5日涨跌</small>{formatSigned(item.change5Percent)}</span>
-                    <span><small>上市</small>{item.listingDate ?? "—"}</span>
-                    <span><small>探索度</small>{item.explorationScore}</span>
-                    {item.businessProfile && <p className="stock-facts-profile">{item.businessProfile}</p>}
+            <div className={`daily-sign-grid${flipOn ? " flip-grid" : ""}`}>
+              {result.recommendations.map((item, index) => {
+                const isFlipped = !flipOn || revealed.has(item.role);
+                const card = (
+                  <article className={`daily-sign-card ${item.isPositive ? "" : "clash-sign"}`} key={item.role} style={{ "--reveal-index": index } as React.CSSProperties}>
+                    <div className="sign-card-top"><span className="role-seal">{ROLE_GLYPHS[item.role]}</span><div><small>{item.roleLabel}</small><strong>{item.isPositive ? "此签可观" : "今日宜远观"}</strong></div><span className={`score-badge grade-${scoreGrade(item.combinedScore)}`} aria-label={`缘分分 ${item.combinedScore}，评级 ${scoreGrade(item.combinedScore)} 级`}><em>{scoreGrade(item.combinedScore)}</em><b>{item.combinedScore}</b><small>缘分分</small></span></div>
+                    <div className="stock-identity"><span>{item.kind}</span><h3>{item.name}</h3><small>{item.code} · {item.theme}</small></div>
+                    <p>{item.rationale}</p>
+                    <div className="mystic-tags">{item.tags.slice(0, 5).map((tag) => <span key={tag}>{tag}</span>)}</div>
+                    <div className="stock-facts">
+                      <span><small>行业</small>{stockIndustry(item)}</span>
+                      <span><small>板块</small>{stockBoard(item)}</span>
+                      <span><small>市值</small>{formatYi(item.marketCap)}</span>
+                      <span><small>营收</small>{item.revenue != null ? `${formatYi(item.revenue)} · ${item.revenueReportDate?.slice(0, 4) ?? "最近"}报` : "—"}</span>
+                      <span><small>当日涨跌</small>{formatSigned(item.changePercent)}</span>
+                      <span><small>5日涨跌</small>{formatSigned(item.change5Percent)}</span>
+                      <span><small>上市</small>{item.listingDate ?? "—"}</span>
+                      <span><small>探索度</small>{item.explorationScore}</span>
+                      {item.businessProfile && <p className="stock-facts-profile">{item.businessProfile}</p>}
+                    </div>
+                    <div className="score-script"><span>本命 {item.natalScore}</span><span>流日 {item.dailyScore}</span><span>缘感 {item.affinityScore}</span></div>
+                    <div className="feedback-row" aria-label={`${item.name}缘分反馈`}><button className={feedbackFor(item.code) === "affinity" ? "selected" : ""} onClick={() => setFeedback(item, "affinity")}>♡ 有缘</button><button className={feedbackFor(item.code) === "neutral" ? "selected" : ""} onClick={() => setFeedback(item, "neutral")}>○ 无感</button><button className={feedbackFor(item.code) === "avoid" ? "selected avoid" : ""} onClick={() => setFeedback(item, "avoid")}>× 避开</button></div>
+                  </article>
+                );
+                if (!flipOn) return card;
+                return (
+                  <div className={`flip-card-wrap${item.isPositive ? "" : " clash-back"}${isFlipped ? " flipped" : ""}`} key={item.role}>
+                    <div className="flip-card-inner">
+                      <button type="button" className="flip-card-back" aria-label={`翻开${item.roleLabel}`} onClick={() => setRevealed((current) => new Set(current).add(item.role))}>
+                        <span className="flip-back-seal" aria-hidden="true">{ROLE_GLYPHS[item.role]}</span>
+                        <strong>{item.roleLabel}</strong>
+                        <small>轻触翻牌</small>
+                      </button>
+                      <div className="flip-card-front">{card}</div>
+                    </div>
                   </div>
-                  <div className="score-script"><span>本命 {item.natalScore}</span><span>流日 {item.dailyScore}</span><span>缘感 {item.affinityScore}</span></div>
-                  <div className="feedback-row" aria-label={`${item.name}缘分反馈`}><button className={feedbackFor(item.code) === "affinity" ? "selected" : ""} onClick={() => setFeedback(item, "affinity")}>♡ 有缘</button><button className={feedbackFor(item.code) === "neutral" ? "selected" : ""} onClick={() => setFeedback(item, "neutral")}>○ 无感</button><button className={feedbackFor(item.code) === "avoid" ? "selected avoid" : ""} onClick={() => setFeedback(item, "avoid")}>× 避开</button></div>
-                </article>
-              ))}
+                );
+              })}
             </div>
           </section>
         ) : view === "collection" ? (

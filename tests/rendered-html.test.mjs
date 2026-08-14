@@ -49,6 +49,7 @@ test("renders the end-to-end demo shell without authentication", async () => {
 
   const html = await response.text();
   assert.match(html, /以生辰启局，以流日定象/);
+  assert.match(html, /开签方式/);
   assert.match(html, /请入生辰/);
   assert.match(html, /启盘 · 寻找我的缘分股/);
   assert.match(html, /每日玄签/);

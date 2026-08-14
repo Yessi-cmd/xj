@@ -28,6 +28,12 @@ test("corrupt and legacy-like state normalizes safely without dropping a collect
   assert.equal(migrated.version, 1);
 });
 
+test("flip reveal preference normalizes as a boolean and defaults off", () => {
+  assert.equal(normalizeMysticState({ flipReveal: true }).flipReveal, true);
+  assert.equal(normalizeMysticState({ flipReveal: "yes" as unknown }).flipReveal, false);
+  assert.equal(normalizeMysticState({}).flipReveal, false);
+});
+
 test("reroll counters normalize as non-negative integers and survive beyond the old single-reroll limit", () => {
   const state = {
     ...createEmptyMysticState(),

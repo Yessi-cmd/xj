@@ -37,6 +37,7 @@ export type PersistedMysticState = {
   collection: string[];
   history: DailyHistoryEntry[];
   rerolls: Record<string, number>;
+  flipReveal?: boolean;
   updatedAt: string;
 };
 
@@ -80,6 +81,7 @@ export function normalizeMysticState(value: unknown): PersistedMysticState {
     collection: [...new Set(collection)],
     history,
     rerolls,
+    flipReveal: source.flipReveal === true,
     updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : base.updatedAt,
   });
 }
