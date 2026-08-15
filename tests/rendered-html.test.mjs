@@ -48,7 +48,7 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.equal(response.status, 200);
 
   const html = await response.text();
-  assert.match(html, /以生辰启局，以流日定象/);
+  assert.doesNotMatch(html, /以生辰启局，以流日定象|玄鉴 · 千股命盘|静候入局/);
   assert.match(html, /开签方式/);
   assert.match(html, /请入生辰/);
   assert.match(html, /启盘 · 寻找我的缘分股/);
@@ -85,7 +85,7 @@ test("renders a public standalone VPS entry without hosted authentication links"
   assert.match(html, /玄鉴命理投研罗盘/);
   assert.match(html, /公开测试版/);
   assert.match(html, /启盘 · 寻找我的缘分股/);
-  assert.match(html, /以生辰启局，以流日定象/);
+  assert.doesNotMatch(html, /以生辰启局，以流日定象|玄鉴 · 千股命盘|静候入局/);
   assert.doesNotMatch(html, /一命一盘|千股寻缘/);
   assert.match(html, /流日风水/);
   assert.match(html, /最近大盘快照|今日大盘/);
