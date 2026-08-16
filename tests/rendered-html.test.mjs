@@ -36,7 +36,7 @@ test("server-renders the finished public landing page", async () => {
   assert.doesNotMatch(html, /一命一盘|千股寻缘/);
   assert.match(html, /命理共振/);
   assert.match(html, /产品演示/);
-  assert.match(html, /先看今日气象，再看大盘事实/);
+  assert.doesNotMatch(html, /先看今日气象，再看大盘事实|风水取象与行情数据彼此独立/);
   assert.match(html, /流日风水/);
   assert.match(html, /上证指数/);
   assert.match(html, /延时或收盘快照 · 不构成投资建议/);
@@ -68,7 +68,7 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.match(html, /暂不提供/);
   assert.match(html, /填写后，四柱测算会更准确/);
   assert.doesNotMatch(html, /type="time"/);
-  assert.match(html, /先看今日气象，再看大盘事实/);
+  assert.doesNotMatch(html, /先看今日气象，再看大盘事实|风水取象与行情数据彼此独立/);
   assert.match(html, /创业板指/);
   assert.match(html, />男<\/button>/);
   assert.match(html, />女<\/button>/);

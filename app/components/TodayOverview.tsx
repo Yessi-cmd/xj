@@ -40,13 +40,11 @@ export default function TodayOverview({ fengShui, market, compact = false }: Tod
   const isTodaySnapshot = market.tradingDate === fengShui.dateKey;
 
   return (
-    <section className={`today-overview${compact ? " today-overview--compact" : ""}`} id="today-overview" aria-labelledby="today-overview-title">
+    <section className={`today-overview${compact ? " today-overview--compact" : ""}`} id="today-overview" aria-label="北京时间每日一览">
       <header className="today-overview-heading">
         <div>
           <span className="section-kicker">北京时间 · 每日一览</span>
-          <h2 id="today-overview-title">先看今日气象，再看大盘事实</h2>
         </div>
-        <p>风水取象与行情数据彼此独立；一边供文化娱乐，一边只记录已经发生的市场变化。</p>
       </header>
 
       <div className="today-overview-grid">
