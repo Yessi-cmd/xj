@@ -3,6 +3,7 @@
 import { ChangeEvent, CSSProperties, FormEvent, KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent, TouchEvent as ReactTouchEvent, useEffect, useMemo, useRef, useState } from "react";
 import LocationPicker from "@/app/components/LocationPicker";
 import BirthDatePicker from "@/app/components/BirthDatePicker";
+import LunarBirthDatePicker from "@/app/components/LunarBirthDatePicker";
 import TodayOverview from "@/app/components/TodayOverview";
 import {
   analyzeProfile,
@@ -29,6 +30,7 @@ import {
 } from "@/app/lib/mystic-state";
 import { decryptMysticState, encryptMysticState } from "@/app/lib/profile-crypto";
 import type { DailyFengShuiOverview } from "@/app/lib/daily-overview";
+import { solarDateToLunarBirthDate } from "@/app/lib/lunar-date";
 import type { MarketSnapshot } from "@/app/lib/market-overview";
 import { BEASTS, scoreGrade } from "@/app/lib/mystic-ranking";
 import type { DailyRecommendation, FeedbackAction } from "@/app/lib/mystic-ranking";
@@ -64,7 +66,7 @@ const TRIGRAMS = [
 const EARTHLY_BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"] as const;
 
 const INITIAL_PROFILE: BirthProfile = {
-  name: "", gender: "male", birthDate: "1990-06-15", birthTime: "12:00", birthTimeKnown: false, location: "北京市",
+  name: "", gender: "male", birthDate: "1990-06-15", birthCalendar: "solar", birthTime: "12:00", birthTimeKnown: false, location: "北京市",
 };
 
 function formatDate(dateKey: string): string {
@@ -218,6 +220,7 @@ export default function CompassExperience({
   const [result, setResult] = useState<FortuneResult | null>(null);
   const [view, setView] = useState<ViewName>("profile");
   const [loading, setLoading] = useState(false);
+  const [birthCalendarLoading, setBirthCalendarLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [password, setPassword] = useState("");
@@ -445,6 +448,23 @@ export default function CompassExperience({
 
   const updateProfile = <Key extends keyof BirthProfile>(key: Key, value: BirthProfile[Key]) => {
     setProfile((current) => ({ ...current, [key]: value }));
+  };
+
+  const changeBirthCalendar = async (calendar: "solar" | "lunar") => {
+    if (calendar === (profile.birthCalendar ?? "solar") || birthCalendarLoading) return;
+    if (calendar === "solar") {
+      setProfile((current) => ({ ...current, birthCalendar: "solar", lunarBirthDate: undefined }));
+      return;
+    }
+    setBirthCalendarLoading(true);
+    try {
+      const lunarBirthDate = await solarDateToLunarBirthDate(profile.birthDate);
+      setProfile((current) => ({ ...current, birthCalendar: "lunar", lunarBirthDate }));
+    } catch {
+      setError("当前日期无法换算为农历，请重新选择出生日期。");
+    } finally {
+      setBirthCalendarLoading(false);
+    }
   };
 
   const submitProfile = async (event: FormEvent<HTMLFormElement>) => {
@@ -692,11 +712,27 @@ export default function CompassExperience({
               <i className="stage-corner corner-nw" aria-hidden="true" /><i className="stage-corner corner-ne" aria-hidden="true" />
               <i className="stage-corner corner-sw" aria-hidden="true" /><i className="stage-corner corner-se" aria-hidden="true" />
               <form className="birth-card profile-editor" onSubmit={submitProfile}>
-                <div className="card-heading"><div><span className="section-kicker">生辰入局</span><h2>{state.profile ? "修订本命档案" : "请入生辰"}</h2><p>公历起盘，并依出生地经度校正真太阳时。</p></div></div>
+                <div className="card-heading"><div><span className="section-kicker">生辰入局</span><h2>{state.profile ? "修订本命档案" : "请入生辰"}</h2></div></div>
                 <div className="form-grid">
                   <label className="field"><span>称呼 <small>可选</small></span><input value={profile.name} onChange={(event) => updateProfile("name", event.target.value)} placeholder="如何称呼你" autoComplete="name" /></label>
                   <fieldset className="field gender-field"><legend>性别</legend><div className="segmented-control"><button type="button" aria-pressed={profile.gender === "male"} className={profile.gender === "male" ? "selected" : ""} onClick={() => updateProfile("gender", "male")}>男</button><button type="button" aria-pressed={profile.gender === "female"} className={profile.gender === "female" ? "selected" : ""} onClick={() => updateProfile("gender", "female")}>女</button></div></fieldset>
-                  <div className="field"><span>出生日期 <small>公历</small></span><BirthDatePicker min="1920-01-01" max={todayKey} value={profile.birthDate} onChange={(value) => updateProfile("birthDate", value)} /></div>
+                  <div className="field birth-date-field">
+                    <div className="birth-date-heading">
+                      <span>出生日期</span>
+                      <div className="birth-calendar-mode" role="group" aria-label="出生日期历法">
+                        <button type="button" aria-pressed={(profile.birthCalendar ?? "solar") === "solar"} className={(profile.birthCalendar ?? "solar") === "solar" ? "selected" : ""} onClick={() => void changeBirthCalendar("solar")}>公历</button>
+                        <button type="button" aria-pressed={profile.birthCalendar === "lunar"} className={profile.birthCalendar === "lunar" ? "selected" : ""} disabled={birthCalendarLoading} onClick={() => void changeBirthCalendar("lunar")}>{birthCalendarLoading ? "换算中" : "农历"}</button>
+                      </div>
+                    </div>
+                    {profile.birthCalendar === "lunar" && profile.lunarBirthDate
+                      ? <LunarBirthDatePicker
+                          min="1920-01-01"
+                          max={todayKey}
+                          value={profile.lunarBirthDate}
+                          onChange={(lunarBirthDate, birthDate) => setProfile((current) => ({ ...current, birthDate, birthCalendar: "lunar", lunarBirthDate }))}
+                        />
+                      : <BirthDatePicker min="1920-01-01" max={todayKey} value={profile.birthDate} onChange={(birthDate) => setProfile((current) => ({ ...current, birthDate, lunarBirthDate: undefined }))} />}
+                  </div>
                   <fieldset className={`field birth-time-field${profile.birthTimeKnown !== false ? " enabled" : ""}`}>
                     <legend>出生时间 <small>可选 · 填写后更准确</small></legend>
                     <button
@@ -809,12 +845,27 @@ export default function CompassExperience({
               </section>
             </section>
 
-            <div className="profile-workspace-grid profile-details-grid">
+            <div className={`profile-workspace-grid profile-details-grid${result ? "" : " no-result"}`}>
+              {result && <div className="profile-side-stack">
+                <section className="surface-card natal-summary"><div className="natal-seal">{result.favorableElement}</div><span>本命称号</span><h2>{result.riskProfile}</h2><p>{result.pattern}</p><div className="element-bars">{ELEMENTS.map((element) => <div className="element-line" key={element}><span><b style={{ background: ELEMENT_META[element].color }} />{element}</span><div><i style={{ width: `${result.elementPercentages[element]}%`, background: ELEMENT_META[element].color }} /></div><strong>{result.elementPercentages[element]}%</strong></div>)}</div></section>
+              </div>}
               <div className="profile-side-stack">
-                {result && <section className="surface-card natal-summary"><div className="natal-seal">{result.favorableElement}</div><span>本命称号</span><h2>{result.riskProfile}</h2><p>{result.pattern}</p><div className="element-bars">{ELEMENTS.map((element) => <div className="element-line" key={element}><span><b style={{ background: ELEMENT_META[element].color }} />{element}</span><div><i style={{ width: `${result.elementPercentages[element]}%`, background: ELEMENT_META[element].color }} /></div><strong>{result.elementPercentages[element]}%</strong></div>)}</div></section>}
-              </div>
-              <div className="profile-side-stack">
-                <section className="surface-card transfer-card"><span className="section-kicker">跨设备迁移</span><h2>带走你的玄鉴档案</h2><p>使用 AES-GCM 加密导出。密码不会保存，遗忘后无法找回。</p><label className="field"><span>档案密码 <small>至少6位</small></span><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="输入导出或导入密码" /></label><div className="transfer-actions"><button onClick={exportProfile} disabled={!state.profile}>加密导出 .xjprofile</button><label className={password.length < 6 ? "disabled" : ""}>解密导入<input type="file" accept=".xjprofile,application/json" disabled={password.length < 6} onChange={importProfile} /></label></div></section>
+                <details className="surface-card transfer-card">
+                  <summary>
+                    <div>
+                      <span className="section-kicker">档案工具</span>
+                      <h2>跨设备迁移</h2>
+                      <p>加密导出或导入你的玄鉴档案</p>
+                    </div>
+                    <span className="transfer-summary-action">展开 <i aria-hidden="true">⌄</i></span>
+                  </summary>
+                  <div className="transfer-panel">
+                    <p>使用 AES-GCM 加密保护档案。密码只用于本次操作，不会保存；遗忘后无法找回。</p>
+                    <label className="field"><span>档案密码 <small>至少6位</small></span><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="输入导出或导入密码" /></label>
+                    <div className="transfer-actions"><button onClick={exportProfile} disabled={!state.profile || password.length < 6}>加密导出 .xjprofile</button><label className={password.length < 6 ? "disabled" : ""}>解密导入<input type="file" accept=".xjprofile,application/json" disabled={password.length < 6} onChange={importProfile} /></label></div>
+                    <small className="transfer-help">{state.profile ? "输入密码后可导出当前档案，或选择另一份档案导入。" : "完成首次开签后可导出；输入密码后也可直接导入已有档案。"}</small>
+                  </div>
+                </details>
                 {avoided.length > 0 && <section className="surface-card avoided-card"><span className="section-kicker">避开名单</span><h2>{avoided.length} 只股票暂不入签</h2>{avoided.map((entry) => <div key={entry.code}><span><strong>{entry.name}</strong><small>{entry.code}</small></span><button onClick={() => { const feedback = { ...state.feedback }; delete feedback[entry.code]; commit({ ...state, feedback }); }}>解除避开</button></div>)}</section>}
               </div>
             </div>

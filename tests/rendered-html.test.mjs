@@ -51,6 +51,7 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.doesNotMatch(html, /以生辰启局，以流日定象|玄鉴 · 千股命盘|静候入局/);
   assert.match(html, /开签方式/);
   assert.match(html, /请入生辰/);
+  assert.doesNotMatch(html, /公历起盘，并依出生地经度校正真太阳时/);
   assert.doesNotMatch(html, /heading-mark/);
   assert.match(html, /启盘 · 寻找我的缘分股/);
   assert.match(html, /每日玄签/);
@@ -63,6 +64,9 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.match(html, /全国县市 · 经度校正/);
   assert.match(html, /省级 \/ 市级 \/ 县区级/);
   assert.match(html, /aria-label="出生日期，格式为年\/月\/日"/);
+  assert.match(html, /aria-label="出生日期历法"/);
+  assert.match(html, />公历<\/button>/);
+  assert.match(html, />农历<\/button>/);
   assert.match(html, /aria-label="打开出生日期日历"/);
   assert.doesNotMatch(html, /type="date"/);
   assert.match(html, /role="switch" aria-checked="false"/);

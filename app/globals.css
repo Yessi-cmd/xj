@@ -2682,6 +2682,105 @@ select:focus-visible {
   color: #5f7069;
 }
 
+.birth-date-heading {
+  display: flex;
+  min-height: 15px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #4a4850;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.birth-calendar-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.birth-calendar-mode button {
+  min-width: 31px;
+  height: 17px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: #aaa59b;
+  cursor: pointer;
+  font-size: 9px;
+  line-height: 17px;
+}
+
+.birth-calendar-mode button:hover,
+.birth-calendar-mode button:focus-visible,
+.birth-calendar-mode button.selected {
+  background: rgba(201, 149, 25, 0.12);
+  color: var(--gold);
+  outline: 0;
+}
+
+.birth-calendar-mode button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.lunar-birth-date-picker {
+  display: grid;
+  gap: 5px;
+}
+
+.lunar-birth-date-control {
+  display: grid;
+  grid-template-columns: 1.08fr 0.92fr 0.9fr;
+}
+
+.field .lunar-birth-date-control select {
+  min-width: 0;
+  padding: 0 8px;
+  border-radius: 0;
+}
+
+.field .lunar-birth-date-control select + select {
+  border-left: 0;
+}
+
+.lunar-date-note {
+  min-height: 13px;
+  color: #8a867f;
+  font-size: 8px;
+  letter-spacing: 0.04em;
+}
+
+.lunar-date-note.error {
+  color: #b84343;
+}
+
+.mystic-shell .birth-date-heading {
+  color: #b6b6a8;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.mystic-shell .birth-calendar-mode button {
+  color: #6f8078;
+}
+
+.mystic-shell .birth-calendar-mode button:hover,
+.mystic-shell .birth-calendar-mode button:focus-visible,
+.mystic-shell .birth-calendar-mode button.selected {
+  background: rgba(210, 170, 87, 0.1);
+  color: var(--mystic-gold-bright);
+}
+
+.mystic-shell .lunar-date-note {
+  color: #65766e;
+}
+
+.mystic-shell .lunar-date-note.error {
+  color: #d77968;
+}
+
 .mystic-shell .field input:hover,
 .mystic-shell .field select:hover,
 .mystic-shell .field input:focus,
@@ -5151,7 +5250,88 @@ select:focus-visible {
 
 .transfer-card h2,
 .avoided-card h2 { margin: 8px 0 7px; font-family: var(--serif); font-size: 23px; }
-.transfer-card > p { margin: 0 0 20px; color: #7e7a70; font-size: 10px; line-height: 1.6; }
+.mystic-shell .transfer-card {
+  padding: 0;
+}
+
+.transfer-card > summary {
+  display: flex;
+  min-height: 112px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 28px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.transfer-card > summary::-webkit-details-marker {
+  display: none;
+}
+
+.transfer-card > summary:focus-visible {
+  outline: 2px solid rgba(210, 170, 87, 0.6);
+  outline-offset: -3px;
+}
+
+.transfer-card > summary h2 {
+  margin: 6px 0 3px;
+}
+
+.transfer-card > summary p {
+  margin: 0;
+  color: #7e7a70;
+  font-size: 10px;
+}
+
+.transfer-summary-action {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 9px;
+  color: #8e8576;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.transfer-summary-action i {
+  color: var(--gold);
+  font-size: 18px;
+  font-style: normal;
+  line-height: 1;
+  transition: transform 180ms ease;
+}
+
+.transfer-card[open] .transfer-summary-action i {
+  transform: rotate(180deg);
+}
+
+.transfer-panel {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(280px, 1fr);
+  align-items: end;
+  gap: 14px 18px;
+  padding: 22px 28px 26px;
+  border-top: 1px solid rgba(21, 26, 54, 0.1);
+}
+
+.transfer-panel > p,
+.transfer-help {
+  grid-column: 1 / -1;
+}
+
+.transfer-panel > p {
+  margin: 0;
+  color: #7e7a70;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.transfer-help {
+  color: #99958d;
+  font-size: 9px;
+}
+
 .transfer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 12px; }
 .transfer-actions button,
 .transfer-actions label {
@@ -5166,9 +5346,9 @@ select:focus-visible {
   cursor: pointer;
 }
 .transfer-actions label { background: transparent; color: var(--ink); }
-.transfer-actions .disabled { cursor: not-allowed; opacity: 0.4; }
+.transfer-actions .disabled { cursor: not-allowed; opacity: 0.34; }
 .transfer-actions input { display: none; }
-.transfer-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+.transfer-actions button:disabled { background: transparent; color: #99958d; opacity: 0.42; cursor: not-allowed; }
 
 .avoided-card > div,
 .history-aside > div {
@@ -5260,6 +5440,10 @@ select:focus-visible {
   .profile-editor { padding: 24px 19px; }
   .profile-editor .form-grid { grid-template-columns: 1fr; }
   .profile-editor .field-wide { grid-column: auto; }
+  .transfer-card > summary { min-height: 96px; padding: 18px 20px; }
+  .transfer-panel { grid-template-columns: 1fr; padding: 20px; }
+  .transfer-panel > p,
+  .transfer-help { grid-column: auto; }
   .transfer-actions { grid-template-columns: 1fr; }
   .collection-card { display: grid; grid-template-columns: auto 1fr; }
   .collection-card button { grid-column: 2; justify-self: start; margin: 0; }
@@ -5424,6 +5608,7 @@ select:focus-visible {
 }
 
 .daily-shell.mystic-shell .profile-input-stage {
+  grid-template-columns: minmax(560px, 1.65fr) minmax(380px, 0.72fr);
   margin-top: 0;
   overflow: visible;
 }
@@ -5436,13 +5621,86 @@ select:focus-visible {
 }
 
 .daily-shell.mystic-shell .profile-compass {
-  min-height: 650px;
+  min-height: 540px;
+  padding: 50px 20px 30px;
+}
+
+.daily-shell.mystic-shell .profile-compass::before {
+  width: 300px;
+  height: 300px;
+}
+
+.daily-shell.mystic-shell .profile-compass::after {
+  width: 410px;
+  height: 410px;
+}
+
+.daily-shell.mystic-shell .profile-compass .compass-topline {
+  right: 20px;
+  left: 20px;
+}
+
+.daily-shell.mystic-shell .profile-compass .compass-visual {
+  width: 320px;
+  height: 320px;
+}
+
+.daily-shell.mystic-shell .profile-compass .compass-visual::before {
+  inset: 38px;
+}
+
+.daily-shell.mystic-shell .profile-compass .compass-visual::after {
+  inset: 67px;
+}
+
+.daily-shell.mystic-shell .profile-compass .branch-ring > span {
+  transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 30deg)) translateY(-137px) rotate(calc(var(--orbit-index) * -30deg)) rotate(calc(var(--wheel-rotation, 0deg) * -1));
+}
+
+.daily-shell.mystic-shell .profile-compass .trigram-ring > span {
+  transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 45deg)) translateY(-105px) rotate(calc(var(--orbit-index) * -45deg)) rotate(calc(var(--wheel-rotation, 0deg) * -1));
+}
+
+.daily-shell.mystic-shell .profile-compass .heaven-needle {
+  height: 118px;
+}
+
+.daily-shell.mystic-shell .profile-compass .five-wheel {
+  width: 190px;
+  height: 190px;
+}
+
+.daily-shell.mystic-shell .profile-compass .five-wheel::before {
+  inset: 38px;
+}
+
+.daily-shell.mystic-shell .profile-compass .wheel-label.wood { top: 20px; right: 16px; }
+.daily-shell.mystic-shell .profile-compass .wheel-label.fire { right: 15px; bottom: 23px; }
+.daily-shell.mystic-shell .profile-compass .wheel-label.earth { bottom: 3px; left: 81px; }
+.daily-shell.mystic-shell .profile-compass .wheel-label.metal { bottom: 23px; left: 15px; }
+.daily-shell.mystic-shell .profile-compass .wheel-label.water { top: 20px; left: 16px; }
+
+.daily-shell.mystic-shell .profile-compass .compass-center {
+  inset: 48px;
+}
+
+.daily-shell.mystic-shell .profile-compass .compass-center strong {
+  font-size: 34px;
+}
+
+.daily-shell.mystic-shell .profile-compass .compass-empty-copy,
+.daily-shell.mystic-shell .profile-compass .pillar-row {
+  max-width: 340px;
 }
 
 .daily-shell.mystic-shell .profile-details-grid {
   grid-template-columns: 1fr 1fr;
   gap: 18px;
   margin-top: 24px;
+}
+
+.daily-shell.mystic-shell .profile-details-grid.no-result {
+  grid-template-columns: 1fr;
 }
 
 .daily-shell.mystic-shell .natal-summary,
@@ -5474,6 +5732,24 @@ select:focus-visible {
   color: #7f8d86;
 }
 
+.daily-shell.mystic-shell .transfer-card > summary p,
+.daily-shell.mystic-shell .transfer-panel > p,
+.daily-shell.mystic-shell .transfer-help {
+  color: #7f8d86;
+}
+
+.daily-shell.mystic-shell .transfer-panel {
+  border-top-color: rgba(210, 170, 87, 0.16);
+}
+
+.daily-shell.mystic-shell .transfer-summary-action {
+  color: #73817b;
+}
+
+.daily-shell.mystic-shell .transfer-summary-action i {
+  color: var(--mystic-gold);
+}
+
 .daily-shell.mystic-shell .natal-seal {
   border-color: rgba(240, 211, 138, 0.45);
   color: var(--mystic-gold-bright);
@@ -5494,6 +5770,13 @@ select:focus-visible {
   border-color: rgba(210, 170, 87, 0.4);
   background: var(--mystic-cinnabar);
   color: #f7edcf;
+}
+
+.daily-shell.mystic-shell .transfer-actions button:disabled {
+  border-color: rgba(210, 170, 87, 0.18);
+  background: transparent;
+  color: #65736d;
+  opacity: 1;
 }
 
 .daily-shell.mystic-shell .transfer-actions label {
@@ -5730,6 +6013,7 @@ select:focus-visible {
   }
 
   .daily-shell.mystic-shell .profile-compass {
+    min-height: 500px;
     border-top: 1px solid rgba(210, 170, 87, 0.3);
     border-left: 0;
   }
@@ -5755,6 +6039,59 @@ select:focus-visible {
 @media (max-width: 640px) {
   .daily-shell.mystic-shell .profile-editor {
     padding: 40px 24px 36px;
+  }
+
+  .daily-shell.mystic-shell .profile-compass {
+    min-height: 480px;
+    padding: 44px 12px 24px;
+  }
+
+  .daily-shell.mystic-shell .profile-compass .compass-visual {
+    width: 280px;
+    height: 280px;
+  }
+
+  .daily-shell.mystic-shell .profile-compass .compass-visual::before {
+    inset: 33px;
+  }
+
+  .daily-shell.mystic-shell .profile-compass .compass-visual::after {
+    inset: 59px;
+  }
+
+  .daily-shell.mystic-shell .profile-compass .branch-ring > span {
+    transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 30deg)) translateY(-120px) rotate(calc(var(--orbit-index) * -30deg)) rotate(calc(var(--wheel-rotation, 0deg) * -1));
+  }
+
+  .daily-shell.mystic-shell .profile-compass .trigram-ring > span {
+    transform: translate(-50%, -50%) rotate(calc(var(--orbit-index) * 45deg)) translateY(-92px) rotate(calc(var(--orbit-index) * -45deg)) rotate(calc(var(--wheel-rotation, 0deg) * -1));
+  }
+
+  .daily-shell.mystic-shell .profile-compass .heaven-needle {
+    height: 103px;
+  }
+
+  .daily-shell.mystic-shell .profile-compass .five-wheel {
+    width: 166px;
+    height: 166px;
+  }
+
+  .daily-shell.mystic-shell .profile-compass .five-wheel::before {
+    inset: 33px;
+  }
+
+  .daily-shell.mystic-shell .profile-compass .wheel-label.wood { top: 17px; right: 13px; }
+  .daily-shell.mystic-shell .profile-compass .wheel-label.fire { right: 13px; bottom: 20px; }
+  .daily-shell.mystic-shell .profile-compass .wheel-label.earth { bottom: 2px; left: 70px; }
+  .daily-shell.mystic-shell .profile-compass .wheel-label.metal { bottom: 20px; left: 13px; }
+  .daily-shell.mystic-shell .profile-compass .wheel-label.water { top: 17px; left: 13px; }
+
+  .daily-shell.mystic-shell .profile-compass .compass-center {
+    inset: 42px;
+  }
+
+  .daily-shell.mystic-shell .profile-compass .compass-center strong {
+    font-size: 30px;
   }
 
   .daily-shell.mystic-shell .profile-oracle-hero h1 {

@@ -28,6 +28,21 @@ test("corrupt and legacy-like state normalizes safely without dropping a collect
   assert.equal(migrated.version, 1);
 });
 
+test("legacy profiles stay solar while valid lunar input metadata survives normalization", () => {
+  const legacyProfile = { name: "旧档案", gender: "male", birthDate: "1990-06-15", birthTime: "12:00", location: "北京市" };
+  assert.deepEqual(normalizeMysticState({ profile: legacyProfile }).profile, legacyProfile);
+
+  const lunarProfile = {
+    ...legacyProfile,
+    birthCalendar: "lunar",
+    lunarBirthDate: { year: 1990, month: 5, day: 23, isLeap: false },
+  };
+  assert.deepEqual(normalizeMysticState({ profile: lunarProfile }).profile, lunarProfile);
+
+  const invalidLunarProfile = { ...legacyProfile, birthCalendar: "lunar", lunarBirthDate: { year: 1990, month: 13, day: 1, isLeap: false } };
+  assert.deepEqual(normalizeMysticState({ profile: invalidLunarProfile }).profile, legacyProfile);
+});
+
 test("flip reveal preference normalizes as a boolean and defaults off", () => {
   assert.equal(normalizeMysticState({ flipReveal: true }).flipReveal, true);
   assert.equal(normalizeMysticState({ flipReveal: "yes" as unknown }).flipReveal, false);

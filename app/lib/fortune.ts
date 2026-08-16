@@ -1,5 +1,6 @@
 import { BEASTS, loadMysticUniverse, rankMysticStocks, stableHash } from "./mystic-ranking.ts";
 import { resolveLocationLongitude } from "./locations.ts";
+import type { LunarBirthDate } from "./lunar-date.ts";
 import type {
   AffinityProfile,
   DailyContext,
@@ -21,6 +22,8 @@ export type BirthProfile = {
   name: string;
   gender: Gender;
   birthDate: string;
+  birthCalendar?: "solar" | "lunar";
+  lunarBirthDate?: LunarBirthDate;
   birthTime: string;
   birthTimeKnown?: boolean;
   location: string;

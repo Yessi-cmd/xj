@@ -1,4 +1,5 @@
 import type { BirthProfile } from "./fortune.ts";
+import { isLunarBirthDate, type LunarBirthDate } from "./lunar-date.ts";
 import type {
   AffinityProfile,
   DailyContext,
@@ -53,14 +54,24 @@ export function createEmptyMysticState(): PersistedMysticState {
   };
 }
 
-function isProfile(value: unknown): value is BirthProfile {
-  if (!value || typeof value !== "object") return false;
+function normalizeProfile(value: unknown): BirthProfile | null {
+  if (!value || typeof value !== "object") return null;
   const profile = value as Record<string, unknown>;
-  return typeof profile.birthDate === "string"
+  const valid = typeof profile.birthDate === "string"
     && typeof profile.birthTime === "string"
     && typeof profile.location === "string"
     && (profile.gender === "male" || profile.gender === "female")
     && typeof profile.name === "string";
+  if (!valid) return null;
+  const birthCalendar = profile.birthCalendar === "lunar" && isLunarBirthDate(profile.lunarBirthDate)
+    ? "lunar"
+    : profile.birthCalendar === "solar" ? "solar" : undefined;
+  const normalized = { ...profile } as BirthProfile;
+  delete normalized.birthCalendar;
+  delete normalized.lunarBirthDate;
+  if (birthCalendar) normalized.birthCalendar = birthCalendar;
+  if (birthCalendar === "lunar") normalized.lunarBirthDate = profile.lunarBirthDate as LunarBirthDate;
+  return normalized;
 }
 
 export function normalizeMysticState(value: unknown): PersistedMysticState {
@@ -76,7 +87,7 @@ export function normalizeMysticState(value: unknown): PersistedMysticState {
 
   return pruneMysticState({
     ...base,
-    profile: isProfile(source.profile) ? source.profile : null,
+    profile: normalizeProfile(source.profile),
     feedback: feedback as Record<string, FeedbackEntry>,
     collection: [...new Set(collection)],
     history,
