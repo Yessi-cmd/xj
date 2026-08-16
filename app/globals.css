@@ -878,19 +878,6 @@ select:focus-visible {
   margin-bottom: 27px;
 }
 
-.heading-mark {
-  display: grid;
-  width: 48px;
-  height: 48px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid rgba(201, 149, 25, 0.38);
-  border-radius: 50%;
-  color: var(--gold);
-  font-family: var(--serif);
-  font-size: 21px;
-}
-
 .card-heading h2,
 .section-title-row h2 {
   margin: 4px 0 2px;
@@ -915,6 +902,7 @@ select:focus-visible {
 .field {
   display: grid;
   min-width: 0;
+  align-content: start;
   gap: 7px;
   border: 0;
   margin: 0;
@@ -926,6 +914,10 @@ select:focus-visible {
   color: #4a4850;
   font-size: 11px;
   font-weight: 700;
+}
+
+.field legend {
+  margin-bottom: 7px;
 }
 
 .field small {
@@ -2640,17 +2632,6 @@ select:focus-visible {
 .mystic-shell .card-heading {
   align-items: flex-start;
   margin-bottom: 36px;
-}
-
-.mystic-shell .heading-mark {
-  width: 58px;
-  height: 58px;
-  border: 1px solid rgba(240, 211, 138, 0.55);
-  border-radius: 1px;
-  background: rgba(143, 55, 45, 0.22);
-  color: #d9aa66;
-  font-size: 27px;
-  transform: rotate(-2deg);
 }
 
 .mystic-shell .section-kicker {

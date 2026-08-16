@@ -51,6 +51,7 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.doesNotMatch(html, /以生辰启局，以流日定象|玄鉴 · 千股命盘|静候入局/);
   assert.match(html, /开签方式/);
   assert.match(html, /请入生辰/);
+  assert.doesNotMatch(html, /heading-mark/);
   assert.match(html, /启盘 · 寻找我的缘分股/);
   assert.match(html, /每日玄签/);
   assert.match(html, /近5,000只A股玄学标签池/);

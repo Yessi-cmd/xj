@@ -692,7 +692,7 @@ export default function CompassExperience({
               <i className="stage-corner corner-nw" aria-hidden="true" /><i className="stage-corner corner-ne" aria-hidden="true" />
               <i className="stage-corner corner-sw" aria-hidden="true" /><i className="stage-corner corner-se" aria-hidden="true" />
               <form className="birth-card profile-editor" onSubmit={submitProfile}>
-                <div className="card-heading"><span className="heading-mark">{profile.gender === "male" ? "乾" : "坤"}</span><div><span className="section-kicker">生辰入局</span><h2>{state.profile ? "修订本命档案" : "请入生辰"}</h2><p>公历起盘，并依出生地经度校正真太阳时。</p></div></div>
+                <div className="card-heading"><div><span className="section-kicker">生辰入局</span><h2>{state.profile ? "修订本命档案" : "请入生辰"}</h2><p>公历起盘，并依出生地经度校正真太阳时。</p></div></div>
                 <div className="form-grid">
                   <label className="field"><span>称呼 <small>可选</small></span><input value={profile.name} onChange={(event) => updateProfile("name", event.target.value)} placeholder="如何称呼你" autoComplete="name" /></label>
                   <fieldset className="field gender-field"><legend>性别</legend><div className="segmented-control"><button type="button" aria-pressed={profile.gender === "male"} className={profile.gender === "male" ? "selected" : ""} onClick={() => updateProfile("gender", "male")}>男</button><button type="button" aria-pressed={profile.gender === "female"} className={profile.gender === "female" ? "selected" : ""} onClick={() => updateProfile("gender", "female")}>女</button></div></fieldset>
