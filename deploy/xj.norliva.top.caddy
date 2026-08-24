@@ -17,6 +17,12 @@ xj.norliva.top {
 	@immutable path /_next/static/*
 	header @immutable Cache-Control "public, max-age=31536000, immutable"
 
+	@stockindex path /data/mystic-stock-index.json
+	header @stockindex Cache-Control "no-cache"
+
+	@stockdata path /data/mystic-stocks.json /data/mystic-stock-facts/*
+	header @stockdata Cache-Control "public, max-age=3600, stale-while-revalidate=86400"
+
 	@share path /favicon.svg /og.png
 	header @share Cache-Control "public, max-age=86400"
 

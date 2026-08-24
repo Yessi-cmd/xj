@@ -12,6 +12,8 @@
 
 - `app/`：React/vinext 路由与界面。
   - `app/components/CompassExperience.tsx`：本命档案、今日开签、缘分册、星轨和分享的主要客户端体验。
+  - `app/components/DailySignCard.tsx`：单张命签、折叠事实资料与缘分反馈。
+  - `app/components/ProfileTransferCard.tsx`：低频档案导入导出界面。
   - `app/components/LunarBirthDatePicker.tsx`：农历年、月（含闰月）、日选择与对应公历日期提示。
   - `app/lib/fortune.ts`：四柱、五行、真太阳时、北京时间流日与每日运势。
   - `app/lib/lunar-date.ts`：公历与农历生日互转、闰月和大小月校验。
@@ -19,7 +21,7 @@
   - `app/lib/mystic-state.ts`：`xuanjian.state.v1` 本地状态、反馈、冷却和历史。
   - `app/lib/profile-crypto.ts`：`.xjprofile` 的 PBKDF2-SHA256 + AES-GCM 加解密。
   - `app/live/`：VPS 公网入口；`app/demo/`：免登录体验；`app/dashboard/`：登录保护入口。
-- `public/data/mystic-stocks.json`：生产运行时使用的静态股票标签池。
+- `public/data/mystic-stocks.json`：完整、版本化股票源数据；`public/data/mystic-stock-index.json` 与 `public/data/mystic-stock-facts/` 是需要一并提交的运行时索引和事实分片。
 - `app/data/market-snapshot.json`：首页展示的版本化三大指数延时或收盘快照。
 - `app/data/china-locations.json`：随前端打包的全国县市与经度静态快照。
 - `scripts/`：交易所资料刷新、标签增强与 VPS 静态构建。
@@ -37,12 +39,15 @@
 npm install
 npm run dev
 npm run lint
+npm run typecheck
 npm test
 npm run build:vps
 ```
 
-- `npm test` 会先执行生产构建，再运行页面渲染、排序、本地状态与加密测试。
-- `npm run build:vps` 生成被忽略的 `dist-vps/`，并验证 `/live` 可作为公开静态首页。
+- `npm test` 会先执行严格类型检查和生产构建，再运行页面渲染、排序、本地状态与加密测试。
+- `npm run build:vps` 先严格检查数据新鲜度，再生成被忽略的 `dist-vps/`，并验证 `/live`、完整标签池、运行时索引与事实分片。
+- `npm run data:runtime` 离线从完整标签池重建紧凑排序索引和事实分片；普通构建会自动执行。
+- `npm run data:check` 离线报告大盘与个股事实快照年龄；添加 `--strict` 时超过阈值即失败。
 - `npm run data:refresh` 需要 Python 与 AkShare，并会访问交易所数据源；不要在普通单元测试中调用网络。
 - `npm run data:market` 显式刷新上证指数、深证成指和创业板指静态快照；不要在普通构建或测试中调用网络。
 - `npm run data:locations` 使用民政部版本化行政区划和固定版本坐标源刷新地点快照；属于显式联网维护操作，不要在普通构建或测试中调用。
@@ -57,6 +62,8 @@ npm run build:vps
 - 确定性随机统一基于稳定哈希；禁止使用 `Math.random()` 生成用户可见命签。
 - UI 文案使用简体中文。视觉延续玄青、鎏金、朱砂、宣纸质感，不使用通用 AI 仪表盘风格。
 - 本命录入页以表单为主要任务，桌面端罗盘只作辅助装饰，不得与表单等宽争夺空间；表单两列控件须保持顶边、控件高度和行距一致，并在窄屏自然收为单列。
+- 新档案不得预填可被误提交的示例性别、生日或地点；性别、出生日期和出生地点必须由用户明确选择后才能启盘。
+- 签卡中的行业、市值、营收与历史涨跌属于静态事实资料，默认折叠并与文化签文分层，不得把事实字段写成签文结论。
 - 跨设备迁移属于低频档案工具，默认以紧凑的折叠区呈现；用户主动展开后才显示密码、导出和导入控件。密码不足六位或尚无档案时，导出按钮必须保持禁用并提供明确状态。
 - 新交互必须支持键盘、触摸和清晰的 `focus-visible` 状态；尊重 `prefers-reduced-motion`。
 
@@ -93,10 +100,12 @@ npm run build:vps
 ## Stock data rules
 
 - `public/data/mystic-stocks.json` 是构建产物，同时也是需要提交的版本化生产数据。
+- 排序运行时只加载 `public/data/mystic-stock-index.json`；六签确定后再从 `public/data/mystic-stock-facts/` 的本站静态分片补齐事实字段。两者均由 `npm run data:runtime` 生成，不得手工编造或造成与完整源不一致。
 - 股票标签应包含五行、阴阳、星曜、神兽、卦宫、灵数、探索度、上市日期、上市日柱、交易所方位、真实行业和标签版本，以及基本面快照字段：总市值、市盈率、当日与 5 日涨跌幅、主营业务简介、主营收入与报告期、证监会行业。
 - 只写入数据源提供的真实行业；缺少行业时保持为空，禁止使用“玄学探索”等伪行业占位。
 - 缺少上市日期时允许回退到代码灵数盘，不得编造日期或上市日柱。
 - 基本面快照在 VPS 上用 `python3 scripts/fetch-stock-facts.py` 抓取（腾讯行情 + 东方财富 F10），回传后执行 `npm run data:facts:merge` 合并并升 `schemaVersion`；快照缺失的个股字段保持为空，不得编造。
+- 总市值字段单位为亿元，东方财富 F10 主营收入字段单位为人民币元；展示层必须使用各自的格式化函数，禁止混用金额单位。
 - 刷新标签后检查 `schemaVersion`、`stockCount`、`tagVersion`，并运行完整测试。
 - 网络数据刷新属于显式维护操作；不要在页面加载或生产运行时请求 AkShare、腾讯行情或东财接口。
 
@@ -111,6 +120,7 @@ npm run build:vps
 
 - `app/data/market-snapshot.json` 是需要提交的版本化首页数据；页面不得在运行时请求行情接口。
 - 大盘卡必须展示交易日、行情更新时间、数据来源，并在非当日快照时明确写“最近大盘快照”。
+- 大盘卡在非当日快照时还应显示距今天数；`build:vps` 默认拒绝早于 7 天的大盘快照和早于 14 天的个股事实快照，需要维护者显式刷新，普通构建不得偷偷联网。
 - 指数摘要只能描述已发生的同步收涨、同步收跌、分化或持平，不得与流日风水建立因果关系或推断后市。
 - 刷新快照后检查 `schemaVersion`、三项指数代码和数值完整性，并运行完整测试。
 
@@ -118,9 +128,11 @@ npm run build:vps
 
 - 浏览器状态统一保存在版本化键 `xuanjian.state.v1`，历史最多保留三十天。
 - 状态结构变化必须提供安全归一化或迁移路径，不能静默删除缘分册和避开名单。
+- 恢复历史时必须验证流日、运势、签卡嵌套字段，并仅接受代码不重复、六种职责齐全的完整签局。
 - `.xjprofile` 密码不得保存、记录或写入导出文件；继续使用 Web Crypto 的 PBKDF2-SHA256 与 AES-GCM。
 - 档案工具默认折叠；导出必须同时满足“已有本命档案”和“密码至少六位”，导入继续允许用户先选择文件再输入密码解密。
 - 导入必须验证格式和版本、处理错误密码或损坏文件，并在覆盖现有档案前要求确认。
+- 导入必须在 PBKDF2 派生前限制文件体积、迭代次数、盐、IV 和密文长度；解密后继续验证内部状态版本。
 - 分享图、日志、错误信息和页面元数据不得包含出生日期、出生时间、出生地点、邮箱或导出密码。
 - 不增加服务端个人数据持久化、D1、R2 或第三方分析，除非用户明确要求并确认隐私边界。
 
@@ -131,6 +143,8 @@ npm run build:vps
 - 排序与流日：`tests/mystic-ranking.test.ts`
 - 本地状态、反馈、冷却与迁移：`tests/mystic-state.test.ts`
 - 加密导入导出：`tests/profile-crypto.test.ts`
+- 首次档案校验与金额单位：`tests/profile-draft.test.ts`、`tests/stock-display.test.ts`
+- 数据发布新鲜度：`tests/data-freshness.test.mjs`
 - 路由、公开入口和认证边界：`tests/rendered-html.test.mjs`
 
 测试必须离线、确定性且不依赖当前日期、市场接口或外部服务。提交前运行：
@@ -148,8 +162,8 @@ npm test
 - 使用简洁、祈使式提交信息，推荐 Conventional Commit，例如 `feat: add daily omen detail`。
 - 不提交密钥、临时档案、构建目录或部署压缩包。
 - 只有用户明确要求发布时才修改生产环境。
-- VPS 发布先运行 `npm run build:vps`，再创建新的版本化 release；验证 `index.html` 和 `data/mystic-stocks.json` 后原子切换 `current` 符号链接。不要直接覆盖当前 release，并保留可回滚版本。
-- 发布后至少验证首页 HTTP 200、每日开签入口、CSP、安全头、标签池 `schemaVersion` 与股票数量。
+- VPS 发布先运行 `npm run build:vps`，再创建新的版本化 release；验证 `index.html`、`data/mystic-stocks.json`、`data/mystic-stock-index.json` 和 `data/mystic-stock-facts/` 后原子切换 `current` 符号链接。不要直接覆盖当前 release，并保留可回滚版本。
+- 发布后至少验证首页 HTTP 200、每日开签入口、CSP、安全头、完整标签池与运行时索引的 `schemaVersion`、股票数量和事实分片可读性。
 
 ## Documentation updates
 

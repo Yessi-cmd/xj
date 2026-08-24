@@ -120,7 +120,7 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
         }}
       >
         <span>
-          <strong>{formatLocationLabel(value)}</strong>
+          <strong>{formatLocationLabel(value) || "请选择出生地点"}</strong>
           <small>省级 / 市级 / 县区级</small>
         </span>
         <b aria-hidden="true">⌄</b>

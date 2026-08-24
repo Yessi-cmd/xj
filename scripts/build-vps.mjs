@@ -1,4 +1,4 @@
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -40,7 +40,7 @@ if (!response.ok) {
 }
 
 const html = await response.text();
-if (!html.includes("玄鉴命理投研罗盘") || html.includes("signin-with-chatgpt")) {
+if (!html.includes("玄鉴每日玄签") || html.includes("命理投研") || html.includes("signin-with-chatgpt")) {
   throw new Error("The rendered VPS page failed its public-entry validation.");
 }
 
@@ -48,4 +48,15 @@ await writeFile(resolve(outputDir, "index.html"), html, "utf8");
 await writeFile(resolve(outputDir, "404.html"), html, "utf8");
 
 const generated = await readFile(resolve(outputDir, "index.html"), "utf8");
-console.log(`Built public VPS bundle (${Buffer.byteLength(generated)} bytes of HTML).`);
+const fullUniverse = JSON.parse(await readFile(resolve(outputDir, "data/mystic-stocks.json"), "utf8"));
+const runtimeUniverse = JSON.parse(await readFile(resolve(outputDir, "data/mystic-stock-index.json"), "utf8"));
+const factShardFiles = (await readdir(resolve(outputDir, "data/mystic-stock-facts"))).filter((name) => name.endsWith(".json"));
+if (!Number.isSafeInteger(fullUniverse.schemaVersion)
+  || fullUniverse.stockCount !== fullUniverse.stocks?.length
+  || runtimeUniverse.sourceSchemaVersion !== fullUniverse.schemaVersion
+  || runtimeUniverse.stockCount !== fullUniverse.stockCount
+  || runtimeUniverse.stocks?.length !== fullUniverse.stockCount
+  || factShardFiles.length === 0) {
+  throw new Error("The rendered VPS bundle failed its stock-data validation.");
+}
+console.log(`Built public VPS bundle (${Buffer.byteLength(generated)} bytes of HTML, ${runtimeUniverse.stockCount} stocks, ${factShardFiles.length} fact shards).`);

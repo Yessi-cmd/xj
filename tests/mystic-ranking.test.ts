@@ -4,10 +4,12 @@ import test from "node:test";
 
 import { buildDailyFengShuiOverview } from "../app/lib/daily-overview.ts";
 import { profileFingerprint, resolveBirthTimeInput, type BirthProfile } from "../app/lib/fortune.ts";
-import { summarizeMarket, type MarketSnapshot } from "../app/lib/market-overview.ts";
+import { calendarDateAge, summarizeMarket, type MarketSnapshot } from "../app/lib/market-overview.ts";
 import { DAILY_ROLES, rankMysticStocks, scoreGrade, type MysticContext, type MysticStockTag, type MysticUniverse } from "../app/lib/mystic-ranking.ts";
 
 const universe = JSON.parse(await readFile(new URL("../public/data/mystic-stocks.json", import.meta.url), "utf8")) as MysticUniverse;
+const runtimeUniverseText = await readFile(new URL("../public/data/mystic-stock-index.json", import.meta.url), "utf8");
+const runtimeUniverse = JSON.parse(runtimeUniverseText) as MysticUniverse;
 const marketSnapshot = JSON.parse(await readFile(new URL("../app/data/market-snapshot.json", import.meta.url), "utf8")) as MarketSnapshot;
 
 const BASE_CONTEXT: MysticContext = {
@@ -117,6 +119,12 @@ test("versioned market snapshot contains three factual indices and a non-predict
   assert.match(summary.description, /不推断后市|不把分化解读为后市信号/);
 });
 
+test("market snapshot age uses calendar dates without device timezone", () => {
+  assert.equal(calendarDateAge("2026-08-23", "2026-08-21"), 2);
+  assert.equal(calendarDateAge("2026-08-21", "2026-08-21"), 0);
+  assert.equal(calendarDateAge("2026-08-20", "2026-08-21"), 0);
+});
+
 test("one reroll changes variable signs but preserves guardian and clash", () => {
   const first = rankMysticStocks(universe, BASE_CONTEXT);
   const rerolled = rankMysticStocks(universe, {
@@ -214,4 +222,29 @@ test("static universe v3 carries listing pillars and fundamental snapshots", () 
   const withFacts = universe.stocks.filter((stock) => stock.marketCap != null && stock.businessProfile && stock.revenue != null);
   assert.ok(withFacts.length >= 4000, `expected most stocks to carry fundamental facts, got ${withFacts.length}`);
   assert.match(universe.factsSnapshot?.tradingDate ?? "", /^\d{8}$/);
+});
+
+test("the compact runtime index preserves ranking while deferring selected stock facts to shards", async () => {
+  assert.equal(runtimeUniverse.schemaVersion, 1);
+  assert.equal(runtimeUniverse.sourceSchemaVersion, universe.schemaVersion);
+  assert.equal(runtimeUniverse.stockCount, universe.stockCount);
+  assert.ok(runtimeUniverseText.length < JSON.stringify(universe).length * 0.35);
+  assert.ok(runtimeUniverse.stocks.every((stock) => stock.businessProfile === undefined && stock.revenue === undefined));
+
+  const full = rankMysticStocks(universe, BASE_CONTEXT);
+  const compact = rankMysticStocks(runtimeUniverse, BASE_CONTEXT);
+  assert.deepEqual(
+    compact.recommendations.map((item) => [item.role, item.code, item.combinedScore]),
+    full.recommendations.map((item) => [item.role, item.code, item.combinedScore]),
+  );
+
+  for (const item of compact.recommendations) {
+    const shard = JSON.parse(await readFile(
+      new URL(`../public/data/mystic-stock-facts/${item.code.slice(0, 4)}.json`, import.meta.url),
+      "utf8",
+    )) as { sourceSchemaVersion: number; stocks: Record<string, { revenue?: number; businessProfile?: string; role?: string }> };
+    assert.equal(shard.sourceSchemaVersion, universe.schemaVersion);
+    assert.ok(shard.stocks[item.code]);
+    assert.equal(shard.stocks[item.code].role, undefined);
+  }
 });

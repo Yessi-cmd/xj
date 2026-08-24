@@ -4,7 +4,7 @@ import { summarizeMarket } from "./lib/market-overview";
 import { getTodayOverviewData } from "./lib/today-overview-data";
 
 const PIPELINE = [
-  { number: "壹", title: "本命立盘", copy: "公历、时辰、性别与出生地生成四柱和五行分布。" },
+  { number: "壹", title: "本命立盘", copy: "生日历法、时辰、性别与出生地生成四柱和五行分布。" },
   { number: "贰", title: "流日相逢", copy: "把今日干支、五行与近五千只股票出生标签逐一合盘。" },
   { number: "叁", title: "每日揭签", copy: "守护、上签、潜龙、同曜、补运与相冲各司其职。" },
 ] as const;
@@ -21,7 +21,7 @@ export default async function Home() {
         <a className="brand-lockup" href="#top" aria-label="玄鉴首页">
           <span>
             <strong>玄鉴</strong>
-            <small>命理投研 · AShare Lab</small>
+            <small>传统命理娱乐 · 每日玄签</small>
           </span>
         </a>
         <nav aria-label="主导航">
@@ -105,7 +105,7 @@ export default async function Home() {
       </section>
 
       <footer className="landing-footer">
-        <span>玄鉴 · AShare Lab</span>
+        <span>玄鉴 · 每日玄签</span>
         <p>传统文化娱乐体验，不构成投资建议。</p>
         <a href={primaryHref}>{user ? "进入工作台" : "登录开始"} ↗</a>
       </footer>

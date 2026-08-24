@@ -5,6 +5,8 @@ import LocationPicker from "@/app/components/LocationPicker";
 import BirthDatePicker from "@/app/components/BirthDatePicker";
 import LunarBirthDatePicker from "@/app/components/LunarBirthDatePicker";
 import TodayOverview from "@/app/components/TodayOverview";
+import DailySignCard from "@/app/components/DailySignCard";
+import ProfileTransferCard from "@/app/components/ProfileTransferCard";
 import {
   analyzeProfile,
   BLOOD_TYPES,
@@ -28,12 +30,24 @@ import {
   type DailyHistoryEntry,
   type PersistedMysticState,
 } from "@/app/lib/mystic-state";
-import { decryptMysticState, encryptMysticState } from "@/app/lib/profile-crypto";
+import {
+  decryptMysticState,
+  encryptMysticState,
+  inspectEncryptedProfile,
+  MAX_PROFILE_FILE_BYTES,
+} from "@/app/lib/profile-crypto";
 import type { DailyFengShuiOverview } from "@/app/lib/daily-overview";
 import { solarDateToLunarBirthDate } from "@/app/lib/lunar-date";
 import type { MarketSnapshot } from "@/app/lib/market-overview";
 import { BEASTS, scoreGrade } from "@/app/lib/mystic-ranking";
 import type { DailyRecommendation, FeedbackAction } from "@/app/lib/mystic-ranking";
+import { createShareImage, downloadBlob } from "@/app/lib/share-image";
+import {
+  EMPTY_PROFILE_DRAFT,
+  validateProfileDraft,
+  type BirthProfileDraft,
+} from "@/app/lib/profile-draft";
+import { formatSnapshotDate } from "@/app/lib/stock-display";
 
 type CompassExperienceProps = {
   displayName: string;
@@ -45,6 +59,7 @@ type CompassExperienceProps = {
 };
 
 type ViewName = "today" | "collection" | "history" | "profile";
+type PendingImportFile = { name: string; text: string };
 
 const ELEMENT_META = {
   木: { color: "#39a96b", phrase: "青龙 · 生发" },
@@ -53,8 +68,6 @@ const ELEMENT_META = {
   金: { color: "#8b7eb8", phrase: "白虎 · 决断" },
   水: { color: "#397db2", phrase: "玄武 · 流变" },
 } as const;
-
-const ROLE_GLYPHS = { guardian: "守", today: "吉", hidden: "潜", sameStar: "曜", remedy: "补", clash: "冲" } as const;
 
 const TRIGRAMS = [
   { symbol: "☰", name: "乾" }, { symbol: "☱", name: "兑" },
@@ -65,16 +78,10 @@ const TRIGRAMS = [
 
 const EARTHLY_BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"] as const;
 
-const INITIAL_PROFILE: BirthProfile = {
-  name: "", gender: "male", birthDate: "1990-06-15", birthCalendar: "solar", birthTime: "12:00", birthTimeKnown: false, location: "北京市",
-};
-
 function formatDate(dateKey: string): string {
   const [year, month, day] = dateKey.split("-");
   return `${year}年${Number(month)}月${Number(day)}日`;
 }
-
-const EXCHANGE_LABELS: Record<DailyRecommendation["exchange"], string> = { SH: "沪市", SZ: "深市", BJ: "北交所" };
 
 const LUCKY_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -91,26 +98,12 @@ const DAY_NIGHT_PREFERENCES = [
   { id: "moon" as const, label: "向阴 · 夜行而思" },
 ];
 
-function stockIndustry(item: DailyRecommendation): string {
-  const csrc = item.industryCsrc?.split("-");
-  if (csrc && csrc.length > 1 && csrc[1]) return csrc[1];
-  if (item.industryCsrc) return item.industryCsrc;
-  return item.industry?.replace(/^[A-Z]\s*/, "") || "—";
-}
-
-function stockBoard(item: DailyRecommendation): string {
-  return item.exchangeDirection ? `${EXCHANGE_LABELS[item.exchange]} · ${item.exchangeDirection}` : EXCHANGE_LABELS[item.exchange];
-}
-
-function formatYi(value: number | null | undefined): string {
-  if (value == null) return "—";
-  if (value >= 10000) return `${(value / 10000).toFixed(2)}万亿`;
-  return `${value >= 100 ? value.toFixed(0) : value.toFixed(1)}亿`;
-}
-
-function formatSigned(value: number | null | undefined): string {
-  if (value == null) return "—";
-  return `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
+function analysisErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : "";
+  if (/标签池|事实资料|HTTP|fetch|network|网络/i.test(message)) {
+    return "股票标签数据暂时未加载成功，请检查网络后重试。";
+  }
+  return "排盘没有完成，请检查出生日期、时间与地点后再试一次。";
 }
 
 function historyEntry(result: FortuneResult, fingerprint: string, openedByUser: boolean): DailyHistoryEntry {
@@ -127,86 +120,6 @@ function historyEntry(result: FortuneResult, fingerprint: string, openedByUser: 
   };
 }
 
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.rel = "noopener";
-  anchor.style.display = "none";
-  // iOS Safari 要求锚点必须在文档内才会触发下载；延迟回收避免下载开始前 blob 被销毁
-  document.body.appendChild(anchor);
-  anchor.click();
-  window.setTimeout(() => {
-    anchor.remove();
-    URL.revokeObjectURL(url);
-  }, 1000);
-}
-
-async function createShareImage(result: FortuneResult): Promise<Blob> {
-  await document.fonts?.ready;
-  const canvas = document.createElement("canvas");
-  canvas.width = 1080;
-  canvas.height = 1440;
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("浏览器暂不支持生成分享图。");
-  const gradient = context.createLinearGradient(0, 0, 1080, 1440);
-  gradient.addColorStop(0, "#10162f");
-  gradient.addColorStop(0.58, "#171838");
-  gradient.addColorStop(1, "#2d1938");
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, 1080, 1440);
-  context.strokeStyle = "rgba(222,174,52,.42)";
-  context.lineWidth = 2;
-  for (let radius = 160; radius <= 440; radius += 70) {
-    context.beginPath();
-    context.arc(540, 330, radius, 0, Math.PI * 2);
-    context.stroke();
-  }
-  context.textAlign = "center";
-  context.fillStyle = "#e7bd4e";
-  context.font = "52px KaiTi, STKaiti, serif";
-  context.fillText("玄 鉴 · 每 日 玄 签", 540, 110);
-  context.fillStyle = "#fff9e9";
-  context.font = "132px KaiTi, STKaiti, serif";
-  context.fillText(result.dailyContext.dayPillar, 540, 370);
-  context.font = "44px KaiTi, STKaiti, serif";
-  context.fillText(`${result.dailyFortune.grade} · ${result.riskProfile}`, 540, 460);
-  context.fillStyle = "rgba(255,255,255,.7)";
-  context.font = "28px Microsoft YaHei, sans-serif";
-  context.fillText(formatDate(result.dailyContext.dateKey), 540, 515);
-  const top = result.recommendations.filter((item) => item.isPositive).slice(0, 3);
-  top.forEach((item, index) => {
-    const y = 650 + index * 190;
-    context.fillStyle = "rgba(255,255,255,.075)";
-    context.fillRect(100, y, 880, 150);
-    context.textAlign = "left";
-    context.fillStyle = "#e7bd4e";
-    context.font = "30px KaiTi, STKaiti, serif";
-    context.fillText(item.roleLabel, 145, y + 48);
-    context.fillStyle = "#fff";
-    context.font = "bold 42px Microsoft YaHei, sans-serif";
-    context.fillText(item.name, 145, y + 103);
-    context.textAlign = "right";
-    context.fillStyle = "rgba(255,255,255,.6)";
-    context.font = "25px Microsoft YaHei, sans-serif";
-    context.fillText(`${item.code} · ${scoreGrade(item.combinedScore)}级 · 缘分 ${item.combinedScore}`, 930, y + 88);
-  });
-  context.textAlign = "center";
-  context.fillStyle = "#d55245";
-  context.beginPath();
-  context.arc(540, 1270, 66, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = "#fff5df";
-  context.font = "30px KaiTi, STKaiti, serif";
-  context.fillText("玄学", 540, 1260);
-  context.fillText("娱乐", 540, 1298);
-  context.font = "24px Microsoft YaHei, sans-serif";
-  context.fillStyle = "rgba(255,255,255,.55)";
-  context.fillText("不构成买卖建议 · xj.norliva.top", 540, 1380);
-  return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("分享图生成失败。")), "image/png"));
-}
-
 export default function CompassExperience({
   displayName,
   dailyOverview,
@@ -215,7 +128,7 @@ export default function CompassExperience({
   demoMode = false,
   standaloneMode = false,
 }: CompassExperienceProps) {
-  const [profile, setProfile] = useState<BirthProfile>(INITIAL_PROFILE);
+  const [profile, setProfile] = useState<BirthProfileDraft>(EMPTY_PROFILE_DRAFT);
   const [state, setState] = useState<PersistedMysticState>(createEmptyMysticState);
   const [result, setResult] = useState<FortuneResult | null>(null);
   const [view, setView] = useState<ViewName>("profile");
@@ -224,6 +137,7 @@ export default function CompassExperience({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [password, setPassword] = useState("");
+  const [pendingImportFile, setPendingImportFile] = useState<PendingImportFile | null>(null);
   const [railOpen, setRailOpen] = useState(false);
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [wheelRotation, setWheelRotation] = useState(0);
@@ -244,6 +158,7 @@ export default function CompassExperience({
   const avoided = Object.values(state.feedback).filter((entry) => entry.action === "avoid");
   const rerollCount = state.rerolls[todayKey] ?? 0;
   const flipOn = state.flipReveal === true && result !== null;
+  const profileReady = profile.gender !== "" && profile.birthDate !== "" && profile.location !== "";
 
   const topSigns = useMemo(() => {
     const counts = new Map<string, { item: DailyRecommendation; count: number }>();
@@ -376,7 +291,7 @@ export default function CompassExperience({
       return saved;
     } catch (analysisError) {
       console.error(analysisError);
-      setError("排盘没有完成，请检查出生日期与时间后再试一次。");
+      setError(analysisErrorMessage(analysisError));
       return baseState;
     } finally {
       setLoading(false);
@@ -446,7 +361,7 @@ export default function CompassExperience({
     };
   }, [railOpen]);
 
-  const updateProfile = <Key extends keyof BirthProfile>(key: Key, value: BirthProfile[Key]) => {
+  const updateProfile = <Key extends keyof BirthProfileDraft>(key: Key, value: BirthProfileDraft[Key]) => {
     setProfile((current) => ({ ...current, [key]: value }));
   };
 
@@ -454,6 +369,10 @@ export default function CompassExperience({
     if (calendar === (profile.birthCalendar ?? "solar") || birthCalendarLoading) return;
     if (calendar === "solar") {
       setProfile((current) => ({ ...current, birthCalendar: "solar", lunarBirthDate: undefined }));
+      return;
+    }
+    if (!profile.birthDate) {
+      setProfile((current) => ({ ...current, birthCalendar: "lunar", lunarBirthDate: undefined }));
       return;
     }
     setBirthCalendarLoading(true);
@@ -469,17 +388,23 @@ export default function CompassExperience({
 
   const submitProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    await openDaily(profile, state, 0);
-    window.setTimeout(() => document.getElementById("daily-oracle")?.scrollIntoView({ behavior: "smooth" }), 60);
+    const validated = validateProfileDraft(profile, todayKey);
+    if (!validated.ok) {
+      setError(validated.message);
+      return;
+    }
+    await openDaily(validated.profile, state, 0);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.setTimeout(() => document.getElementById("daily-oracle")?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" }), 60);
   };
 
   const reroll = async () => {
-    if (!result || loading) return;
+    if (!result || !state.profile || loading) return;
     if (!window.confirm("换卦不改变守护签与相冲签，确定再换一卦吗？")) return;
     const nextVersion = (state.rerolls[todayKey] ?? 0) + 1;
     const withReroll: PersistedMysticState = { ...state, rerolls: { ...state.rerolls, [todayKey]: nextVersion } };
     const saved = commit(withReroll);
-    await openDaily(profile, saved, nextVersion);
+    await openDaily(state.profile, saved, nextVersion);
     setNotice(`天机再转，今日四枚变签已更新（第 ${nextVersion} 卦）。仍可随时再换。`);
   };
 
@@ -502,7 +427,7 @@ export default function CompassExperience({
       else collectionCodes.delete(recommendation.code);
     }
     commit({ ...state, feedback, collection: [...collectionCodes] });
-    setNotice("已记入你的缘分偏好，将从明日的命签开始生效。");
+    setNotice("已记入缘分偏好；当前签局不变，从下一次换卦或明日开签开始生效。");
   };
 
   const share = async () => {
@@ -540,23 +465,44 @@ export default function CompassExperience({
     }
   };
 
-  const importProfile = async (event: ChangeEvent<HTMLInputElement>) => {
+  const selectImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
     setError("");
+    if (file.size > MAX_PROFILE_FILE_BYTES) {
+      setPendingImportFile(null);
+      setError("档案文件过大，无法安全导入。");
+      return;
+    }
     try {
-      const imported = await decryptMysticState(await file.text(), password);
+      const text = await file.text();
+      inspectEncryptedProfile(text);
+      setPendingImportFile({ name: file.name, text });
+      setNotice("档案文件已选定，请输入密码后解密导入。");
+    } catch (importError) {
+      setPendingImportFile(null);
+      setError((importError as Error).message);
+    }
+  };
+
+  const importProfile = async () => {
+    if (!pendingImportFile || password.length < 6) return;
+    setError("");
+    try {
+      const imported = await decryptMysticState(pendingImportFile.text, password);
       if (!window.confirm("导入会覆盖当前浏览器里的本命档案、缘分册和星轨，确定继续吗？")) return;
       let saved = commit(imported);
       setPassword("");
+      setPendingImportFile(null);
       if (saved.profile) {
-        setProfile(saved.profile);
+        const importedProfile = saved.profile;
+        setProfile(importedProfile);
         const dateKey = getShanghaiDateKey();
-        const nextFingerprint = profileFingerprint(saved.profile);
+        const nextFingerprint = profileFingerprint(importedProfile);
         const readyState = prepareStateForDailyOpening(saved, dateKey, nextFingerprint);
         if (readyState !== saved) saved = commit(readyState);
-        if (hasDailyEntry(saved, dateKey, nextFingerprint)) await openDaily(saved.profile, saved, undefined, false);
+        if (hasDailyEntry(saved, dateKey, nextFingerprint)) await openDaily(importedProfile, saved, undefined, false);
         else {
           setResult(null);
           setView("profile");
@@ -658,7 +604,7 @@ export default function CompassExperience({
           window.requestAnimationFrame(() => mobileMenuButton.current?.focus());
         }}>×</button>
         <button className="brand-lockup rail-brand-button" onClick={() => selectView(result ? "today" : "profile")} aria-label="玄鉴首页">
-          <span><strong>玄鉴</strong><small>每日玄签 · AShare Lab</small></span>
+          <span><strong>玄鉴</strong><small>每日玄签 · 本机推演</small></span>
         </button>
         <nav className="side-nav daily-side-nav">
           {nav.map((item) => (
@@ -700,8 +646,6 @@ export default function CompassExperience({
           </section>
         ) : view === "profile" ? (
           <section className="profile-workspace">
-            <TodayOverview fengShui={dailyOverview} market={marketSnapshot} compact />
-
             <div className="journey-steps" aria-label="开签步骤">
               <span className="complete"><b>1</b>出生信息</span><i />
               <span className={result ? "complete" : "current"}><b>2</b>本命推演</span><i />
@@ -714,17 +658,17 @@ export default function CompassExperience({
               <form className="birth-card profile-editor" onSubmit={submitProfile}>
                 <div className="card-heading"><div><span className="section-kicker">生辰入局</span><h2>{state.profile ? "修订本命档案" : "请入生辰"}</h2></div></div>
                 <div className="form-grid">
-                  <label className="field"><span>称呼 <small>可选</small></span><input value={profile.name} onChange={(event) => updateProfile("name", event.target.value)} placeholder="如何称呼你" autoComplete="name" /></label>
-                  <fieldset className="field gender-field"><legend>性别</legend><div className="segmented-control"><button type="button" aria-pressed={profile.gender === "male"} className={profile.gender === "male" ? "selected" : ""} onClick={() => updateProfile("gender", "male")}>男</button><button type="button" aria-pressed={profile.gender === "female"} className={profile.gender === "female" ? "selected" : ""} onClick={() => updateProfile("gender", "female")}>女</button></div></fieldset>
+                  <label className="field"><span>称呼 <small>可选</small></span><input value={profile.name} maxLength={40} onChange={(event) => updateProfile("name", event.target.value)} placeholder="如何称呼你" autoComplete="name" /></label>
+                  <fieldset className="field gender-field"><legend>性别 <small>必选</small></legend><div className="segmented-control"><button type="button" aria-pressed={profile.gender === "male"} className={profile.gender === "male" ? "selected" : ""} onClick={() => updateProfile("gender", "male")}>男</button><button type="button" aria-pressed={profile.gender === "female"} className={profile.gender === "female" ? "selected" : ""} onClick={() => updateProfile("gender", "female")}>女</button></div></fieldset>
                   <div className="field birth-date-field">
                     <div className="birth-date-heading">
-                      <span>出生日期</span>
+                      <span>出生日期 <small>必选</small></span>
                       <div className="birth-calendar-mode" role="group" aria-label="出生日期历法">
                         <button type="button" aria-pressed={(profile.birthCalendar ?? "solar") === "solar"} className={(profile.birthCalendar ?? "solar") === "solar" ? "selected" : ""} onClick={() => void changeBirthCalendar("solar")}>公历</button>
                         <button type="button" aria-pressed={profile.birthCalendar === "lunar"} className={profile.birthCalendar === "lunar" ? "selected" : ""} disabled={birthCalendarLoading} onClick={() => void changeBirthCalendar("lunar")}>{birthCalendarLoading ? "换算中" : "农历"}</button>
                       </div>
                     </div>
-                    {profile.birthCalendar === "lunar" && profile.lunarBirthDate
+                    {profile.birthCalendar === "lunar"
                       ? <LunarBirthDatePicker
                           min="1920-01-01"
                           max={todayKey}
@@ -748,7 +692,7 @@ export default function CompassExperience({
                     {profile.birthTimeKnown !== false && <input aria-label="出生时间，当地钟表时间" type="time" required value={profile.birthTime} onChange={(event) => updateProfile("birthTime", event.target.value)} />}
                     <p>若记得大致时辰，开启并填写后，四柱测算会更准确。</p>
                   </fieldset>
-                  <div className="field field-wide"><span>出生地点 <small>全国县市 · 经度校正</small></span><LocationPicker value={profile.location} onChange={(location) => updateProfile("location", location)} /></div>
+                  <div className="field field-wide"><span>出生地点 <small>必选 · 全国县市经度校正</small></span><LocationPicker value={profile.location} onChange={(location) => updateProfile("location", location)} /></div>
                   <div className="field field-wide">
                     <span>开签方式 <small>可选</small></span>
                     <button
@@ -808,8 +752,8 @@ export default function CompassExperience({
                     </div>
                   </details>
                 </div>
-                <button className="primary-button" type="submit" disabled={loading}><small>敕</small><span>{loading ? "星盘运转 · 正在寻缘…" : !state.profile ? "启盘 · 寻找我的缘分股" : result ? "重排本命 · 开启今日玄签" : "开启今日玄签"}</span><b>卜</b></button>
-                <p className="privacy-note">◌ 生辰只在本机推演，不上传云端</p>
+                <button className="primary-button" type="submit" disabled={loading || !profileReady} aria-describedby="profile-form-status"><small>敕</small><span>{loading ? "星盘运转 · 正在寻缘…" : !state.profile ? "启盘 · 寻找我的缘分股" : result ? "重排本命 · 开启今日玄签" : "开启今日玄签"}</span><b>卜</b></button>
+                <p className="privacy-note" id="profile-form-status">{profileReady ? "◌ 生辰只在本机推演，不上传云端" : "请完成性别、出生日期与出生地点后启盘；生辰只在本机推演"}</p>
               </form>
 
               <section className={`compass-card profile-compass ${result ? "has-result" : ""}`} aria-live="polite">
@@ -845,27 +789,22 @@ export default function CompassExperience({
               </section>
             </section>
 
+            <TodayOverview fengShui={dailyOverview} market={marketSnapshot} compact />
+
             <div className={`profile-workspace-grid profile-details-grid${result ? "" : " no-result"}`}>
               {result && <div className="profile-side-stack">
                 <section className="surface-card natal-summary"><div className="natal-seal">{result.favorableElement}</div><span>本命称号</span><h2>{result.riskProfile}</h2><p>{result.pattern}</p><div className="element-bars">{ELEMENTS.map((element) => <div className="element-line" key={element}><span><b style={{ background: ELEMENT_META[element].color }} />{element}</span><div><i style={{ width: `${result.elementPercentages[element]}%`, background: ELEMENT_META[element].color }} /></div><strong>{result.elementPercentages[element]}%</strong></div>)}</div></section>
               </div>}
               <div className="profile-side-stack">
-                <details className="surface-card transfer-card">
-                  <summary>
-                    <div>
-                      <span className="section-kicker">档案工具</span>
-                      <h2>跨设备迁移</h2>
-                      <p>加密导出或导入你的玄鉴档案</p>
-                    </div>
-                    <span className="transfer-summary-action">展开 <i aria-hidden="true">⌄</i></span>
-                  </summary>
-                  <div className="transfer-panel">
-                    <p>使用 AES-GCM 加密保护档案。密码只用于本次操作，不会保存；遗忘后无法找回。</p>
-                    <label className="field"><span>档案密码 <small>至少6位</small></span><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="输入导出或导入密码" /></label>
-                    <div className="transfer-actions"><button onClick={exportProfile} disabled={!state.profile || password.length < 6}>加密导出 .xjprofile</button><label className={password.length < 6 ? "disabled" : ""}>解密导入<input type="file" accept=".xjprofile,application/json" disabled={password.length < 6} onChange={importProfile} /></label></div>
-                    <small className="transfer-help">{state.profile ? "输入密码后可导出当前档案，或选择另一份档案导入。" : "完成首次开签后可导出；输入密码后也可直接导入已有档案。"}</small>
-                  </div>
-                </details>
+                <ProfileTransferCard
+                  hasProfile={Boolean(state.profile)}
+                  password={password}
+                  pendingFileName={pendingImportFile?.name}
+                  onPasswordChange={setPassword}
+                  onExport={exportProfile}
+                  onSelectFile={selectImportFile}
+                  onImport={importProfile}
+                />
                 {avoided.length > 0 && <section className="surface-card avoided-card"><span className="section-kicker">避开名单</span><h2>{avoided.length} 只股票暂不入签</h2>{avoided.map((entry) => <div key={entry.code}><span><strong>{entry.name}</strong><small>{entry.code}</small></span><button onClick={() => { const feedback = { ...state.feedback }; delete feedback[entry.code]; commit({ ...state, feedback }); }}>解除避开</button></div>)}</section>}
               </div>
             </div>
@@ -881,45 +820,20 @@ export default function CompassExperience({
               <section className="omen-panel surface-card"><span className="fortune-grade">{result.dailyFortune.grade}</span><h2>{result.dailyFortune.title}</h2><div className="omen-grid"><div><small>幸运时辰</small><strong>{result.dailyFortune.luckyHour}</strong></div><div><small>幸运色</small><strong>{result.dailyFortune.luckyColor}</strong></div><div><small>今日灵数</small><strong>{result.dailyFortune.luckyNumber}</strong></div></div><div className="do-dont"><p><b>宜</b>{result.dailyFortune.favorable.join(" · ")}</p><p><b>忌</b>{result.dailyFortune.avoid.join(" · ")}</p></div></section>
             </div>
 
-            <div className="sign-heading"><div><span>六签各司其职</span><h2>揭开今日股缘</h2></div><p>守护签随本命恒定；相冲签只作警示；其余四签随流日与换卦变化。{result.recommendations[0]?.factsDate ? <small className="facts-note">基本面快照 · {result.recommendations[0].factsDate} · 数据仅供文化娱乐参考，不构成投资建议</small> : null}</p></div>
+            <div className="sign-heading"><div><span>六签各司其职</span><h2>揭开今日股缘</h2></div><p>守护签随本命恒定；相冲签只作警示；其余四签随流日与换卦变化。{result.recommendations[0]?.factsDate ? <small className="facts-note">静态事实快照 · {formatSnapshotDate(result.recommendations[0].factsDate)} · 仅供文化娱乐参考，不构成投资建议</small> : null}</p></div>
             <div className={`daily-sign-grid${flipOn ? " flip-grid" : ""}`}>
-              {result.recommendations.map((item, index) => {
-                const isFlipped = !flipOn || revealed.has(item.role);
-                const card = (
-                  <article className={`daily-sign-card ${item.isPositive ? "" : "clash-sign"}`} key={item.role} style={{ "--reveal-index": index } as React.CSSProperties}>
-                    <div className="sign-card-top"><span className="role-seal">{ROLE_GLYPHS[item.role]}</span><div><small>{item.roleLabel}</small><strong>{item.isPositive ? "此签可观" : "今日宜远观"}</strong></div><span className={`score-badge grade-${scoreGrade(item.combinedScore)}`} aria-label={`缘分分 ${item.combinedScore}，评级 ${scoreGrade(item.combinedScore)} 级`}><em>{scoreGrade(item.combinedScore)}</em><b>{item.combinedScore}</b><small>缘分分</small></span></div>
-                    <div className="stock-identity"><span>{item.kind}</span><h3>{item.name}</h3><small>{item.code} · {item.theme}</small></div>
-                    <p>{item.rationale}</p>
-                    <div className="mystic-tags">{item.tags.slice(0, 5).map((tag) => <span key={tag}>{tag}</span>)}</div>
-                    <div className="stock-facts">
-                      <span><small>行业</small>{stockIndustry(item)}</span>
-                      <span><small>板块</small>{stockBoard(item)}</span>
-                      <span><small>市值</small>{formatYi(item.marketCap)}</span>
-                      <span><small>营收</small>{item.revenue != null ? `${formatYi(item.revenue)} · ${item.revenueReportDate?.slice(0, 4) ?? "最近"}报` : "—"}</span>
-                      <span><small>当日涨跌</small>{formatSigned(item.changePercent)}</span>
-                      <span><small>5日涨跌</small>{formatSigned(item.change5Percent)}</span>
-                      <span><small>上市</small>{item.listingDate ?? "—"}</span>
-                      <span><small>探索度</small>{item.explorationScore}</span>
-                      {item.businessProfile && <p className="stock-facts-profile">{item.businessProfile}</p>}
-                    </div>
-                    <div className="score-script"><span>本命 {item.natalScore}</span><span>流日 {item.dailyScore}</span><span>缘感 {item.affinityScore}</span></div>
-                    <div className="feedback-row" aria-label={`${item.name}缘分反馈`}><button className={feedbackFor(item.code) === "affinity" ? "selected" : ""} onClick={() => setFeedback(item, "affinity")}>♡ 有缘</button><button className={feedbackFor(item.code) === "neutral" ? "selected" : ""} onClick={() => setFeedback(item, "neutral")}>○ 无感</button><button className={feedbackFor(item.code) === "avoid" ? "selected avoid" : ""} onClick={() => setFeedback(item, "avoid")}>× 避开</button></div>
-                  </article>
-                );
-                if (!flipOn) return card;
-                return (
-                  <div className={`flip-card-wrap${item.isPositive ? "" : " clash-back"}${isFlipped ? " flipped" : ""}`} key={item.role}>
-                    <div className="flip-card-inner">
-                      <button type="button" className="flip-card-back" aria-label={`翻开${item.roleLabel}`} onClick={() => setRevealed((current) => new Set(current).add(item.role))}>
-                        <span className="flip-back-seal" aria-hidden="true">{ROLE_GLYPHS[item.role]}</span>
-                        <strong>{item.roleLabel}</strong>
-                        <small>轻触翻牌</small>
-                      </button>
-                      <div className="flip-card-front">{card}</div>
-                    </div>
-                  </div>
-                );
-              })}
+              {result.recommendations.map((item, index) => (
+                <DailySignCard
+                  key={item.role}
+                  item={item}
+                  index={index}
+                  flipOn={flipOn}
+                  revealed={revealed.has(item.role)}
+                  feedback={feedbackFor(item.code)}
+                  onReveal={() => setRevealed((current) => new Set(current).add(item.role))}
+                  onFeedback={(action) => setFeedback(item, action)}
+                />
+              ))}
             </div>
           </section>
         ) : view === "collection" ? (

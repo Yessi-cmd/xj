@@ -1,5 +1,5 @@
 import type { DailyFengShuiOverview } from "@/app/lib/daily-overview";
-import { summarizeMarket, type MarketSnapshot } from "@/app/lib/market-overview";
+import { calendarDateAge, summarizeMarket, type MarketSnapshot } from "@/app/lib/market-overview";
 
 type TodayOverviewProps = {
   fengShui: DailyFengShuiOverview;
@@ -38,6 +38,7 @@ function formatChange(value: number): string {
 export default function TodayOverview({ fengShui, market, compact = false }: TodayOverviewProps) {
   const marketSummary = summarizeMarket(market);
   const isTodaySnapshot = market.tradingDate === fengShui.dateKey;
+  const snapshotAge = calendarDateAge(fengShui.dateKey, market.tradingDate);
 
   return (
     <section className={`today-overview${compact ? " today-overview--compact" : ""}`} id="today-overview" aria-label="北京时间每日一览">
@@ -74,7 +75,7 @@ export default function TodayOverview({ fengShui, market, compact = false }: Tod
         <article className={`today-overview-card market-overview-card market-${marketSummary.direction}`}>
           <header>
             <span>{isTodaySnapshot ? "今日大盘" : "最近大盘快照"}</span>
-            <small>{market.status} · {formatSnapshotTime(market.marketUpdatedAt)}</small>
+            <small>{market.status} · {formatSnapshotTime(market.marketUpdatedAt)}{snapshotAge > 0 ? ` · ${snapshotAge}天前` : ""}</small>
           </header>
           <div className="market-overview-intro">
             <small>{formatDate(market.tradingDate)}</small>

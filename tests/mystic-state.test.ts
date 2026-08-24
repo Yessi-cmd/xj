@@ -4,28 +4,54 @@ import test from "node:test";
 import { affinityTags, buildAffinityProfile, calculateStreak, createEmptyMysticState, hasDailyEntry, normalizeMysticState, positiveCodesInLastDays, prepareStateForDailyOpening } from "../app/lib/mystic-state.ts";
 import type { DailyHistoryEntry, PersistedMysticState } from "../app/lib/mystic-state.ts";
 
-const recommendation = (code: string, isPositive = true) => ({
-  code, name: code, kind: "股票" as const, role: isPositive ? "today" as const : "clash" as const,
-  roleLabel: isPositive ? "今日上签" : "相冲签", isPositive, theme: "木系", natalScore: 80, dailyScore: 80,
+const recommendation = (code: string, role: "guardian" | "today" | "hidden" | "sameStar" | "remedy" | "clash" = "today") => ({
+  code, name: code, kind: "股票" as const, role,
+  roleLabel: role === "clash" ? "相冲签" : role === "today" ? "今日上签" : `${role}签`, isPositive: role !== "clash", theme: "木系", natalScore: 80, dailyScore: 80,
   affinityScore: 50, explorationScore: 80, combinedScore: 78, primaryElement: "木" as const,
   star: "紫微", beast: "青龙", palace: "坎", number: 3, industry: "J 金融业", exchange: "SZ" as const,
   exchangeDirection: "南·离", listingDate: "1991-04-03", tags: ["木火双象"], rationale: "测试契合理由。",
 });
 
-const history = (dateKey: string, codes: string[]): DailyHistoryEntry => ({
-  dateKey, profileFingerprint: "p1", drawVersion: 0,
-  dailyContext: { dateKey, dayPillar: "戊午", dayElement: "土", drawVersion: 0 },
-  dailyFortune: { grade: "上吉有缘", title: "测试", luckyHour: "辰时", luckyColor: "琥珀黄", luckyNumber: 3, favorable: [], avoid: [] },
-  recommendations: [...codes.map((code) => recommendation(code)), recommendation("clash", false)],
-  archetype: "青木拓荒客", openedAt: `${dateKey}T00:00:00.000Z`,
-  openedByUser: true,
-});
+const history = (dateKey: string, codes: string[]): DailyHistoryEntry => {
+  const positiveRoles = ["today", "hidden", "sameStar", "remedy", "guardian"] as const;
+  return {
+    dateKey, profileFingerprint: "p1", drawVersion: 0,
+    dailyContext: { dateKey, dayPillar: "戊午", dayElement: "土", drawVersion: 0 },
+    dailyFortune: { grade: "上吉有缘", title: "测试", luckyHour: "辰时", luckyColor: "琥珀黄", luckyNumber: 3, favorable: [], avoid: [] },
+    recommendations: [
+      ...positiveRoles.map((role, index) => recommendation(codes[index] ?? `${dateKey}-${role}`, role)),
+      recommendation(`${dateKey}-clash`, "clash"),
+    ],
+    archetype: "青木拓荒客", openedAt: `${dateKey}T00:00:00.000Z`,
+    openedByUser: true,
+  };
+};
 
 test("corrupt and legacy-like state normalizes safely without dropping a collection", () => {
   assert.deepEqual(normalizeMysticState("bad"), createEmptyMysticState());
   const migrated = normalizeMysticState({ collection: ["000001", "000001"], feedback: {}, history: [], rerolls: {} });
   assert.deepEqual(migrated.collection, ["000001"]);
   assert.equal(migrated.version, 1);
+});
+
+test("current-date history with missing nested fields is discarded before the UI can read it", () => {
+  const normalized = normalizeMysticState({
+    collection: ["000001"],
+    history: [{ dateKey: "2026-08-23", profileFingerprint: "p1" }],
+    feedback: {
+      "000001": { code: "000001", name: "平安银行", action: "affinity", tags: "bad" },
+    },
+  });
+  assert.deepEqual(normalized.history, []);
+  assert.deepEqual(normalized.collection, ["000001"]);
+  assert.deepEqual(normalized.feedback["000001"]?.tags, []);
+});
+
+test("history normalization only restores a complete six-role draw", () => {
+  const valid = history("2026-08-23", ["a", "b", "c", "d", "e"]);
+  assert.equal(normalizeMysticState({ history: [valid] }).history.length, 1);
+  const duplicateRole = { ...valid, recommendations: valid.recommendations.map((item) => ({ ...item, role: "today" })) };
+  assert.deepEqual(normalizeMysticState({ history: [duplicateRole] }).history, []);
 });
 
 test("legacy profiles stay solar while valid lunar input metadata survives normalization", () => {
@@ -100,7 +126,10 @@ test("affinity tags carry structured element, star, beast, palace, and number ke
 test("seven-day cooldown and streak calculations use distinct Shanghai dates", () => {
   const state = { ...createEmptyMysticState(), history: [history("2026-08-12", ["a"]), history("2026-08-11", ["b"]), history("2026-08-10", ["c"])] };
   assert.equal(calculateStreak(state.history, "2026-08-12"), 3);
-  assert.deepEqual(new Set(positiveCodesInLastDays(state, "2026-08-12")), new Set(["b", "c"]));
+  const recentCodes = new Set(positiveCodesInLastDays(state, "2026-08-12"));
+  assert.equal(recentCodes.has("a"), false);
+  assert.equal(recentCodes.has("b"), true);
+  assert.equal(recentCodes.has("c"), true);
 });
 
 test("a saved profile must reopen the draw screen when the Shanghai date changes", () => {

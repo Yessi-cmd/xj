@@ -25,6 +25,13 @@ export type MarketSummary = {
   direction: "up" | "down" | "mixed" | "flat";
 };
 
+export function calendarDateAge(currentDateKey: string, snapshotDateKey: string): number {
+  const current = Date.parse(`${currentDateKey}T00:00:00Z`);
+  const snapshot = Date.parse(`${snapshotDateKey}T00:00:00Z`);
+  if (!Number.isFinite(current) || !Number.isFinite(snapshot)) return 0;
+  return Math.max(0, Math.floor((current - snapshot) / 86_400_000));
+}
+
 export function summarizeMarket(snapshot: MarketSnapshot): MarketSummary {
   const positive = snapshot.indices.filter((index) => index.changePercent > 0).length;
   const negative = snapshot.indices.filter((index) => index.changePercent < 0).length;

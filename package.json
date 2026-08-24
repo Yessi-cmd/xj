@@ -6,15 +6,18 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "vinext dev",
-    "build": "vinext build",
-    "build:vps": "npm run build && node scripts/build-vps.mjs",
+    "dev": "npm run data:runtime && vinext dev",
+    "build": "npm run data:runtime && vinext build",
+    "build:vps": "npm run data:check -- --strict && npm run build && node scripts/build-vps.mjs",
     "data:locations": "node scripts/build-china-locations.mjs",
     "data:market": "node scripts/refresh-market-snapshot.mjs",
-    "data:refresh": "python scripts/fetch-stock-listings.py && node scripts/enrich-mystic-stocks.mjs",
-    "data:facts:merge": "node scripts/merge-stock-facts.mjs var/stock-facts.json",
+    "data:check": "node scripts/check-data-freshness.mjs",
+    "data:refresh": "python scripts/fetch-stock-listings.py && node scripts/enrich-mystic-stocks.mjs && npm run data:runtime",
+    "data:facts:merge": "node scripts/merge-stock-facts.mjs var/stock-facts.json && npm run data:runtime",
+    "data:runtime": "node scripts/build-stock-runtime-data.mjs",
     "start": "vinext start",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs && node --experimental-strip-types --test tests/*.test.ts",
+    "test": "npm run typecheck && npm run build && node --test tests/rendered-html.test.mjs tests/data-freshness.test.mjs && node --experimental-strip-types --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern dist-vps --ignore-pattern .next --ignore-pattern var"
   },
   "dependencies": {

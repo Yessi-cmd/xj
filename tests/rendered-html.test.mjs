@@ -30,7 +30,7 @@ test("server-renders the finished public landing page", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>玄鉴｜命理投研罗盘<\/title>/);
+  assert.match(html, /<title>玄鉴｜每日玄签<\/title>/);
   assert.match(html, /viewport-fit=cover/);
   assert.match(html, /每日揭开六枚不同职责/);
   assert.doesNotMatch(html, /一命一盘|千股寻缘/);
@@ -40,6 +40,7 @@ test("server-renders the finished public landing page", async () => {
   assert.match(html, /流日风水/);
   assert.match(html, /上证指数/);
   assert.match(html, /延时或收盘快照 · 不构成投资建议/);
+  assert.doesNotMatch(html, /命理投研|AShare Lab/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton|Your site is taking shape/i);
 });
 
@@ -61,7 +62,7 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.match(html, /aria-label="展开产品导航"/);
   assert.match(html, /aria-label="打开功能导航"/);
   assert.match(html, /生辰只在本机推演/);
-  assert.match(html, /全国县市 · 经度校正/);
+  assert.match(html, /必选 · 全国县市经度校正/);
   assert.match(html, /省级 \/ 市级 \/ 县区级/);
   assert.match(html, /aria-label="出生日期，格式为年\/月\/日"/);
   assert.match(html, /aria-label="出生日期历法"/);
@@ -77,8 +78,15 @@ test("renders the end-to-end demo shell without authentication", async () => {
   assert.match(html, /创业板指/);
   assert.match(html, />男<\/button>/);
   assert.match(html, />女<\/button>/);
+  assert.match(html, /aria-pressed="false" class="">男<\/button>/);
+  assert.match(html, /placeholder="年\/月\/日" value=""/);
+  assert.match(html, /<strong>请选择出生地点<\/strong>/);
+  assert.match(html, /class="primary-button" type="submit" disabled=""/);
+  assert.match(html, />选择档案<input type="file"/);
+  assert.ok(html.indexOf("profile-input-stage") < html.indexOf("today-overview today-overview--compact"));
   assert.doesNotMatch(html, /生辰与反馈仅保存在这台设备/);
   assert.doesNotMatch(html, /先守量化纪律|本产品原型不构成投资建议/);
+  assert.doesNotMatch(html, /命理投研|AShare Lab/);
   assert.doesNotMatch(html, /mobile-oracle-nav/);
 });
 
@@ -87,7 +95,7 @@ test("renders a public standalone VPS entry without hosted authentication links"
   assert.equal(response.status, 200);
 
   const html = await response.text();
-  assert.match(html, /玄鉴命理投研罗盘/);
+  assert.match(html, /玄鉴每日玄签/);
   assert.match(html, /公开测试版/);
   assert.match(html, /启盘 · 寻找我的缘分股/);
   assert.doesNotMatch(html, /以生辰启局，以流日定象|玄鉴 · 千股命盘|静候入局/);
@@ -103,6 +111,7 @@ test("renders a public standalone VPS entry without hosted authentication links"
   assert.match(html, /aria-label="展开产品导航"/);
   assert.doesNotMatch(html, /生辰与反馈仅保存在这台设备/);
   assert.doesNotMatch(html, /方法说明|先守量化纪律|本产品原型不构成投资建议/);
+  assert.doesNotMatch(html, /命理投研|AShare Lab/);
 });
 
 test("keeps the personal dashboard behind sign-in", async () => {

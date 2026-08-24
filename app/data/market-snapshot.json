@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "tradingDate": "2026-08-12",
-  "marketUpdatedAt": "2026-08-12T16:12:02+08:00",
-  "capturedAt": "2026-08-12T22:40:09+08:00",
-  "status": "收盘快照",
+  "tradingDate": "2026-08-21",
+  "marketUpdatedAt": "2026-08-21T16:12:02+08:00",
+  "capturedAt": "2026-08-23T23:01:27+08:00",
+  "status": "最近收盘",
   "source": {
     "name": "东方财富行情中心",
     "url": "https://quote.eastmoney.com/center/"
@@ -12,23 +12,23 @@
     {
       "code": "000001",
       "name": "上证指数",
-      "level": 3946.68,
-      "change": 12.59,
-      "changePercent": 0.32
+      "level": 3905.2,
+      "change": 1.48,
+      "changePercent": 0.04
     },
     {
       "code": "399001",
       "name": "深证成指",
-      "level": 14414.43,
-      "change": 154.99,
-      "changePercent": 1.09
+      "level": 14094.17,
+      "change": 121.39,
+      "changePercent": 0.87
     },
     {
       "code": "399006",
       "name": "创业板指",
-      "level": 3602.08,
-      "change": 52.92,
-      "changePercent": 1.49
+      "level": 3545.58,
+      "change": 49.99,
+      "changePercent": 1.43
     }
   ]
 }

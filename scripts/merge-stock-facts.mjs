@@ -50,7 +50,7 @@ universe.stocks = universe.stocks.map((stock) => {
 
 universe.schemaVersion = 3;
 universe.snapshotAt = facts.capturedAt;
-universe.source = `${universe.source.replace(/ · 玄学标签 v\d+$/, "")} · 基本面快照 · 玄学标签 v3`;
+universe.source = "沪深北交易所上市资料 · 腾讯行情 · 东方财富F10 · 玄学标签 v3";
 universe.factsSnapshot = {
   tradingDate: facts.tradingDate ?? "",
   capturedAt: facts.capturedAt,

@@ -2,7 +2,7 @@ import CompassExperience from "@/app/components/CompassExperience";
 import { getTodayOverviewData } from "@/app/lib/today-overview-data";
 
 export const metadata = {
-  title: "玄鉴命理投研罗盘",
+  title: "玄鉴每日玄签",
   description: "输入出生时空，生成当天六枚 A 股玄签。本命盘遇见今日流日，仅作传统文化娱乐。",
 };
 

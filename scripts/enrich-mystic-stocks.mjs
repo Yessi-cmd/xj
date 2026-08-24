@@ -54,7 +54,7 @@ universe.stocks = universe.stocks.map((stock) => {
 });
 universe.schemaVersion = 2;
 universe.snapshotAt = listingPayload.fetchedAt;
-universe.source = `${universe.source.replace(/ · 玄学标签 v\d+$/, "")} · 交易所上市资料 · 玄学标签 v2`;
+universe.source = "沪深北交易所上市资料 · 玄学标签 v2";
 
 await writeFile(universePath, JSON.stringify(universe), "utf8");
 console.log(`Enriched ${enriched}/${universe.stockCount} mystic stock tags with listing dates.`);

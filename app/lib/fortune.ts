@@ -1,4 +1,4 @@
-import { BEASTS, loadMysticUniverse, rankMysticStocks, stableHash } from "./mystic-ranking.ts";
+import { BEASTS, hydrateMysticRecommendations, loadMysticUniverse, rankMysticStocks, stableHash } from "./mystic-ranking.ts";
 import { resolveLocationLongitude } from "./locations.ts";
 import type { LunarBirthDate } from "./lunar-date.ts";
 import type {
@@ -145,8 +145,8 @@ function makeDailyFortune(profileKey: string, daily: DailyContext): DailyFortune
     luckyHour: LUCKY_HOURS[stableHash(`${key}|时`) % LUCKY_HOURS.length],
     luckyColor: LUCKY_COLORS[daily.dayElement],
     luckyNumber,
-    favorable: ["宜观冷门", "宜收一签", "宜午后复盘"],
-    avoid: ["忌追热", "忌凭签下注"],
+    favorable: ["宜观冷门之象", "宜收一签", "宜午后回看"],
+    avoid: ["忌随众逐热", "忌凭签下注"],
   };
 }
 
@@ -179,6 +179,7 @@ export async function analyzeProfile(profile: BirthProfile, options: AnalyzeOpti
     bloodType: BLOOD_TYPES.includes(profile.bloodType as BloodType) ? profile.bloodType : undefined,
     affinity: options.affinity, recentPositiveCodes: options.recentPositiveCodes,
   });
+  const recommendations = await hydrateMysticRecommendations(ranked.recommendations, universe);
   const spread = percentages[dominantElement] - percentages[favorableElement];
   return {
     pillars: ["年柱", "月柱", "日柱", birthTimeKnown ? "时柱" : "时柱（估）"].map((label, index) => ({ label, value: pillarValues[index] })),
@@ -189,7 +190,7 @@ export async function analyzeProfile(profile: BirthProfile, options: AnalyzeOpti
     riskProfile,
     summary: spread <= 8 ? `五行分布相对均衡，以${dayMaster}日主与流日寻缘。` : `${dominantElement}气相对集中，取${favorableElement}为调和之象，命盘化身为“${riskProfile}”。`,
     elementPercentages: percentages,
-    recommendations: ranked.recommendations,
+    recommendations,
     mysticSignature: ranked.signature,
     dailyContext,
     dailyFortune: makeDailyFortune(profileKey, dailyContext),
