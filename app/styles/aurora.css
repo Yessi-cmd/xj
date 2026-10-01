@@ -365,6 +365,9 @@ summary:focus-visible,
 
 .orbit-halo {
   border-color: rgba(217, 178, 99, 0.2);
+  /* 用独立 translate 居中：旋转动画作用于 rotate 属性时，不会把居中偏移一起转走。 */
+  transform: none;
+  translate: -50% -50%;
 }
 
 .halo-one {
@@ -1654,5 +1657,771 @@ summary:focus-visible,
   .landing-nav,
   .mystic-shell .side-rail {
     background: rgba(4, 11, 13, 0.96);
+  }
+}
+
+/* ======================================================
+ * 排版与细节整理
+ * 统一字号阶梯（12 / 13 / 14 / 16 起），清除旧版残留装饰，
+ * 并让评级配色回到鎏金—玉青体系；朱砂只用于相冲与警示。
+ * ====================================================== */
+
+:root {
+  --fs-micro: 12px;
+  --fs-meta: 13px;
+  --fs-body: 14px;
+  --fs-lead: 16px;
+  --xj-text: #e9e2cf;
+  --xj-text-2: #b3bbb4;
+  --xj-text-3: #85928b;
+  --xj-tile: rgba(255, 255, 255, 0.035);
+  --xj-tile-line: rgba(217, 178, 99, 0.14);
+}
+
+/* ---------- 通用小字 ---------- */
+
+.daily-shell.mystic-shell .section-kicker,
+.daily-shell.mystic-shell .oracle-date,
+.daily-shell.mystic-shell .subpage-heading > span,
+.daily-shell.mystic-shell .sign-heading span,
+.landing-page .section-kicker,
+.landing-page .eyebrow {
+  color: var(--xj-gold);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.daily-shell.mystic-shell .daily-heading p,
+.daily-shell.mystic-shell .subpage-heading p,
+.daily-shell.mystic-shell .sign-heading p {
+  color: var(--xj-text-2);
+  font-size: var(--fs-body);
+  line-height: 1.75;
+}
+
+.daily-shell.mystic-shell .facts-note {
+  display: block;
+  margin-top: 4px;
+  color: var(--xj-text-3);
+  font-size: var(--fs-micro);
+}
+
+/* ---------- 侧栏 ---------- */
+
+.mystic-shell .brand-lockup small,
+.landing-page .brand-lockup small {
+  font-size: var(--fs-micro);
+  letter-spacing: 0.08em;
+}
+
+.daily-shell.mystic-shell .daily-side-nav button {
+  font-size: var(--fs-body);
+}
+
+.mystic-shell .rail-status strong { font-size: var(--fs-meta); }
+.mystic-shell .rail-status small { font-size: var(--fs-micro); }
+.mystic-shell .rail-status::after,
+.mystic-shell .side-rail::before { display: none; }
+
+.daily-shell.mystic-shell .streak-stamp span,
+.mystic-shell .user-copy strong { font-size: var(--fs-meta); }
+
+.mystic-shell .user-copy small,
+.mystic-shell .rail-user .quiet-action { font-size: var(--fs-micro); }
+
+/* ---------- 今日签局头部 ---------- */
+
+.daily-shell.mystic-shell .daily-heading {
+  align-items: flex-end;
+  margin-bottom: 32px;
+}
+
+.daily-shell.mystic-shell .daily-heading h1,
+.daily-shell.mystic-shell .subpage-heading h1 {
+  font-size: clamp(38px, 3.6vw, 54px);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.daily-shell.mystic-shell .daily-actions {
+  gap: 10px;
+  padding-bottom: 2px;
+}
+
+.daily-shell.mystic-shell .daily-actions button,
+.daily-shell.mystic-shell .empty-oracle button {
+  min-height: 44px;
+  padding: 0 22px;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- 流日罗盘 ---------- */
+
+.daily-shell.mystic-shell .daily-oracle-grid {
+  gap: 20px;
+}
+
+.daily-shell.mystic-shell .daily-compass::before,
+.daily-shell.mystic-shell .daily-compass::after,
+.daily-shell.mystic-shell .omen-panel::before,
+.daily-shell.mystic-shell .omen-panel::after {
+  display: none;
+}
+
+.daily-shell.mystic-shell .daily-compass {
+  padding: 28px 28px 0;
+}
+
+.daily-shell.mystic-shell .daily-compass-rings {
+  align-self: center;
+  margin: 18px auto 30px;
+  scale: 1.1;
+}
+
+.daily-shell.mystic-shell .daily-core small,
+.daily-shell.mystic-shell .daily-core span {
+  font-size: var(--fs-micro);
+  letter-spacing: 0.1em;
+}
+
+.daily-shell.mystic-shell .daily-compass-rings > i {
+  font-size: var(--fs-body);
+}
+
+.daily-shell.mystic-shell .daily-signature {
+  gap: 12px;
+  min-height: 60px;
+  margin: 0 -28px;
+  padding: 0 28px;
+  border-top: 1px solid var(--xj-tile-line);
+  background: rgba(0, 0, 0, 0.16);
+  font-size: var(--fs-meta);
+}
+
+.daily-shell.mystic-shell .daily-signature strong {
+  font-size: var(--fs-lead);
+}
+
+/* ---------- 运势面板 ---------- */
+
+.daily-shell.mystic-shell .omen-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 36px;
+  background:
+    radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgba(246, 220, 151, calc(0.08 * var(--glow-a))), transparent 70%),
+    radial-gradient(120% 80% at 100% 100%, rgba(181, 65, 47, 0.16), transparent 55%),
+    linear-gradient(160deg, rgba(16, 38, 37, 0.9), rgba(6, 17, 19, 0.94));
+}
+
+.daily-shell.mystic-shell .fortune-grade {
+  align-self: flex-start;
+  padding: 7px 14px;
+  font-size: var(--fs-body);
+}
+
+.daily-shell.mystic-shell .omen-panel h2 {
+  margin: 20px 0 24px;
+  color: var(--xj-text);
+  font-size: 30px;
+  letter-spacing: 0.04em;
+}
+
+.daily-shell.mystic-shell .omen-grid {
+  gap: 10px;
+  background: transparent;
+}
+
+.daily-shell.mystic-shell .omen-grid > div {
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--xj-tile-line);
+  border-radius: 14px;
+  background: var(--xj-tile);
+}
+
+.daily-shell.mystic-shell .omen-grid small {
+  color: var(--xj-text-3);
+  font-size: var(--fs-micro);
+}
+
+.daily-shell.mystic-shell .omen-grid strong {
+  color: var(--xj-gold-hi);
+  font-size: 18px;
+}
+
+.daily-shell.mystic-shell .do-dont {
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.daily-shell.mystic-shell .do-dont p {
+  display: flex;
+  align-items: center;
+  color: var(--xj-text-2);
+  font-size: var(--fs-body);
+}
+
+.daily-shell.mystic-shell .do-dont b {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  margin-right: 12px;
+  font-size: var(--fs-body);
+}
+
+/* ---------- 六签标题 ---------- */
+
+.daily-shell.mystic-shell .sign-heading {
+  margin: 64px 0 24px;
+}
+
+.daily-shell.mystic-shell .sign-heading h2 {
+  font-size: 32px;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- 签卡 ---------- */
+
+.daily-shell.mystic-shell .daily-sign-card {
+  padding: 26px;
+}
+
+.daily-shell.mystic-shell .daily-sign-card::after {
+  display: none;
+}
+
+.daily-shell.mystic-shell .sign-card-top {
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--xj-tile-line);
+}
+
+.daily-shell.mystic-shell .role-seal {
+  width: 44px;
+  height: 44px;
+  font-size: 19px;
+}
+
+.daily-shell.mystic-shell .sign-card-top small {
+  font-size: var(--fs-lead);
+  letter-spacing: 0.08em;
+}
+
+.daily-shell.mystic-shell .sign-card-top strong {
+  color: var(--xj-text-3);
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+
+.daily-shell.mystic-shell .score-badge {
+  min-width: 66px;
+  min-height: 66px;
+  gap: 2px;
+  border-color: var(--xj-tile-line);
+  background: var(--xj-tile);
+}
+
+.daily-shell.mystic-shell .score-badge em {
+  font-size: 26px;
+}
+
+.daily-shell.mystic-shell .score-badge b {
+  color: var(--xj-text);
+  font-family: var(--sans);
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-shell.mystic-shell .score-badge small {
+  color: var(--xj-text-3);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+.daily-shell.mystic-shell .score-badge.grade-S { border-color: rgba(246, 220, 151, 0.6); background: rgba(246, 220, 151, 0.1); }
+.daily-shell.mystic-shell .score-badge.grade-S em { color: var(--xj-gold-pale); text-shadow: 0 0 18px rgba(246, 220, 151, 0.6); }
+.daily-shell.mystic-shell .score-badge.grade-A { border-color: rgba(217, 178, 99, 0.42); background: rgba(217, 178, 99, 0.07); }
+.daily-shell.mystic-shell .score-badge.grade-A em { color: var(--xj-gold-hi); }
+.daily-shell.mystic-shell .score-badge.grade-B { border-color: rgba(111, 191, 154, 0.36); background: rgba(111, 191, 154, 0.06); }
+.daily-shell.mystic-shell .score-badge.grade-B em { color: #7fcca8; }
+.daily-shell.mystic-shell .score-badge.grade-C { border-color: rgba(184, 162, 122, 0.32); background: rgba(184, 162, 122, 0.05); }
+.daily-shell.mystic-shell .score-badge.grade-C em { color: #c2ad84; }
+.daily-shell.mystic-shell .score-badge.grade-D { border-color: rgba(133, 146, 139, 0.3); background: rgba(133, 146, 139, 0.05); }
+.daily-shell.mystic-shell .score-badge.grade-D em { color: var(--xj-text-3); }
+
+.daily-shell.mystic-shell .stock-identity {
+  margin: 22px 0 14px;
+}
+
+.daily-shell.mystic-shell .stock-identity > span {
+  padding: 3px 10px;
+  border: 1px solid rgba(217, 178, 99, 0.3);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--xj-gold);
+  font-size: var(--fs-micro);
+  letter-spacing: 0.08em;
+}
+
+.daily-shell.mystic-shell .stock-identity h3 {
+  margin: 12px 0 6px;
+  font-size: 28px;
+  letter-spacing: 0.04em;
+}
+
+.daily-shell.mystic-shell .stock-identity small {
+  color: var(--xj-text-3);
+  font-size: var(--fs-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-shell.mystic-shell .daily-sign-card > p {
+  min-height: 0;
+  margin: 0 0 16px;
+  color: var(--xj-text-2);
+  font-size: var(--fs-body);
+  line-height: 1.75;
+}
+
+.daily-shell.mystic-shell .mystic-tags {
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.daily-shell.mystic-shell .mystic-tags span {
+  padding: 4px 10px;
+  border-color: var(--xj-tile-line);
+  background: var(--xj-tile);
+  color: #cdbf95;
+  font-size: var(--fs-micro);
+}
+
+.daily-shell.mystic-shell .stock-facts {
+  margin-top: auto;
+  border-color: var(--xj-tile-line);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.daily-shell.mystic-shell .stock-facts > summary {
+  min-height: 48px;
+  padding: 0 14px;
+}
+
+.daily-shell.mystic-shell .facts-toggle-copy strong,
+.daily-shell.mystic-shell .facts-toggle-action {
+  font-size: var(--fs-meta);
+}
+
+.daily-shell.mystic-shell .facts-toggle-copy small {
+  color: var(--xj-text-3);
+  font-size: var(--fs-micro);
+}
+
+.daily-shell.mystic-shell .stock-facts-grid > span,
+.daily-shell.mystic-shell .stock-facts-profile {
+  font-size: var(--fs-meta);
+  line-height: 1.7;
+}
+
+.daily-shell.mystic-shell .stock-facts-grid small {
+  font-size: var(--fs-micro);
+}
+
+.daily-shell.mystic-shell .score-script {
+  gap: 14px;
+  margin: 16px 0 14px;
+  color: var(--xj-text-3);
+  font-size: var(--fs-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-shell.mystic-shell .feedback-row {
+  gap: 8px;
+}
+
+.daily-shell.mystic-shell .feedback-row button {
+  min-height: 40px;
+  border-color: var(--xj-tile-line);
+  background: var(--xj-tile);
+  color: var(--xj-text-2);
+  font-size: var(--fs-meta);
+}
+
+.daily-shell.mystic-shell .feedback-row button:hover {
+  border-color: rgba(217, 178, 99, 0.4);
+  color: var(--xj-gold-hi);
+}
+
+.daily-shell.mystic-shell .feedback-row button.selected {
+  border-color: rgba(246, 220, 151, 0.55);
+  background: rgba(217, 178, 99, 0.14);
+  color: var(--xj-gold-hi);
+}
+
+.daily-shell.mystic-shell .feedback-row button.selected.avoid {
+  border-color: rgba(231, 115, 92, 0.55);
+  background: rgba(181, 65, 47, 0.16);
+  color: #f0a08f;
+}
+
+.flip-card-back strong {
+  font-size: 22px;
+}
+
+.flip-card-back small {
+  font-size: var(--fs-micro);
+  letter-spacing: 0.24em;
+}
+
+/* ---------- 每日一览 ---------- */
+
+:is(.landing-page, .daily-shell.mystic-shell) .today-overview-card {
+  padding: 32px;
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .today-overview-card > header span {
+  font-size: var(--fs-lead);
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .today-overview-card > header small,
+:is(.landing-page, .daily-shell.mystic-shell) .fengshui-overview-main small,
+:is(.landing-page, .daily-shell.mystic-shell) .market-overview-intro > small,
+:is(.landing-page, .daily-shell.mystic-shell) .fengshui-facts dt,
+:is(.landing-page, .daily-shell.mystic-shell) .market-index-grid span,
+:is(.landing-page, .daily-shell.mystic-shell) .market-overview-card > footer {
+  font-size: var(--fs-micro);
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .fengshui-overview-main p,
+:is(.landing-page, .daily-shell.mystic-shell) .market-overview-intro p,
+:is(.landing-page, .daily-shell.mystic-shell) .fengshui-facts dd,
+:is(.landing-page, .daily-shell.mystic-shell) .fengshui-actions p {
+  color: var(--xj-text-2);
+  font-size: var(--fs-body);
+  line-height: 1.75;
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .fengshui-facts dd {
+  color: var(--xj-text);
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .fengshui-actions b {
+  width: 28px;
+  height: 28px;
+  font-size: var(--fs-meta);
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .market-index-grid strong {
+  font-size: 22px;
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .market-index-grid b {
+  font-size: var(--fs-meta);
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .market-index-grid > div {
+  padding: 16px;
+}
+
+/* ---------- 本命录入 ---------- */
+
+.mystic-shell .journey-steps span {
+  font-size: var(--fs-meta);
+}
+
+.mystic-shell .journey-steps span b {
+  font-size: var(--fs-micro);
+}
+
+.mystic-shell .field > span,
+.mystic-shell .field legend,
+.mystic-shell .birth-date-heading > span {
+  color: #cfc8b3;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.mystic-shell .field small {
+  color: var(--xj-text-3);
+  font-size: var(--fs-micro);
+  font-weight: 400;
+}
+
+.mystic-shell .field input,
+.mystic-shell .field select,
+.mystic-shell .segmented-control button,
+.mystic-shell .location-trigger strong,
+.mystic-shell .birth-date-control > button {
+  font-size: var(--fs-body);
+}
+
+.mystic-shell .birth-calendar-mode button {
+  font-size: var(--fs-micro);
+}
+
+.mystic-shell .birth-time-toggle b {
+  font-size: var(--fs-body);
+}
+
+.mystic-shell .birth-time-toggle small,
+.mystic-shell .location-trigger small,
+.mystic-shell .birth-time-field > p,
+.mystic-shell .lunar-date-note,
+.mystic-shell .privacy-note,
+.mystic-shell .advanced-fields > summary small {
+  color: var(--xj-text-3);
+  font-size: var(--fs-micro);
+  line-height: 1.6;
+}
+
+.mystic-shell .advanced-fields > summary {
+  font-size: var(--fs-body);
+}
+
+.mystic-shell .chip {
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: var(--fs-meta);
+}
+
+.mystic-shell .primary-button span {
+  font-size: var(--fs-lead);
+  letter-spacing: 0.1em;
+}
+
+.mystic-shell .birth-card::after {
+  display: none;
+}
+
+.mystic-shell .compass-topline,
+.mystic-shell .compass-topline small,
+.daily-shell.mystic-shell .wheel-hint,
+.mystic-shell .compass-empty-copy span {
+  font-size: var(--fs-micro);
+}
+
+.mystic-shell .compass-empty-copy strong {
+  font-size: var(--fs-lead);
+}
+
+.mystic-shell .pillar-row small {
+  font-size: var(--fs-micro);
+}
+
+.mystic-shell .pillar-row > div {
+  border-radius: 12px;
+}
+
+/* 日历与地点面板 */
+
+.mystic-shell .birth-calendar > header,
+.mystic-shell .birth-calendar-days > button,
+.mystic-shell .birth-calendar > footer button {
+  font-size: var(--fs-meta);
+}
+
+.mystic-shell .birth-calendar-weekdays > span,
+.mystic-shell .birth-calendar > footer span {
+  font-size: var(--fs-micro);
+}
+
+.location-cascade-panel {
+  border-radius: 20px;
+}
+
+.location-cascade-panel > header strong {
+  font-size: var(--fs-lead);
+}
+
+.location-cascade-panel > header small,
+.location-cascade-panel > footer small,
+.location-cascade-panel > footer > span,
+.location-level-heading > small {
+  font-size: var(--fs-micro);
+}
+
+.location-level-heading,
+.location-cascade-panel > footer > strong,
+.location-level-options > button,
+.location-level-options > p,
+.mystic-shell .location-level > input {
+  font-size: var(--fs-meta);
+}
+
+.location-level-options > button > b {
+  font-size: var(--fs-micro);
+}
+
+.location-cascade-panel > header > button,
+.mystic-shell .location-level > input,
+.location-level-heading > b {
+  border-radius: 10px;
+}
+
+/* ---------- 本命摘要、档案工具、避开名单 ---------- */
+
+.daily-shell.mystic-shell .natal-summary > span,
+.daily-shell.mystic-shell .natal-summary > p,
+.daily-shell.mystic-shell .element-line > span,
+.daily-shell.mystic-shell .element-line > strong {
+  font-size: var(--fs-meta);
+}
+
+.daily-shell.mystic-shell .natal-summary > p {
+  color: var(--xj-text-2);
+  line-height: 1.75;
+}
+
+.daily-shell.mystic-shell .transfer-card > summary p,
+.daily-shell.mystic-shell .transfer-panel > p,
+.daily-shell.mystic-shell .transfer-help,
+.daily-shell.mystic-shell .transfer-summary-action,
+.daily-shell.mystic-shell .import-file-status,
+.daily-shell.mystic-shell .avoided-card small {
+  font-size: var(--fs-meta);
+  line-height: 1.7;
+}
+
+.daily-shell.mystic-shell .transfer-actions button,
+.daily-shell.mystic-shell .transfer-actions label,
+.daily-shell.mystic-shell .avoided-card button,
+.daily-shell.mystic-shell .avoided-card strong {
+  font-size: var(--fs-meta);
+}
+
+/* ---------- 缘分册与星轨 ---------- */
+
+.daily-shell.mystic-shell .collection-card small,
+.daily-shell.mystic-shell .collection-card p,
+.daily-shell.mystic-shell .collection-card button {
+  font-size: var(--fs-meta);
+}
+
+.daily-shell.mystic-shell .empty-oracle p {
+  color: var(--xj-text-2);
+  font-size: var(--fs-body);
+}
+
+.daily-shell.mystic-shell .history-timeline > article {
+  grid-template-columns: 150px 1fr auto;
+  align-items: center;
+}
+
+.daily-shell.mystic-shell .history-timeline time {
+  padding-top: 0;
+  font-size: var(--fs-body);
+  white-space: nowrap;
+}
+
+.daily-shell.mystic-shell .history-timeline article small {
+  color: var(--xj-gold);
+  font-size: var(--fs-micro);
+}
+
+.daily-shell.mystic-shell .history-timeline article p,
+.daily-shell.mystic-shell .history-aside > p,
+.daily-shell.mystic-shell .history-aside small {
+  color: var(--xj-text-3);
+  font-size: var(--fs-meta);
+}
+
+.daily-shell.mystic-shell .history-aside strong {
+  font-size: var(--fs-body);
+}
+
+/* ---------- 提示与加载 ---------- */
+
+.daily-shell.mystic-shell .oracle-notice,
+.daily-shell.mystic-shell .oracle-error {
+  font-size: var(--fs-body);
+}
+
+.daily-shell.mystic-shell .oracle-loading small {
+  font-size: var(--fs-meta);
+}
+
+/* ---------- 首页小字 ---------- */
+
+.landing-nav nav {
+  font-size: var(--fs-body);
+}
+
+.trust-row {
+  font-size: var(--fs-meta);
+}
+
+.floating-card small,
+.floating-card span,
+.hero-wheel small,
+.hero-wheel span {
+  font-size: var(--fs-micro);
+}
+
+.hero-direction {
+  font-size: var(--fs-meta);
+}
+
+.pipeline-grid p,
+.approach-heading p,
+.boundary-section > p {
+  font-size: var(--fs-body);
+  line-height: 1.85;
+}
+
+.landing-footer {
+  font-size: var(--fs-meta);
+}
+
+.hero-copy .eyebrow {
+  margin-bottom: 20px;
+}
+
+.mystic-shell .birth-date-control > button {
+  border-radius: 10px;
+}
+
+.daily-shell.mystic-shell .today-overview--compact {
+  margin-top: 44px;
+}
+
+@media (max-width: 640px) {
+  .daily-shell.mystic-shell .daily-compass-rings {
+    scale: 1;
+  }
+
+  .daily-shell.mystic-shell .omen-panel {
+    padding: 26px 22px;
+  }
+
+  .daily-shell.mystic-shell .omen-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .daily-shell.mystic-shell .omen-grid > div:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .daily-shell.mystic-shell .omen-grid > div:last-child {
+    grid-column: auto;
+  }
+
+  .daily-shell.mystic-shell .history-timeline > article {
+    grid-template-columns: 1fr auto;
+  }
+
+  .daily-shell.mystic-shell .history-timeline time {
+    grid-column: 1 / -1;
+  }
+
+  :is(.landing-page, .daily-shell.mystic-shell) .today-overview-card {
+    padding: 22px;
   }
 }
