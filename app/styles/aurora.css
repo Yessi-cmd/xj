@@ -1258,10 +1258,6 @@ summary:focus-visible,
 
 /* 翻牌：牌背流光、翻开闪光 */
 
-.flip-grid {
-  perspective: 2000px;
-}
-
 .flip-card-wrap {
   animation: xj-sign-rise 900ms var(--xj-ease) backwards;
 }
@@ -1271,10 +1267,6 @@ summary:focus-visible,
 .flip-card-wrap:nth-child(4) { animation-delay: 330ms; }
 .flip-card-wrap:nth-child(5) { animation-delay: 440ms; }
 .flip-card-wrap:nth-child(6) { animation-delay: 550ms; }
-
-.flip-card-inner {
-  transition: transform 1000ms cubic-bezier(0.3, 1.25, 0.4, 1);
-}
 
 .flip-card-back {
   overflow: hidden;
@@ -1381,7 +1373,7 @@ summary:focus-visible,
   background: linear-gradient(115deg, transparent 30%, rgba(255, 240, 200, 0.5) 48%, transparent 64%);
   background-size: 300% 100%;
   pointer-events: none;
-  animation: xj-reveal-glint 1.2s ease-out 520ms both;
+  animation: xj-reveal-glint 1.2s ease-out 820ms both;
 }
 
 .flip-card-wrap.flipped .flip-card-front::before {
@@ -1395,7 +1387,7 @@ summary:focus-visible,
   border: 2px solid rgba(246, 220, 151, 0.7);
   border-radius: 50%;
   pointer-events: none;
-  animation: xj-burst 1s var(--xj-ease) 420ms both;
+  animation: xj-burst 1s var(--xj-ease) 760ms both;
 }
 
 .flip-card-wrap.flipped.clash-back .flip-card-front::before {
@@ -2346,6 +2338,73 @@ summary:focus-visible,
 
 .daily-shell.mystic-shell .oracle-loading small {
   font-size: var(--fs-meta);
+}
+
+.daily-shell.mystic-shell .oracle-loading {
+  min-height: calc(100vh - 140px);
+}
+
+.oracle-steps {
+  display: grid;
+  gap: 12px;
+  min-width: min(340px, 100%);
+  margin: 30px 0 0;
+  padding: 20px 24px;
+  border: 1px solid var(--xj-tile-line);
+  border-radius: 18px;
+  background: rgba(6, 18, 20, 0.6);
+  list-style: none;
+  text-align: left;
+}
+
+.oracle-steps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--xj-dim);
+  font-size: var(--fs-body);
+  transition: color 300ms ease;
+}
+
+.oracle-steps li > i {
+  position: relative;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(217, 178, 99, 0.25);
+  border-radius: 50%;
+}
+
+.oracle-steps li.active {
+  color: var(--xj-gold-hi);
+}
+
+.oracle-steps li.active > i {
+  border-color: transparent;
+  border-top-color: var(--xj-gold-hi);
+  border-right-color: var(--xj-gold-hi);
+  animation: xj-rotate 800ms linear infinite;
+}
+
+.oracle-steps li.done {
+  color: var(--xj-text-2);
+}
+
+.oracle-steps li.done > i {
+  border-color: rgba(127, 204, 168, 0.6);
+  background: rgba(127, 204, 168, 0.14);
+}
+
+.oracle-steps li.done > i::after {
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  width: 4px;
+  height: 8px;
+  border: solid #7fcca8;
+  border-width: 0 1.5px 1.5px 0;
+  content: "";
+  transform: rotate(45deg);
 }
 
 /* ---------- 首页小字 ---------- */

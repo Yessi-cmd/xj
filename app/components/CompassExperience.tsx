@@ -85,6 +85,16 @@ function formatDate(dateKey: string): string {
 
 const LUCKY_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
+/** 主动启盘时的推演步骤，仅作展示节奏，不影响排盘结果。 */
+const CEREMONY_STEPS = [
+  "校真太阳时，排定四柱",
+  "合今日流日干支",
+  "遍历近五千只股票出生标签",
+  "六签各司其职，成局",
+] as const;
+const CEREMONY_STEP_MS = 620;
+const CEREMONY_MIN_MS = 2600;
+
 const INDUSTRY_PREFERENCES = [
   { id: "金" as const, label: "金融资本" },
   { id: "木" as const, label: "医药农林" },
@@ -133,6 +143,7 @@ export default function CompassExperience({
   const [result, setResult] = useState<FortuneResult | null>(null);
   const [view, setView] = useState<ViewName>("profile");
   const [loading, setLoading] = useState(false);
+  const [ceremonyStage, setCeremonyStage] = useState<number | null>(null);
   const [birthCalendarLoading, setBirthCalendarLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -344,6 +355,12 @@ export default function CompassExperience({
   }, []);
 
   useEffect(() => {
+    if (ceremonyStage === null || ceremonyStage >= CEREMONY_STEPS.length - 1) return;
+    const timer = window.setTimeout(() => setCeremonyStage((stage) => (stage === null ? null : stage + 1)), CEREMONY_STEP_MS);
+    return () => window.clearTimeout(timer);
+  }, [ceremonyStage]);
+
+  useEffect(() => {
     if (!railOpen) return;
     const compactNavigation = window.matchMedia("(max-width: 900px)").matches;
     const focusFrame = compactNavigation
@@ -393,8 +410,14 @@ export default function CompassExperience({
       setError(validated.message);
       return;
     }
-    await openDaily(validated.profile, state, 0);
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setCeremonyStage(0);
+    window.scrollTo({ top: 0, behavior: "auto" });
+    await Promise.all([
+      openDaily(validated.profile, state, 0),
+      new Promise((resolve) => window.setTimeout(resolve, reduced ? 0 : CEREMONY_MIN_MS)),
+    ]);
+    setCeremonyStage(null);
     window.setTimeout(() => document.getElementById("daily-oracle")?.scrollIntoView({ behavior: reduced ? "auto" : "smooth" }), 60);
   };
 
@@ -634,7 +657,7 @@ export default function CompassExperience({
         {notice && <div className="oracle-notice" role="status"><span>鉴</span>{notice}<button onClick={() => setNotice("")} aria-label="关闭提示">×</button></div>}
         {error && <div className="oracle-error" role="alert">{error}<button onClick={() => setError("")}>×</button></div>}
 
-        {loading && !result ? (
+        {ceremonyStage !== null || (loading && !result) ? (
           <section className="oracle-loading" role="status" aria-live="polite">
             <div className="oracle-dial" aria-hidden="true">
               <i className="dial-ring dial-ring-outer" />
@@ -643,6 +666,15 @@ export default function CompassExperience({
             </div>
             <strong>浑天运转，正在排布今日星轨</strong>
             <small>本命与近五千只股票标签合盘中</small>
+            {ceremonyStage !== null && (
+              <ol className="oracle-steps">
+                {CEREMONY_STEPS.map((step, index) => (
+                  <li key={step} className={index < ceremonyStage ? "done" : index === ceremonyStage ? "active" : ""}>
+                    <i aria-hidden="true" />{step}
+                  </li>
+                ))}
+              </ol>
+            )}
           </section>
         ) : view === "profile" ? (
           <section className="profile-workspace">

@@ -558,11 +558,12 @@
   gap: 14px;
 }
 
-/* 翻牌开签：六张牌背，点击后 3D 翻转亮牌 */
-
-.flip-grid {
-  perspective: 1800px;
-}
+/*
+ * 翻牌开签：六张牌背，点击后 3D 翻转亮牌。
+ * 两面各自做一次性旋转动画，静止时都回到平面：未翻时只有牌背可见可点，
+ * 翻开后只有牌面可见可点。不使用 preserve-3d 的静止状态，避免浏览器在
+ * 3D 命中测试中让背向的牌背继续拦截点击。
+ */
 
 .flip-card-wrap {
   display: grid;
@@ -571,12 +572,6 @@
 
 .flip-card-inner {
   display: grid;
-  transform-style: preserve-3d;
-  transition: transform 720ms cubic-bezier(0.25, 0.9, 0.3, 1);
-}
-
-.flip-card-wrap.flipped .flip-card-inner {
-  transform: rotateY(180deg);
 }
 
 .flip-card-back,
@@ -588,12 +583,30 @@
 }
 
 .flip-card-front {
+  visibility: hidden;
   pointer-events: none;
-  transform: rotateY(180deg);
+}
+
+.flip-card-wrap.flipped .flip-card-back {
+  visibility: hidden;
+  pointer-events: none;
+  animation: flip-face-out 360ms cubic-bezier(0.55, 0, 0.75, 0.3) both;
 }
 
 .flip-card-wrap.flipped .flip-card-front {
+  visibility: visible;
   pointer-events: auto;
+  animation: flip-face-in 520ms cubic-bezier(0.2, 0.9, 0.3, 1.15) 340ms both;
+}
+
+@keyframes flip-face-out {
+  from { visibility: visible; transform: perspective(1600px) rotateY(0deg); }
+  to { visibility: hidden; transform: perspective(1600px) rotateY(-90deg); }
+}
+
+@keyframes flip-face-in {
+  from { transform: perspective(1600px) rotateY(90deg); }
+  to { transform: none; }
 }
 
 .flip-card-back {

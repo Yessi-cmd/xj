@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useRef, type CSSProperties } from "react";
 import {
   scoreGrade,
   type DailyRecommendation,
@@ -61,6 +61,7 @@ export default function DailySignCard({
   onReveal,
   onFeedback,
 }: DailySignCardProps) {
+  const frontRef = useRef<HTMLDivElement>(null);
   const grade = scoreGrade(item.combinedScore);
   const isFlipped = !flipOn || revealed;
   const card = (
@@ -108,12 +109,21 @@ export default function DailySignCard({
   return (
     <div className={`flip-card-wrap${item.isPositive ? "" : " clash-back"}${isFlipped ? " flipped" : ""}`}>
       <div className="flip-card-inner">
-        <button type="button" className="flip-card-back" aria-label={`翻开${item.roleLabel}`} onClick={onReveal}>
+        <button
+          type="button"
+          className="flip-card-back"
+          aria-label={`翻开${item.roleLabel}`}
+          onClick={() => {
+            onReveal();
+            // 牌背翻开后即隐藏，把焦点交给牌面，避免键盘用户丢失位置
+            window.requestAnimationFrame(() => frontRef.current?.focus({ preventScroll: true }));
+          }}
+        >
           <span className="flip-back-seal" aria-hidden="true">{ROLE_GLYPHS[item.role]}</span>
           <strong>{item.roleLabel}</strong>
           <small>轻触翻牌</small>
         </button>
-        <div className="flip-card-front">{card}</div>
+        <div ref={frontRef} className="flip-card-front" tabIndex={-1}>{card}</div>
       </div>
     </div>
   );
