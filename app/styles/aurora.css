@@ -1,0 +1,1658 @@
+/*
+ * 玄鉴 · 夜光层
+ * 统一首页与命签工作台为玄青夜幕：极光底色、宣纸颗粒、星尘画布、鎏金玻璃面板与朱砂警示。
+ * 本文件最后加载，只覆盖视觉与动效，不改变布局职责；所有动效在 prefers-reduced-motion 下停用。
+ */
+
+@property --glow-a {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --sheen-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+:root {
+  --xj-void: #03080a;
+  --xj-ink: #061214;
+  --xj-jade: #0e2b28;
+  --xj-jade-bright: #4fa894;
+  --xj-gold: #d9b263;
+  --xj-gold-hi: #f6dc97;
+  --xj-gold-pale: #fff3d0;
+  --xj-cinnabar: #b5412f;
+  --xj-cinnabar-hi: #e7735c;
+  --xj-paper: #efe6cf;
+  --xj-muted: #8d9a93;
+  --xj-dim: #5f6f69;
+  --xj-line: rgba(217, 178, 99, 0.18);
+  --xj-line-strong: rgba(217, 178, 99, 0.42);
+  --xj-glass: linear-gradient(160deg, rgba(22, 52, 48, 0.58), rgba(6, 17, 19, 0.78) 58%, rgba(5, 13, 15, 0.86));
+  --xj-radius-lg: 24px;
+  --xj-radius: 16px;
+  --xj-radius-sm: 11px;
+  --xj-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --xj-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --xj-gold-text: linear-gradient(100deg, #e9d9b0 0%, #f6dc97 28%, #fff6dc 42%, #d9b263 58%, #f6dc97 76%, #e9d9b0 100%);
+}
+
+/* ---------- 夜幕底色：极光 + 宣纸颗粒 + 星尘 ---------- */
+
+html {
+  background: var(--xj-void);
+  color-scheme: dark;
+}
+
+body {
+  position: relative;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(30, 72, 66, 0.55), transparent 55%),
+    linear-gradient(180deg, #051012 0%, var(--xj-void) 70%);
+  background-attachment: fixed;
+  color: var(--xj-paper);
+}
+
+body::before {
+  position: fixed;
+  z-index: -2;
+  inset: -25%;
+  content: "";
+  background:
+    radial-gradient(38% 30% at 74% 18%, rgba(64, 150, 130, 0.26), transparent 70%),
+    radial-gradient(30% 26% at 18% 72%, rgba(181, 65, 47, 0.16), transparent 70%),
+    radial-gradient(34% 28% at 58% 64%, rgba(217, 178, 99, 0.1), transparent 70%),
+    radial-gradient(26% 22% at 28% 22%, rgba(78, 102, 160, 0.12), transparent 70%);
+  filter: blur(40px) saturate(120%);
+  pointer-events: none;
+  animation: xj-aurora 46s ease-in-out infinite alternate;
+}
+
+body::after {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.94 0 0 0 0 0.86 0 0 0 0 0.68 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.ambient-stardust {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+::selection {
+  background: rgba(217, 178, 99, 0.35);
+  color: var(--xj-gold-pale);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[role="slider"]:focus-visible {
+  outline: 2px solid var(--xj-gold-hi);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(246, 220, 151, 0.14);
+}
+
+/* ---------- 滚动显现（仅在动效就绪时隐藏） ---------- */
+
+.motion-ready :is(
+  [data-reveal],
+  .today-overview-card,
+  .approach-heading,
+  .pipeline-grid article,
+  .boundary-section,
+  .sign-heading,
+  .daily-compass,
+  .omen-panel,
+  .natal-summary,
+  .transfer-card,
+  .avoided-card,
+  .collection-card,
+  .history-timeline article,
+  .history-aside
+):not(.is-revealed) {
+  opacity: 0;
+}
+
+.motion-ready :is(
+  [data-reveal],
+  .today-overview-card,
+  .approach-heading,
+  .pipeline-grid article,
+  .boundary-section,
+  .sign-heading,
+  .daily-compass,
+  .omen-panel,
+  .natal-summary,
+  .transfer-card,
+  .avoided-card,
+  .collection-card,
+  .history-timeline article,
+  .history-aside
+).is-revealed {
+  animation: xj-rise 1s var(--xj-ease) backwards;
+  animation-delay: var(--xj-stagger, 0ms);
+}
+
+.pipeline-grid article:nth-child(2),
+.today-overview-card:nth-child(2),
+.omen-panel,
+.collection-card:nth-child(3n + 2) { --xj-stagger: 110ms; }
+.pipeline-grid article:nth-child(3),
+.collection-card:nth-child(3n) { --xj-stagger: 220ms; }
+
+/* ---------- 指针光斑与微倾 ---------- */
+
+:is(.daily-sign-card, .flip-card-back, .surface-card, .today-overview-card, .floating-card, .pipeline-grid article, .collection-card) {
+  --glow-a: 0;
+  transition:
+    --glow-a 420ms ease,
+    transform 520ms var(--xj-ease),
+    border-color 260ms ease,
+    box-shadow 420ms ease;
+}
+
+:is(.daily-sign-card, .flip-card-back, .surface-card, .today-overview-card, .floating-card, .pipeline-grid article, .collection-card).is-pointer-active {
+  --glow-a: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .motion-ready :is(.daily-sign-card, .flip-card-back, .pipeline-grid article, .collection-card).is-pointer-active {
+    transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateY(-6px);
+  }
+}
+
+/* ======================================================
+ * 首页
+ * ====================================================== */
+
+.landing-page {
+  overflow: clip;
+  background: transparent;
+  color: var(--xj-paper);
+}
+
+.landing-nav {
+  position: sticky;
+  top: 14px;
+  z-index: 50;
+  margin-top: 14px;
+  padding: 12px 14px 12px 26px;
+  border: 1px solid var(--xj-line);
+  border-radius: 22px;
+  background: rgba(5, 14, 16, 0.62);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35), inset 0 1px rgba(255, 240, 200, 0.05);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  animation: xj-drop-in 900ms var(--xj-ease) backwards;
+}
+
+.brand-lockup strong,
+.mystic-shell .brand-lockup strong {
+  background: var(--xj-gold-text);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  animation: xj-shimmer 9s linear infinite;
+}
+
+.landing-page .brand-lockup small {
+  color: var(--xj-dim);
+}
+
+.landing-nav nav {
+  color: #a3aca6;
+}
+
+.landing-nav nav a {
+  padding: 6px 0;
+}
+
+.landing-nav nav a::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, transparent, var(--xj-gold-hi), transparent);
+  transform: scaleX(0);
+  transition: transform 360ms var(--xj-ease);
+}
+
+.landing-nav nav a:hover {
+  color: var(--xj-gold-hi);
+}
+
+.landing-nav nav a:hover::after,
+.landing-nav nav a:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.nav-cta {
+  border-color: var(--xj-line-strong);
+  background: rgba(217, 178, 99, 0.08);
+  color: var(--xj-paper);
+  transition: transform 260ms var(--xj-spring), background 260ms ease, box-shadow 260ms ease;
+}
+
+.nav-cta:hover {
+  background: rgba(217, 178, 99, 0.16);
+  box-shadow: 0 0 30px rgba(217, 178, 99, 0.2);
+}
+
+.nav-cta span {
+  background: linear-gradient(135deg, var(--xj-gold-hi), var(--xj-gold));
+  color: var(--xj-ink);
+}
+
+.landing-hero {
+  min-height: 720px;
+}
+
+.hero-copy::before {
+  background: linear-gradient(transparent, var(--xj-gold), transparent);
+  box-shadow: 0 0 18px rgba(217, 178, 99, 0.5);
+}
+
+.hero-copy > * {
+  animation: xj-rise 1.1s var(--xj-ease) backwards;
+}
+
+.hero-copy > :nth-child(2) { animation-delay: 140ms; }
+.hero-copy > :nth-child(3) { animation-delay: 280ms; }
+.hero-copy > :nth-child(4) { animation-delay: 420ms; }
+
+.landing-page .eyebrow,
+.landing-page .section-kicker {
+  color: var(--xj-gold);
+}
+
+.hero-copy .eyebrow i {
+  border-color: var(--xj-gold-hi);
+  box-shadow: 0 0 0 4px rgba(217, 178, 99, 0.12), 0 0 14px rgba(246, 220, 151, 0.6);
+  animation: xj-beacon 2.6s ease-in-out infinite;
+}
+
+.hero-copy > p {
+  color: #c2bfae;
+  font-size: 18px;
+}
+
+.primary-link,
+.secondary-link {
+  position: relative;
+  overflow: hidden;
+  border-radius: 999px;
+  transition: transform 300ms var(--xj-spring), box-shadow 300ms ease, background 300ms ease;
+}
+
+.primary-link {
+  background: linear-gradient(120deg, #c99a45, var(--xj-gold-hi) 50%, #c99a45);
+  background-size: 200% 100%;
+  color: #1a1408;
+  box-shadow: 0 16px 40px rgba(217, 178, 99, 0.28), inset 0 1px rgba(255, 255, 255, 0.5);
+  animation: xj-shimmer 7s linear infinite;
+}
+
+.primary-link span {
+  color: #1a1408;
+  transition: transform 300ms var(--xj-spring);
+}
+
+.primary-link:hover span {
+  transform: translateX(5px);
+}
+
+.primary-link:hover {
+  box-shadow: 0 22px 55px rgba(217, 178, 99, 0.42), inset 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.secondary-link {
+  border-color: var(--xj-line-strong);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--xj-paper);
+  backdrop-filter: blur(10px);
+}
+
+.secondary-link:hover {
+  background: rgba(217, 178, 99, 0.1);
+}
+
+.secondary-link span {
+  color: var(--xj-gold-hi);
+  animation: xj-beacon 2.6s ease-in-out infinite;
+}
+
+.trust-row {
+  color: var(--xj-muted);
+}
+
+.trust-row b {
+  color: var(--xj-gold-hi);
+}
+
+.trust-row i {
+  background: var(--xj-gold);
+  box-shadow: 0 0 8px var(--xj-gold);
+}
+
+.hero-orbit {
+  animation: xj-fade-scale 1.4s var(--xj-ease) 200ms backwards;
+}
+
+.hero-orbit::before {
+  background: radial-gradient(circle, rgba(64, 150, 130, 0.24), rgba(217, 178, 99, 0.06) 45%, transparent 68%);
+  animation: xj-breathe 7s ease-in-out infinite;
+}
+
+.orbit-halo {
+  border-color: rgba(217, 178, 99, 0.2);
+}
+
+.halo-one {
+  border-style: dashed;
+  border-color: rgba(217, 178, 99, 0.26);
+  animation: xj-rotate 90s linear infinite;
+}
+
+.halo-two {
+  border: 1px solid transparent;
+  border-top-color: rgba(246, 220, 151, 0.55);
+  border-left-color: rgba(79, 168, 148, 0.35);
+  opacity: 1;
+  animation: xj-rotate 24s linear infinite reverse;
+}
+
+.hero-compass {
+  border-color: rgba(217, 178, 99, 0.5);
+  background:
+    repeating-conic-gradient(from 0deg, rgba(246, 220, 151, 0.22) 0deg 0.45deg, transparent 0.45deg 10deg),
+    radial-gradient(circle, rgba(10, 30, 30, 0.9), rgba(4, 12, 13, 0.6));
+  box-shadow:
+    inset 0 0 0 18px rgba(217, 178, 99, 0.035),
+    inset 0 0 60px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(246, 220, 151, 0.08),
+    0 0 90px rgba(64, 150, 130, 0.18),
+    0 40px 90px rgba(0, 0, 0, 0.5);
+}
+
+.hero-compass::before {
+  border-color: rgba(79, 168, 148, 0.32);
+  animation: xj-rotate 60s linear infinite;
+}
+
+.hero-compass::after {
+  border-color: rgba(217, 178, 99, 0.42);
+  animation: xj-rotate 42s linear infinite reverse;
+}
+
+.hero-wheel {
+  border-color: rgba(5, 15, 17, 0.92);
+  background: conic-gradient(#3b7fb8 0 72deg, #2f9d69 72deg 144deg, #d4523f 144deg 216deg, #d0a04a 216deg 288deg, #8f7fc4 288deg);
+  box-shadow: 0 0 0 1px rgba(246, 220, 151, 0.35), 0 0 60px rgba(217, 178, 99, 0.28), 0 24px 60px rgba(0, 0, 0, 0.5);
+  animation: xj-rotate 36s linear infinite;
+}
+
+.hero-wheel::before {
+  background: radial-gradient(circle at 50% 35%, #12302c, #050f11 72%);
+  box-shadow: inset 0 0 0 1px rgba(246, 220, 151, 0.3), inset 0 0 30px rgba(0, 0, 0, 0.6);
+}
+
+.hero-wheel > div {
+  animation: xj-rotate 36s linear infinite reverse;
+}
+
+.hero-wheel small,
+.hero-wheel span {
+  color: var(--xj-muted);
+}
+
+.hero-wheel strong {
+  background: var(--xj-gold-text);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 14px rgba(246, 220, 151, 0.35));
+  animation: xj-shimmer 6s linear infinite;
+}
+
+.hero-direction {
+  color: var(--xj-gold);
+  text-shadow: 0 0 12px rgba(217, 178, 99, 0.4);
+}
+
+.floating-card {
+  border-color: var(--xj-line);
+  border-radius: 18px;
+  background:
+    radial-gradient(260px circle at var(--mx, 50%) var(--my, 0%), rgba(246, 220, 151, calc(0.14 * var(--glow-a))), transparent 70%),
+    linear-gradient(160deg, rgba(20, 46, 43, 0.72), rgba(5, 14, 16, 0.82));
+  color: var(--xj-paper);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px rgba(255, 240, 200, 0.06);
+  animation: xj-float 7s ease-in-out infinite;
+}
+
+.card-score { animation-delay: -2.4s; }
+.card-risk { animation-delay: -4.6s; }
+
+.floating-card small,
+.floating-card span {
+  color: var(--xj-muted);
+}
+
+.floating-card strong {
+  color: var(--xj-paper);
+}
+
+.card-score strong {
+  background: var(--xj-gold-text);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.approach-section {
+  border-top-color: var(--xj-line);
+}
+
+.approach-heading h2,
+.boundary-section h2,
+.landing-page .today-overview-heading h2 {
+  color: var(--xj-paper);
+}
+
+.approach-heading h2 {
+  font-size: clamp(32px, 3vw, 46px);
+  text-wrap: balance;
+}
+
+.approach-heading p,
+.boundary-section > p {
+  color: var(--xj-muted);
+}
+
+.pipeline-grid {
+  gap: 16px;
+}
+
+.pipeline-grid article {
+  border-color: var(--xj-line);
+  border-radius: var(--xj-radius-lg);
+  background:
+    radial-gradient(340px circle at var(--mx, 50%) var(--my, 0%), rgba(246, 220, 151, calc(0.12 * var(--glow-a))), transparent 70%),
+    var(--xj-glass);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3), inset 0 1px rgba(255, 240, 200, 0.05);
+}
+
+.pipeline-grid article:hover {
+  border-color: var(--xj-line-strong);
+}
+
+.pipeline-grid article > span {
+  display: inline-grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--xj-line-strong);
+  border-radius: 50%;
+  color: var(--xj-gold-hi);
+  font-size: 15px;
+  box-shadow: 0 0 22px rgba(217, 178, 99, 0.18);
+}
+
+.pipeline-grid h3 {
+  margin-top: 38px;
+  color: var(--xj-paper);
+}
+
+.pipeline-grid p {
+  color: var(--xj-muted);
+}
+
+.pipeline-grid i {
+  border-color: rgba(217, 178, 99, 0.28);
+  box-shadow: 0 0 0 18px rgba(217, 178, 99, 0.03), 0 0 0 36px rgba(217, 178, 99, 0.018);
+  transition: transform 700ms var(--xj-ease);
+}
+
+.pipeline-grid article:hover i {
+  transform: scale(1.25);
+}
+
+.boundary-section {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(217, 178, 99, 0.3);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 8% 50%, rgba(181, 65, 47, 0.28), transparent 32%),
+    radial-gradient(circle at 92% 0%, rgba(64, 150, 130, 0.2), transparent 36%),
+    linear-gradient(150deg, rgba(14, 34, 33, 0.9), rgba(5, 12, 14, 0.95));
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.45), inset 0 1px rgba(255, 240, 200, 0.06);
+}
+
+.boundary-seal {
+  position: relative;
+  border-color: rgba(246, 220, 151, 0.55);
+  background: radial-gradient(circle, rgba(181, 65, 47, 0.45), rgba(120, 36, 26, 0.2) 70%);
+  color: var(--xj-gold-hi);
+  text-shadow: 0 0 18px rgba(246, 220, 151, 0.5);
+  box-shadow: 0 0 40px rgba(181, 65, 47, 0.35);
+}
+
+.boundary-seal::before {
+  position: absolute;
+  inset: -10px;
+  content: "";
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent, rgba(246, 220, 151, 0.7), transparent 30%, transparent 50%, rgba(231, 115, 92, 0.6), transparent 80%);
+  -webkit-mask: radial-gradient(circle, transparent 0 calc(100% - 2px), #000 calc(100% - 1px));
+  mask: radial-gradient(circle, transparent 0 calc(100% - 2px), #000 calc(100% - 1px));
+  animation: xj-rotate 9s linear infinite;
+}
+
+.boundary-section .section-kicker,
+.boundary-section > a {
+  color: var(--xj-gold-hi);
+}
+
+.boundary-section > a {
+  transition: letter-spacing 300ms var(--xj-ease), color 300ms ease;
+}
+
+.boundary-section > a:hover {
+  color: var(--xj-gold-pale);
+  letter-spacing: 0.06em;
+}
+
+.landing-footer {
+  border-top-color: var(--xj-line);
+  color: var(--xj-dim);
+}
+
+.landing-footer > span {
+  color: var(--xj-paper);
+}
+
+.landing-footer > a {
+  color: var(--xj-gold-hi);
+}
+
+/* ---------- 每日一览（首页与工作台共用） ---------- */
+
+:is(.landing-page, .daily-shell.mystic-shell) .today-overview-card {
+  border-color: var(--xj-line);
+  border-radius: var(--xj-radius-lg);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35), inset 0 1px rgba(255, 240, 200, 0.05);
+}
+
+.today-overview-card.fengshui-overview-card {
+  background:
+    radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgba(246, 220, 151, calc(0.1 * var(--glow-a))), transparent 70%),
+    radial-gradient(circle at 12% 85%, rgba(212, 169, 72, 0.18), transparent 26%),
+    radial-gradient(circle at 100% 0%, rgba(68, 140, 122, 0.3), transparent 38%),
+    linear-gradient(160deg, rgba(16, 36, 36, 0.86), rgba(5, 13, 15, 0.92));
+}
+
+.fengshui-overview-card::after {
+  animation: xj-rotate 120s linear infinite;
+}
+
+.element-orb {
+  position: relative;
+  background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.06), transparent 70%);
+  text-shadow: 0 0 18px currentColor;
+}
+
+.element-orb::before {
+  position: absolute;
+  inset: -7px;
+  content: "";
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 20%, currentColor 32%, transparent 44% 70%, rgba(246, 220, 151, 0.8) 82%, transparent 94%);
+  opacity: 0.55;
+  -webkit-mask: radial-gradient(circle, transparent 0 calc(100% - 2px), #000 calc(100% - 1.5px));
+  mask: radial-gradient(circle, transparent 0 calc(100% - 2px), #000 calc(100% - 1.5px));
+  animation: xj-rotate 7s linear infinite;
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .market-overview-card {
+  background:
+    radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgba(246, 220, 151, calc(0.1 * var(--glow-a))), transparent 70%),
+    linear-gradient(135deg, rgba(217, 178, 99, 0.06), transparent 42%),
+    linear-gradient(160deg, rgba(12, 30, 30, 0.86), rgba(5, 13, 15, 0.92));
+  color: #e4ddc9;
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .today-overview-card > header {
+  border-bottom-color: var(--xj-line);
+  color: rgba(217, 178, 99, 0.72);
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .market-overview-intro > small {
+  color: var(--xj-gold);
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .market-overview-intro h3,
+:is(.landing-page, .daily-shell.mystic-shell) .market-index-grid strong {
+  color: var(--xj-paper);
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .market-overview-intro p,
+:is(.landing-page, .daily-shell.mystic-shell) .market-index-grid span,
+:is(.landing-page, .daily-shell.mystic-shell) .market-overview-card > footer {
+  color: var(--xj-muted);
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .market-index-grid > div {
+  border-color: rgba(217, 178, 99, 0.14);
+  border-radius: var(--xj-radius-sm);
+  background: rgba(255, 255, 255, 0.025);
+  transition: transform 300ms var(--xj-spring), border-color 300ms ease, background 300ms ease;
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .market-index-grid > div:hover {
+  border-color: var(--xj-line-strong);
+  background: rgba(217, 178, 99, 0.06);
+  transform: translateY(-3px);
+}
+
+:is(.landing-page, .daily-shell.mystic-shell) .market-index-grid .up b { color: #ef7e6b; }
+:is(.landing-page, .daily-shell.mystic-shell) .market-index-grid .down b { color: #5fc298; }
+
+:is(.landing-page, .daily-shell.mystic-shell) .market-overview-card > footer a {
+  color: var(--xj-gold-hi);
+}
+
+/* ======================================================
+ * 命签工作台
+ * ====================================================== */
+
+.mystic-shell,
+.daily-shell.mystic-shell {
+  background: transparent;
+  color: #eae3cf;
+}
+
+.mystic-shell::before {
+  opacity: 0.22;
+}
+
+/* 侧栏：磨砂玻璃 */
+
+.mystic-shell .side-rail {
+  border-right-color: var(--xj-line);
+  background:
+    linear-gradient(180deg, rgba(20, 48, 45, 0.45), rgba(3, 10, 12, 0.6)),
+    rgba(4, 11, 13, 0.72);
+  box-shadow: 24px 0 80px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+}
+
+.daily-shell.mystic-shell .daily-side-nav button {
+  border-radius: 14px;
+  transition: color 240ms ease, background 320ms ease, border-color 240ms ease, transform 320ms var(--xj-spring);
+}
+
+.daily-shell.mystic-shell .daily-side-nav button:hover:not(:disabled) {
+  transform: translateX(4px);
+}
+
+.daily-shell.mystic-shell .daily-side-nav button.active {
+  border-color: rgba(246, 220, 151, 0.32);
+  background: linear-gradient(90deg, rgba(217, 178, 99, 0.2), rgba(217, 178, 99, 0.02));
+  box-shadow: inset 0 1px rgba(255, 240, 200, 0.08), 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.daily-shell.mystic-shell .daily-side-nav button.active::before {
+  border-color: var(--xj-gold-hi);
+  box-shadow: 0 0 12px rgba(246, 220, 151, 0.8);
+}
+
+.mystic-shell .rail-status,
+.mystic-shell .rail-user,
+.daily-shell.mystic-shell .streak-stamp {
+  border-radius: var(--xj-radius);
+  border-color: var(--xj-line);
+  background: rgba(10, 28, 28, 0.55);
+}
+
+.mystic-shell .status-dot {
+  animation: xj-beacon 2.4s ease-in-out infinite;
+}
+
+.daily-shell.mystic-shell .streak-stamp strong {
+  border-radius: 50%;
+  box-shadow: 0 0 22px rgba(246, 220, 151, 0.25);
+}
+
+.mystic-shell .avatar {
+  border-radius: 50%;
+  box-shadow: 0 0 16px rgba(246, 220, 151, 0.25);
+}
+
+/* 提示条：滑入 */
+
+.daily-shell.mystic-shell .oracle-notice,
+.daily-shell.mystic-shell .oracle-error {
+  border-radius: var(--xj-radius);
+  background: rgba(6, 18, 20, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: xj-drop-in 600ms var(--xj-ease) backwards;
+}
+
+/* 开签步骤 */
+
+.mystic-shell .journey-steps {
+  border-color: var(--xj-line);
+  border-radius: 999px;
+  background: rgba(6, 18, 20, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.mystic-shell .journey-steps span b {
+  border-radius: 50%;
+}
+
+.mystic-shell .journey-steps span.current b {
+  animation: xj-step-pulse 2.2s ease-in-out infinite;
+}
+
+.mystic-shell .journey-steps > i {
+  position: relative;
+  overflow: hidden;
+}
+
+.mystic-shell .journey-steps > i::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(90deg, transparent, var(--xj-gold-hi), transparent);
+  transform: translateX(-100%);
+  animation: xj-trace 2.8s ease-in-out infinite;
+}
+
+/* 录入舞台 */
+
+.mystic-shell .input-stage {
+  border-color: rgba(217, 178, 99, 0.3);
+  border-radius: 28px;
+  background: rgba(6, 17, 19, 0.6);
+  box-shadow:
+    0 50px 120px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(246, 220, 151, 0.04),
+    inset 0 1px rgba(255, 240, 200, 0.06);
+  animation: xj-rise 1s var(--xj-ease) backwards;
+}
+
+.stage-corner {
+  display: none;
+}
+
+/* 录入舞台保持 overflow: visible 以容纳下拉面板，因此由两侧子面板各自承担圆角。 */
+.daily-shell.mystic-shell .profile-input-stage > .birth-card {
+  border-radius: 28px 0 0 28px;
+}
+
+.daily-shell.mystic-shell .profile-input-stage > .compass-card {
+  border-radius: 0 28px 28px 0;
+}
+
+.mystic-shell .birth-card {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(64, 150, 130, 0.22), transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(181, 65, 47, 0.08), transparent 40%),
+    linear-gradient(145deg, rgba(14, 40, 38, 0.82), rgba(6, 20, 21, 0.86) 56%, rgba(4, 14, 15, 0.9));
+}
+
+.mystic-shell .card-heading h2 {
+  background: var(--xj-gold-text);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: xj-shimmer 10s linear infinite;
+}
+
+.mystic-shell .section-kicker {
+  color: var(--xj-gold);
+}
+
+.mystic-shell .field input,
+.mystic-shell .field select,
+.mystic-shell .segmented-control,
+.mystic-shell .birth-time-toggle,
+.mystic-shell .advanced-fields > summary {
+  border-color: rgba(217, 178, 99, 0.2);
+  border-radius: 13px;
+  background: rgba(2, 12, 13, 0.55);
+  transition: border-color 220ms ease, box-shadow 320ms ease, background 220ms ease;
+}
+
+.mystic-shell .field input:hover,
+.mystic-shell .field select:hover,
+.mystic-shell .birth-time-toggle:hover,
+.mystic-shell .advanced-fields > summary:hover {
+  border-color: rgba(217, 178, 99, 0.42);
+  background: rgba(8, 24, 25, 0.7);
+}
+
+.mystic-shell .field input:focus,
+.mystic-shell .field select:focus {
+  border-color: var(--xj-gold-hi);
+  box-shadow: 0 0 0 4px rgba(246, 220, 151, 0.12), 0 0 28px rgba(217, 178, 99, 0.15);
+  outline: 0;
+}
+
+.mystic-shell .segmented-control {
+  padding: 4px;
+}
+
+.mystic-shell .segmented-control button {
+  border-radius: 9px;
+  transition: background 260ms ease, color 260ms ease, box-shadow 260ms ease;
+}
+
+.mystic-shell .segmented-control button.selected,
+.mystic-shell .birth-calendar-mode button.selected {
+  background: linear-gradient(135deg, #a83a2b, #c6553a);
+  color: var(--xj-gold-pale);
+  box-shadow: 0 8px 22px rgba(181, 65, 47, 0.4), inset 0 1px rgba(255, 220, 180, 0.3);
+}
+
+.mystic-shell .birth-calendar-mode button {
+  border-radius: 999px;
+}
+
+.mystic-shell .chip {
+  border-radius: 999px;
+  transition: transform 260ms var(--xj-spring), background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.mystic-shell .chip:hover {
+  transform: translateY(-2px);
+}
+
+.mystic-shell .chip.selected {
+  box-shadow: 0 0 0 1px rgba(246, 220, 151, 0.4), 0 8px 22px rgba(217, 178, 99, 0.22);
+}
+
+.mystic-shell .birth-time-toggle > i {
+  border-radius: 999px;
+}
+
+.mystic-shell .location-picker-panel,
+.mystic-shell .birth-calendar {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+/* 主按钮：朱砂鎏金，流光扫过 */
+
+.mystic-shell .primary-button {
+  overflow: hidden;
+  border-color: rgba(246, 220, 151, 0.55);
+  border-radius: 18px;
+  background: linear-gradient(115deg, #7e2a20 0%, #b5412f 38%, #c9673a 58%, #a3382a 100%);
+  background-size: 220% 100%;
+  box-shadow: 0 20px 44px rgba(181, 65, 47, 0.38), inset 0 1px rgba(255, 228, 190, 0.35);
+  transition: transform 320ms var(--xj-spring), box-shadow 320ms ease, background-position 900ms var(--xj-ease), filter 220ms ease;
+}
+
+.mystic-shell .primary-button::before {
+  opacity: 0.5;
+}
+
+.mystic-shell .primary-button::after {
+  top: 0;
+  right: auto;
+  bottom: 0;
+  left: 0;
+  width: 34%;
+  background: linear-gradient(100deg, transparent, rgba(255, 238, 200, 0.42), transparent);
+  transform: translateX(-160%) skewX(-22deg);
+  animation: xj-sheen 4.6s ease-in-out 1.2s infinite;
+}
+
+.mystic-shell .primary-button:hover:not(:disabled) {
+  background-position: 100% 0;
+  box-shadow: 0 26px 60px rgba(181, 65, 47, 0.5), 0 0 40px rgba(246, 220, 151, 0.18), inset 0 1px rgba(255, 228, 190, 0.4);
+  transform: translateY(-3px);
+}
+
+.mystic-shell .primary-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+
+.mystic-shell .primary-button:disabled {
+  filter: grayscale(0.7) brightness(0.65);
+  box-shadow: none;
+}
+
+.mystic-shell .primary-button:disabled::after {
+  animation: none;
+  opacity: 0;
+}
+
+/* 罗盘：慢转星环 */
+
+.mystic-shell .compass-card {
+  background:
+    radial-gradient(circle at 50% 47%, rgba(64, 150, 130, 0.22), transparent 34%),
+    radial-gradient(circle at 50% 47%, rgba(14, 37, 35, 0.9) 0, rgba(5, 16, 17, 0.92) 55%, rgba(3, 10, 11, 0.95) 100%);
+}
+
+.mystic-shell .compass-card::before {
+  border-color: rgba(217, 178, 99, 0.12);
+  animation: xj-rotate 70s linear infinite;
+}
+
+.mystic-shell .compass-card::after {
+  border-color: rgba(79, 168, 148, 0.1);
+  animation: xj-rotate 110s linear infinite reverse;
+}
+
+.mystic-shell .compass-visual {
+  box-shadow:
+    inset 0 0 0 9px rgba(217, 178, 99, 0.03),
+    inset 0 0 65px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(246, 220, 151, 0.14),
+    0 0 90px rgba(64, 150, 130, 0.22),
+    0 0 160px rgba(217, 178, 99, 0.08);
+}
+
+.mystic-shell .compass-visual::after {
+  animation: xj-rotate 50s linear infinite reverse;
+}
+
+.compass-center {
+  animation: xj-core-pulse 5s ease-in-out infinite;
+}
+
+.compass-dial {
+  cursor: grab;
+}
+
+.compass-dial:active {
+  cursor: grabbing;
+}
+
+/* 通用面板 */
+
+.daily-shell.mystic-shell :is(.natal-summary, .transfer-card, .avoided-card, .history-aside) {
+  border-color: var(--xj-line);
+  border-radius: var(--xj-radius-lg);
+  background:
+    radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgba(246, 220, 151, calc(0.08 * var(--glow-a))), transparent 70%),
+    var(--xj-glass);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35), inset 0 1px rgba(255, 240, 200, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.daily-shell.mystic-shell .natal-seal {
+  box-shadow: 0 0 30px rgba(246, 220, 151, 0.22);
+  animation: xj-core-pulse 5s ease-in-out infinite;
+}
+
+.daily-shell.mystic-shell .element-line > div {
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.daily-shell.mystic-shell .element-line > div > i {
+  border-radius: 999px;
+  transform-origin: left;
+  animation: xj-grow-x 1.4s var(--xj-ease) 300ms backwards;
+}
+
+.daily-shell.mystic-shell .transfer-actions button,
+.daily-shell.mystic-shell .transfer-actions label,
+.daily-shell.mystic-shell .avoided-card button,
+.daily-shell.mystic-shell .transfer-card .field input {
+  border-radius: 12px;
+}
+
+/* 今日签局头部 */
+
+.daily-shell.mystic-shell .daily-heading {
+  animation: xj-rise 900ms var(--xj-ease) backwards;
+}
+
+.daily-shell.mystic-shell .daily-heading h1,
+.daily-shell.mystic-shell .subpage-heading h1 {
+  background: var(--xj-gold-text);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-wrap: balance;
+  animation: xj-shimmer 9s linear infinite;
+}
+
+.daily-shell.mystic-shell .daily-heading h1 em {
+  background: linear-gradient(100deg, #f6dc97, #fff3d0 45%, #e7735c 75%, #f6dc97);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 22px rgba(246, 220, 151, 0.35));
+  animation: xj-shimmer 5s linear infinite;
+}
+
+.daily-shell.mystic-shell .daily-actions button,
+.daily-shell.mystic-shell .empty-oracle button {
+  border-radius: 999px;
+  border-color: var(--xj-line-strong);
+  background: rgba(10, 28, 28, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform 300ms var(--xj-spring), box-shadow 300ms ease, background 300ms ease;
+}
+
+.daily-shell.mystic-shell .daily-actions button:hover:not(:disabled),
+.daily-shell.mystic-shell .empty-oracle button:hover {
+  background: rgba(217, 178, 99, 0.12);
+  box-shadow: 0 0 30px rgba(217, 178, 99, 0.18);
+  transform: translateY(-2px);
+}
+
+.daily-shell.mystic-shell .daily-actions .reroll-button {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(115deg, #8e3125, #b5412f 50%, #c9673a);
+  box-shadow: 0 14px 34px rgba(181, 65, 47, 0.35), inset 0 1px rgba(255, 228, 190, 0.3);
+}
+
+.daily-shell.mystic-shell .daily-actions .reroll-button:hover:not(:disabled) {
+  background: linear-gradient(115deg, #9b3628, #c4492f 50%, #d6773f);
+  box-shadow: 0 18px 44px rgba(181, 65, 47, 0.5), 0 0 30px rgba(246, 220, 151, 0.18);
+}
+
+/* 流日罗盘与运势 */
+
+.daily-shell.mystic-shell .daily-compass,
+.daily-shell.mystic-shell .omen-panel {
+  border-color: var(--xj-line);
+  border-radius: var(--xj-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35), inset 0 1px rgba(255, 240, 200, 0.05);
+}
+
+.daily-shell.mystic-shell .daily-compass {
+  background:
+    radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgba(246, 220, 151, calc(0.08 * var(--glow-a))), transparent 70%),
+    radial-gradient(circle at 50% 46%, rgba(64, 150, 130, 0.24), transparent 36%),
+    linear-gradient(160deg, rgba(10, 28, 28, 0.88), rgba(4, 12, 13, 0.92));
+}
+
+.daily-shell.mystic-shell .daily-compass-rings .ring-two {
+  animation: xj-rotate 46s linear infinite reverse;
+  border-style: dashed;
+}
+
+.daily-shell.mystic-shell .daily-compass-rings .ring-three {
+  box-shadow: 0 0 40px rgba(64, 150, 130, 0.2);
+}
+
+.daily-shell.mystic-shell .daily-core {
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.45), 0 0 0 8px rgba(217, 178, 99, 0.04), 0 0 50px rgba(217, 178, 99, 0.18);
+  animation: xj-core-pulse 5s ease-in-out infinite;
+}
+
+.daily-shell.mystic-shell .daily-core strong {
+  background: var(--xj-gold-text);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: xj-shimmer 7s linear infinite;
+}
+
+.daily-shell.mystic-shell .daily-compass-rings > i {
+  box-shadow: 0 0 16px rgba(217, 178, 99, 0.2);
+}
+
+.daily-shell.mystic-shell .omen-panel {
+  background:
+    radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgba(246, 220, 151, calc(0.08 * var(--glow-a))), transparent 70%),
+    radial-gradient(circle at 100% 100%, rgba(181, 65, 47, 0.32), transparent 45%),
+    linear-gradient(150deg, rgba(8, 23, 24, 0.9), rgba(16, 39, 37, 0.88) 60%, rgba(40, 22, 22, 0.9));
+}
+
+.daily-shell.mystic-shell .omen-grid > div {
+  border-radius: 14px;
+  transition: transform 300ms var(--xj-spring), background 300ms ease;
+}
+
+.daily-shell.mystic-shell .omen-grid > div:hover {
+  transform: translateY(-3px);
+}
+
+.daily-shell.mystic-shell .fortune-grade {
+  border-radius: 999px;
+  box-shadow: 0 0 24px rgba(246, 220, 151, 0.2);
+}
+
+/* 六签 */
+
+.daily-sign-grid {
+  gap: 18px;
+}
+
+.daily-shell.mystic-shell .daily-sign-card {
+  border-color: var(--xj-line);
+  border-radius: 22px;
+  background:
+    radial-gradient(360px circle at var(--mx, 50%) var(--my, 0%), rgba(246, 220, 151, calc(0.13 * var(--glow-a))), transparent 70%),
+    linear-gradient(160deg, rgba(20, 46, 43, 0.82), rgba(7, 19, 20, 0.92) 55%, rgba(5, 13, 15, 0.95));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.38), inset 0 1px rgba(255, 240, 200, 0.06);
+  animation: xj-sign-rise 900ms var(--xj-ease) backwards;
+  animation-delay: calc(var(--reveal-index, 0) * 110ms);
+}
+
+.daily-shell.mystic-shell .daily-sign-card::after {
+  border-top-right-radius: 12px;
+  border-color: rgba(246, 220, 151, 0.35);
+}
+
+.daily-shell.mystic-shell .daily-sign-card:hover {
+  border-color: rgba(246, 220, 151, 0.45);
+  box-shadow: 0 36px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(246, 220, 151, 0.12), 0 0 50px rgba(217, 178, 99, 0.12);
+}
+
+.daily-shell.mystic-shell .clash-sign {
+  border-color: rgba(231, 115, 92, 0.55);
+  background:
+    radial-gradient(360px circle at var(--mx, 50%) var(--my, 0%), rgba(231, 115, 92, calc(0.16 * var(--glow-a))), transparent 70%),
+    radial-gradient(circle at 100% 0%, rgba(181, 65, 47, 0.3), transparent 50%),
+    linear-gradient(160deg, rgba(44, 20, 19, 0.92), rgba(18, 10, 11, 0.95));
+  animation:
+    xj-sign-rise 900ms var(--xj-ease) backwards,
+    xj-clash-pulse 3.4s ease-in-out 1.2s infinite;
+  animation-delay: calc(var(--reveal-index, 0) * 110ms), 1.2s;
+}
+
+.daily-shell.mystic-shell .clash-sign:hover {
+  border-color: rgba(231, 115, 92, 0.8);
+}
+
+.daily-shell.mystic-shell .role-seal {
+  border-radius: 50%;
+  box-shadow: 0 0 22px rgba(246, 220, 151, 0.2);
+}
+
+.daily-shell.mystic-shell .clash-sign .role-seal {
+  box-shadow: 0 0 26px rgba(231, 115, 92, 0.55);
+}
+
+.daily-shell.mystic-shell .score-badge {
+  position: relative;
+  border-radius: 16px;
+}
+
+.daily-shell.mystic-shell .score-badge.grade-S {
+  animation: xj-grade-glow 3s ease-in-out infinite;
+}
+
+.daily-shell.mystic-shell .score-badge.grade-S::before {
+  position: absolute;
+  inset: -1px;
+  content: "";
+  border-radius: inherit;
+  background: conic-gradient(from var(--sheen-angle, 0deg), transparent 0 60%, rgba(246, 220, 151, 0.95) 75%, transparent 90%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  padding: 1px;
+  animation: xj-spin-angle 3.6s linear infinite;
+}
+
+.daily-shell.mystic-shell .mystic-tags span {
+  border-radius: 999px;
+}
+
+.daily-shell.mystic-shell .stock-facts {
+  border-radius: 14px;
+}
+
+.daily-shell.mystic-shell .feedback-row button {
+  border-radius: 999px;
+  transition: transform 260ms var(--xj-spring), background 220ms ease, color 220ms ease, box-shadow 220ms ease;
+}
+
+.daily-shell.mystic-shell .feedback-row button:hover {
+  transform: translateY(-2px);
+}
+
+.daily-shell.mystic-shell .feedback-row button.selected {
+  box-shadow: 0 0 20px rgba(246, 220, 151, 0.22);
+  animation: xj-pop 420ms var(--xj-spring);
+}
+
+/* 翻牌：牌背流光、翻开闪光 */
+
+.flip-grid {
+  perspective: 2000px;
+}
+
+.flip-card-wrap {
+  animation: xj-sign-rise 900ms var(--xj-ease) backwards;
+}
+
+.flip-card-wrap:nth-child(2) { animation-delay: 110ms; }
+.flip-card-wrap:nth-child(3) { animation-delay: 220ms; }
+.flip-card-wrap:nth-child(4) { animation-delay: 330ms; }
+.flip-card-wrap:nth-child(5) { animation-delay: 440ms; }
+.flip-card-wrap:nth-child(6) { animation-delay: 550ms; }
+
+.flip-card-inner {
+  transition: transform 1000ms cubic-bezier(0.3, 1.25, 0.4, 1);
+}
+
+.flip-card-back {
+  overflow: hidden;
+  border-color: rgba(217, 178, 99, 0.32);
+  border-radius: 22px;
+  background:
+    radial-gradient(360px circle at var(--mx, 50%) var(--my, 30%), rgba(246, 220, 151, calc(0.06 + 0.12 * var(--glow-a))), transparent 70%),
+    repeating-linear-gradient(45deg, rgba(217, 178, 99, 0.035) 0 14px, transparent 14px 28px),
+    linear-gradient(160deg, #0f2a28, #081819 56%, #040c0d);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42), inset 0 1px rgba(255, 240, 200, 0.06);
+}
+
+.flip-card-back::before {
+  border-radius: 15px;
+  border-color: rgba(217, 178, 99, 0.26);
+}
+
+.flip-card-back::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 236, 186, 0.12) 48%, transparent 60%);
+  background-size: 300% 100%;
+  pointer-events: none;
+  animation: xj-card-glint 5.5s ease-in-out infinite;
+}
+
+.flip-card-wrap:nth-child(2n) .flip-card-back::after { animation-delay: -1.8s; }
+.flip-card-wrap:nth-child(3n) .flip-card-back::after { animation-delay: -3.6s; }
+
+.flip-card-back:hover,
+.flip-card-back:focus-visible {
+  border-color: rgba(246, 220, 151, 0.7);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(246, 220, 151, 0.2), 0 0 60px rgba(217, 178, 99, 0.2);
+}
+
+.flip-back-seal {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  font-size: 30px;
+  background: radial-gradient(circle, rgba(181, 65, 47, 0.45), rgba(120, 36, 26, 0.2) 70%);
+  box-shadow: 0 0 30px rgba(181, 65, 47, 0.3);
+  text-shadow: 0 0 14px rgba(246, 220, 151, 0.6);
+  transition: transform 500ms var(--xj-spring), box-shadow 300ms ease;
+}
+
+.flip-back-seal::before,
+.flip-back-seal::after {
+  position: absolute;
+  content: "";
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.flip-back-seal::before {
+  inset: -9px;
+  background: conic-gradient(from 0deg, transparent, rgba(246, 220, 151, 0.8), transparent 35%, transparent 55%, rgba(79, 168, 148, 0.6), transparent 90%);
+  -webkit-mask: radial-gradient(circle, transparent 0 calc(100% - 1.5px), #000 calc(100% - 1px));
+  mask: radial-gradient(circle, transparent 0 calc(100% - 1.5px), #000 calc(100% - 1px));
+  animation: xj-rotate 6s linear infinite;
+}
+
+.flip-back-seal::after {
+  inset: -22px;
+  border: 1px dashed rgba(217, 178, 99, 0.22);
+  animation: xj-rotate 22s linear infinite reverse;
+}
+
+.flip-card-back:hover .flip-back-seal,
+.flip-card-back:focus-visible .flip-back-seal {
+  transform: scale(1.1) rotate(-6deg);
+  box-shadow: 0 0 44px rgba(246, 220, 151, 0.4);
+}
+
+.flip-card-back small {
+  color: var(--xj-gold);
+  animation: xj-breathe-text 2.6s ease-in-out infinite;
+}
+
+.flip-card-wrap.clash-back .flip-card-back {
+  border-color: rgba(231, 115, 92, 0.42);
+  background:
+    radial-gradient(360px circle at var(--mx, 50%) var(--my, 30%), rgba(231, 115, 92, calc(0.08 + 0.12 * var(--glow-a))), transparent 70%),
+    repeating-linear-gradient(45deg, rgba(231, 115, 92, 0.04) 0 14px, transparent 14px 28px),
+    linear-gradient(160deg, #2a1514, #150c0d 56%, #090606);
+}
+
+.flip-card-wrap.clash-back .flip-back-seal::before {
+  background: conic-gradient(from 0deg, transparent, rgba(231, 115, 92, 0.9), transparent 40%, transparent 60%, rgba(246, 220, 151, 0.5), transparent 90%);
+}
+
+.flip-card-front {
+  position: relative;
+  border-radius: 22px;
+}
+
+.flip-card-wrap.flipped .flip-card-front::after {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  content: "";
+  border-radius: 22px;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 240, 200, 0.5) 48%, transparent 64%);
+  background-size: 300% 100%;
+  pointer-events: none;
+  animation: xj-reveal-glint 1.2s ease-out 520ms both;
+}
+
+.flip-card-wrap.flipped .flip-card-front::before {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  aspect-ratio: 1;
+  content: "";
+  border: 2px solid rgba(246, 220, 151, 0.7);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: xj-burst 1s var(--xj-ease) 420ms both;
+}
+
+.flip-card-wrap.flipped.clash-back .flip-card-front::before {
+  border-color: rgba(231, 115, 92, 0.8);
+}
+
+.flip-card-wrap.flipped .daily-sign-card {
+  animation: none;
+}
+
+.daily-shell.mystic-shell .flip-card-wrap.flipped .clash-sign {
+  animation: xj-clash-pulse 3.4s ease-in-out 1.2s infinite;
+}
+
+/* 子页面 */
+
+.daily-shell.mystic-shell .collection-card {
+  border-radius: var(--xj-radius-lg);
+  background:
+    radial-gradient(360px circle at var(--mx, 50%) var(--my, 0%), rgba(246, 220, 151, calc(0.12 * var(--glow-a))), transparent 70%),
+    var(--xj-glass);
+  border-color: var(--xj-line);
+}
+
+.daily-shell.mystic-shell .history-timeline article {
+  border-radius: var(--xj-radius);
+  transition: background 260ms ease, transform 320ms var(--xj-spring);
+}
+
+.daily-shell.mystic-shell .history-timeline article:hover {
+  background: rgba(217, 178, 99, 0.05);
+  transform: translateX(6px);
+}
+
+.daily-shell.mystic-shell .history-dot {
+  box-shadow: 0 0 14px rgba(246, 220, 151, 0.6);
+}
+
+.daily-shell.mystic-shell .empty-oracle {
+  border-radius: var(--xj-radius-lg);
+}
+
+/* 推演加载 */
+
+.daily-shell.mystic-shell .oracle-dial {
+  animation: xj-core-pulse 2.4s ease-in-out infinite;
+}
+
+.daily-shell.mystic-shell .oracle-dial::after {
+  position: absolute;
+  inset: -18px;
+  content: "";
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 70%, rgba(246, 220, 151, 0.55) 92%, transparent);
+  -webkit-mask: radial-gradient(circle, transparent 0 58%, #000 60%);
+  mask: radial-gradient(circle, transparent 0 58%, #000 60%);
+  animation: xj-rotate 1.8s linear infinite;
+}
+
+.daily-shell.mystic-shell .oracle-loading strong {
+  background: var(--xj-gold-text);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: xj-shimmer 3s linear infinite;
+}
+
+/* 抽屉入口 */
+
+.rail-edge-trigger {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* ======================================================
+ * 关键帧
+ * ====================================================== */
+
+@keyframes xj-aurora {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+  50% { transform: translate3d(3%, -2%, 0) rotate(8deg) scale(1.08); }
+  100% { transform: translate3d(-3%, 3%, 0) rotate(-6deg) scale(1.02); }
+}
+
+@keyframes xj-rise {
+  from { opacity: 0; transform: translate3d(0, 32px, 0) scale(0.985); filter: blur(8px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+
+@keyframes xj-sign-rise {
+  0% { opacity: 0; transform: perspective(1000px) translate3d(0, 46px, 0) rotateX(14deg) scale(0.96); filter: blur(10px); }
+  60% { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: none; filter: none; }
+}
+
+@keyframes xj-drop-in {
+  from { opacity: 0; transform: translate3d(0, -18px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes xj-fade-scale {
+  from { opacity: 0; transform: scale(0.9); filter: blur(12px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+
+@keyframes xj-shimmer {
+  from { background-position: 0% 50%; }
+  to { background-position: -220% 50%; }
+}
+
+@keyframes xj-rotate {
+  to { rotate: 360deg; }
+}
+
+@keyframes xj-spin-angle {
+  to { --sheen-angle: 360deg; }
+}
+
+@keyframes xj-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -14px; }
+}
+
+@keyframes xj-breathe {
+  0%, 100% { opacity: 0.75; scale: 1; }
+  50% { opacity: 1; scale: 1.05; }
+}
+
+@keyframes xj-breathe-text {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes xj-beacon {
+  0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 0 transparent); }
+  50% { opacity: 1; filter: drop-shadow(0 0 6px rgba(246, 220, 151, 0.9)); }
+}
+
+@keyframes xj-core-pulse {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(246, 220, 151, 0)); }
+  50% { filter: drop-shadow(0 0 18px rgba(246, 220, 151, 0.35)); }
+}
+
+@keyframes xj-step-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(231, 115, 92, 0.55); }
+  50% { box-shadow: 0 0 0 8px rgba(231, 115, 92, 0); }
+}
+
+@keyframes xj-trace {
+  0% { transform: translateX(-100%); }
+  60%, 100% { transform: translateX(100%); }
+}
+
+@keyframes xj-sheen {
+  0% { transform: translateX(-160%) skewX(-22deg); }
+  45%, 100% { transform: translateX(420%) skewX(-22deg); }
+}
+
+@keyframes xj-grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes xj-clash-pulse {
+  0%, 100% { box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), 0 0 0 0 rgba(231, 115, 92, 0); }
+  50% { box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(231, 115, 92, 0.45), 0 0 46px rgba(181, 65, 47, 0.32); }
+}
+
+@keyframes xj-grade-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(246, 220, 151, 0); }
+  50% { box-shadow: 0 0 26px rgba(246, 220, 151, 0.38); }
+}
+
+@keyframes xj-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@keyframes xj-card-glint {
+  0%, 55% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+}
+
+@keyframes xj-reveal-glint {
+  from { background-position: 120% 0; opacity: 1; }
+  to { background-position: -120% 0; opacity: 0; }
+}
+
+@keyframes xj-burst {
+  from { opacity: 0.9; transform: translate(-50%, -50%) scale(0.3); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+}
+
+/* ======================================================
+ * 响应式与降级
+ * ====================================================== */
+
+@media (max-width: 1040px) {
+  .daily-shell.mystic-shell .profile-input-stage > .birth-card {
+    border-radius: 22px 22px 0 0;
+  }
+
+  .daily-shell.mystic-shell .profile-input-stage > .compass-card {
+    border-radius: 0 0 22px 22px;
+  }
+}
+
+@media (max-width: 900px) {
+  .landing-nav {
+    top: 8px;
+    width: calc(100% - 24px);
+    padding: 10px 10px 10px 18px;
+    border-radius: 18px;
+  }
+
+  .mystic-shell .input-stage {
+    border-radius: 22px;
+  }
+}
+
+@media (max-width: 640px) {
+  .mystic-shell .input-stage,
+  .boundary-section {
+    border-radius: 20px;
+  }
+
+  .daily-shell.mystic-shell .daily-sign-card,
+  .flip-card-back,
+  .flip-card-front {
+    border-radius: 18px;
+  }
+
+  body::before {
+    filter: blur(30px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .flip-card-wrap.flipped .flip-card-front::before,
+  .flip-card-wrap.flipped .flip-card-front::after,
+  .flip-card-back::after {
+    display: none;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .landing-nav,
+  .mystic-shell .side-rail {
+    background: rgba(4, 11, 13, 0.96);
+  }
+}

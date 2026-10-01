@@ -4,6 +4,8 @@ import "./globals.css";
 import "./styles/daily-oracle.css";
 import "./styles/today-overview.css";
 import "./styles/navigation.css";
+import "./styles/aurora.css";
+import AmbientEffects from "./components/AmbientEffects";
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
@@ -42,7 +44,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
-      <body>{children}</body>
+      <body>
+        <AmbientEffects />
+        {children}
+      </body>
     </html>
   );
 }

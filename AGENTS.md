@@ -15,6 +15,8 @@
   - `app/components/DailySignCard.tsx`：单张命签、折叠事实资料与缘分反馈。
   - `app/components/ProfileTransferCard.tsx`：低频档案导入导出界面。
   - `app/components/LunarBirthDatePicker.tsx`：农历年、月（含闰月）、日选择与对应公历日期提示。
+  - `app/components/AmbientEffects.tsx`：根布局中的装饰星尘画布、指针光斑、签卡微倾与滚动显现。
+  - `app/styles/aurora.css`：最后加载的玄青夜幕视觉与动效层；新增动效须在此统一并尊重 `prefers-reduced-motion`。
   - `app/lib/fortune.ts`：四柱、五行、真太阳时、北京时间流日与每日运势。
   - `app/lib/lunar-date.ts`：公历与农历生日互转、闰月和大小月校验。
   - `app/lib/mystic-ranking.ts`：股票标签类型、缘分评分和六签选择。
