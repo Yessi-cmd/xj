@@ -2582,6 +2582,8 @@ select:focus-visible {
 
 .mystic-shell .input-stage {
   position: relative;
+  /* 高于后续的每日一览（z-index: 3），否则地点候选面板会被其遮挡。 */
+  z-index: 6;
   grid-template-columns: minmax(460px, 0.82fr) minmax(610px, 1.18fr);
   overflow: hidden;
   border: 1px solid rgba(210, 170, 87, 0.38);
@@ -3474,7 +3476,7 @@ select:focus-visible {
 }
 
 .location-level-options {
-  max-height: 250px;
+  max-height: min(250px, 32vh);
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
