@@ -845,14 +845,6 @@ export default function CompassExperience({
         ) : view === "today" && result ? (
           <section className="daily-workspace" id="daily-oracle">
             <header className="daily-heading"><div><span className="oracle-date">{formatDate(result.dailyContext.dateKey)} · 北京时间</span><h1>今日玄签，<em>{result.dailyFortune.grade}</em></h1><p>{result.dailyFortune.title}。本命「{result.riskProfile}」今日宜观象，不宜因签下注。</p></div><div className="daily-actions"><button onClick={share}>生成分享卡</button><button className="reroll-button" disabled={loading} onClick={() => rerollDialog.current?.showModal()}>{loading ? "天机运转中" : rerollCount ? `再换一卦 · 今日第${rerollCount}卦` : "换一卦 · 每日不限"}</button></div></header>
-            <div className="daily-oracle-grid">
-              <section className="daily-compass surface-card">
-                <div className="daily-compass-rings"><span className="ring-one" /><span className="ring-two" /><span className="ring-three" /><div className="daily-core"><small>今日流日</small><strong>{result.dailyContext.dayPillar}</strong><span>{result.dailyContext.dayElement}气行运</span></div>{ELEMENTS.map((element, index) => <i key={element} style={{ "--daily-index": index } as React.CSSProperties}>{element}</i>)}</div>
-                <div className="daily-signature"><span>本命主星</span><strong>{result.mysticSignature.star}</strong><i /> <span>守局神兽</span><strong>{result.mysticSignature.beast}</strong><i /><span>灵数</span><strong>{result.mysticSignature.destinyNumber}</strong></div>
-              </section>
-              <section className="omen-panel surface-card"><span className="fortune-grade">{result.dailyFortune.grade}</span><h2>{result.dailyFortune.title}</h2><div className="omen-grid"><div><small>幸运时辰</small><strong>{result.dailyFortune.luckyHour}</strong></div><div><small>幸运色</small><strong>{result.dailyFortune.luckyColor}</strong></div><div><small>今日灵数</small><strong>{result.dailyFortune.luckyNumber}</strong></div></div><div className="do-dont"><p><b>宜</b>{result.dailyFortune.favorable.join(" · ")}</p><p><b>忌</b>{result.dailyFortune.avoid.join(" · ")}</p></div></section>
-            </div>
-
             <div className="sign-heading"><div><span>六签各司其职</span><h2>揭开今日股缘</h2></div><p>守护签随本命恒定；相冲签只作警示；其余四签随流日与换卦变化。{result.recommendations[0]?.factsDate ? <small className="facts-note">静态事实快照 · {formatSnapshotDate(result.recommendations[0].factsDate)} · 仅供文化娱乐参考，不构成投资建议</small> : null}</p></div>
             <div className={`daily-sign-grid${flipOn ? " flip-grid" : ""}`}>
               {result.recommendations.map((item, index) => (
@@ -867,6 +859,13 @@ export default function CompassExperience({
                   onFeedback={(action) => setFeedback(item, action)}
                 />
               ))}
+            </div>
+            <div className="daily-oracle-grid">
+              <section className="daily-compass surface-card">
+                <div className="daily-compass-rings"><span className="ring-one" /><span className="ring-two" /><span className="ring-three" /><div className="daily-core"><small>今日流日</small><strong>{result.dailyContext.dayPillar}</strong><span>{result.dailyContext.dayElement}气行运</span></div>{ELEMENTS.map((element, index) => <i key={element} style={{ "--daily-index": index } as React.CSSProperties}>{element}</i>)}</div>
+                <div className="daily-signature"><span>本命主星</span><strong>{result.mysticSignature.star}</strong><i /> <span>守局神兽</span><strong>{result.mysticSignature.beast}</strong><i /><span>灵数</span><strong>{result.mysticSignature.destinyNumber}</strong></div>
+              </section>
+              <section className="omen-panel surface-card"><span className="fortune-grade">{result.dailyFortune.grade}</span><h2>{result.dailyFortune.title}</h2><div className="omen-grid"><div><small>幸运时辰</small><strong>{result.dailyFortune.luckyHour}</strong></div><div><small>幸运色</small><strong>{result.dailyFortune.luckyColor}</strong></div><div><small>今日灵数</small><strong>{result.dailyFortune.luckyNumber}</strong></div></div><div className="do-dont"><p><b>宜</b>{result.dailyFortune.favorable.join(" · ")}</p><p><b>忌</b>{result.dailyFortune.avoid.join(" · ")}</p></div></section>
             </div>
           </section>
         ) : view === "collection" ? (

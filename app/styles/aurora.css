@@ -1754,6 +1754,7 @@ summary:focus-visible,
 
 .daily-shell.mystic-shell .daily-oracle-grid {
   gap: 20px;
+  margin-top: 48px;
 }
 
 .daily-shell.mystic-shell .daily-compass::before,
@@ -1869,7 +1870,7 @@ summary:focus-visible,
 /* ---------- 六签标题 ---------- */
 
 .daily-shell.mystic-shell .sign-heading {
-  margin: 64px 0 24px;
+  margin: 0 0 24px;
 }
 
 .daily-shell.mystic-shell .sign-heading h2 {
