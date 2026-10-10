@@ -51,6 +51,9 @@ test("renders the end-to-end demo shell without authentication", async () => {
   const html = await response.text();
   assert.doesNotMatch(html, /以生辰启局，以流日定象|玄鉴 · 千股命盘|静候入局/);
   assert.match(html, /开签方式/);
+  assert.match(html, /<dialog[^>]*class="reroll-dialog"[^>]*aria-labelledby="reroll-dialog-title"/);
+  assert.match(html, /<form[^>]*class="reroll-dialog-actions"[^>]*>/);
+  assert.match(html, /确认换卦/);
   assert.match(html, /请入生辰/);
   assert.doesNotMatch(html, /公历起盘，并依出生地经度校正真太阳时/);
   assert.doesNotMatch(html, /heading-mark/);

@@ -10,6 +10,7 @@ const workerPath = resolve(projectRoot, "dist", "server", "index.js");
 await rm(outputDir, { recursive: true, force: true });
 await mkdir(outputDir, { recursive: true });
 await cp(clientDir, outputDir, { recursive: true });
+await cp(resolve(projectRoot, "app/data/market-snapshot.json"), resolve(outputDir, "data/market-snapshot.json"));
 
 const moduleUrl = pathToFileURL(workerPath);
 moduleUrl.searchParams.set("vps-build", Date.now().toString());

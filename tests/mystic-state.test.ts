@@ -47,7 +47,8 @@ test("current-date history with missing nested fields is discarded before the UI
   assert.deepEqual(normalized.feedback["000001"]?.tags, []);
 });
 
-test("history normalization only restores a complete six-role draw", () => {
+test("history normalization only restores a complete six-role draw", (context) => {
+  context.mock.timers.enable({ apis: ["Date"], now: new Date("2026-08-23T12:00:00+08:00") });
   const valid = history("2026-08-23", ["a", "b", "c", "d", "e"]);
   assert.equal(normalizeMysticState({ history: [valid] }).history.length, 1);
   const duplicateRole = { ...valid, recommendations: valid.recommendations.map((item) => ({ ...item, role: "today" })) };
@@ -75,7 +76,8 @@ test("flip reveal preference normalizes as a boolean and defaults off", () => {
   assert.equal(normalizeMysticState({}).flipReveal, false);
 });
 
-test("reroll counters normalize as non-negative integers and survive beyond the old single-reroll limit", () => {
+test("reroll counters normalize as non-negative integers and survive beyond the old single-reroll limit", (context) => {
+  context.mock.timers.enable({ apis: ["Date"], now: new Date("2026-08-23T12:00:00+08:00") });
   const state = {
     ...createEmptyMysticState(),
     history: [history("2026-08-12", ["a"]), history("2026-08-13", ["b"])],

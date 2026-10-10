@@ -216,7 +216,7 @@ test("combined scores map to the S/A/B/C/D display tiers", () => {
 });
 
 test("static universe v3 carries listing pillars and fundamental snapshots", () => {
-  assert.equal(universe.schemaVersion, 3);
+  assert.equal(universe.schemaVersion, 4);
   assert.ok(universe.stocks.every((stock) => stock.listingDate && stock.listingDayPillar && stock.tagVersion === "3.0"));
   assert.ok(universe.stocks.every((stock) => stock.industry !== "玄学探索"));
   const withFacts = universe.stocks.filter((stock) => stock.marketCap != null && stock.businessProfile && stock.revenue != null);

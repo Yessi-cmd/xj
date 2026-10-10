@@ -2484,3 +2484,63 @@ summary:focus-visible,
     padding: 22px;
   }
 }
+/* 换卦确认与完整静态资料 */
+.reroll-dialog {
+  margin: auto;
+  width: min(460px, calc(100vw - 40px));
+  max-height: calc(100dvh - 48px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  padding: 30px;
+  border: 1px solid rgba(207, 174, 104, 0.45);
+  border-radius: 16px;
+  background: linear-gradient(145deg, #172d30, #0b191e);
+  color: #ece4d1;
+  box-shadow: 0 24px 90px #0009;
+}
+
+.reroll-dialog::backdrop {
+  background: rgba(3, 12, 17, 0.78);
+  backdrop-filter: blur(6px);
+}
+
+.reroll-dialog h2 {
+  font-size: 24px;
+  margin: 16px 0;
+  color: #e5c784;
+  font-family: "Noto Serif SC", "Songti SC", serif;
+}
+
+.reroll-dialog p { line-height: 1.85; }
+.reroll-dialog small { color: #b3b4a9; line-height: 1.7; }
+.reroll-dialog-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.reroll-dialog-actions button {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid #9f895955;
+  border-radius: 8px;
+  background: #ffffff08;
+  color: #e0d5bb;
+  cursor: pointer;
+}
+.reroll-dialog-actions .reroll-confirm { background: #d6b56e; color: #14252a; }
+.reroll-dialog button:focus-visible,
+.stock-facts-scroll:focus-visible { outline: 2px solid #e5c784; outline-offset: 3px; }
+
+.stock-facts-scroll {
+  max-height: min(320px, 45dvh);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #a9905c #112228;
+}
+.stock-facts-scroll::-webkit-scrollbar { width: 8px; }
+.stock-facts-scroll::-webkit-scrollbar-track { background: #112228; }
+.stock-facts-scroll::-webkit-scrollbar-thumb { background: #a9905c; border-radius: 4px; }
+.daily-shell.mystic-shell .stock-facts-profile {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  overflow-wrap: anywhere;
+}

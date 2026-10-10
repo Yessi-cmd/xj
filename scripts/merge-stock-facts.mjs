@@ -36,7 +36,7 @@ universe.stocks = universe.stocks.map((stock) => {
     pe: quote.pe ?? null,
     changePercent: quote.changePct ?? null,
     change5Percent: detail.change5 ?? null,
-    businessProfile: clip(profile.businessProfile, 160),
+    businessProfile: typeof profile.businessProfile === "string" ? profile.businessProfile.trim() || undefined : undefined,
     businessScope: clip(profile.businessScope, 120),
     industryCsrc: profile.industryCsrc ?? undefined,
     employeeCount: profile.employeeCount ?? undefined,
@@ -48,7 +48,7 @@ universe.stocks = universe.stocks.map((stock) => {
   };
 });
 
-universe.schemaVersion = 3;
+universe.schemaVersion = Math.max(4, universe.schemaVersion ?? 0);
 universe.snapshotAt = facts.capturedAt;
 universe.source = "沪深北交易所上市资料 · 腾讯行情 · 东方财富F10 · 玄学标签 v3";
 universe.factsSnapshot = {

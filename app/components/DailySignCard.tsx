@@ -84,17 +84,21 @@ export default function DailySignCard({
           <span className="facts-toggle-copy"><strong>静态事实资料</strong><small>{item.factsDate ? `${formatSnapshotDate(item.factsDate)} 快照` : "暂无快照日期"}</small></span>
           <b className="facts-toggle-action"><span className="facts-open-label">收起</span><span className="facts-closed-label">展开</span><i aria-hidden="true">⌄</i></b>
         </summary>
+        {/* 独立滚动区域需要键盘焦点，供方向键和 PageDown 阅读完整资料。 */}
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */}
+        <div className="stock-facts-scroll" role="region" aria-label={`${item.name}静态事实资料，可滚动查看`} tabIndex={0}>
         <div className="stock-facts-grid">
           <span><small>行业</small>{stockIndustry(item)}</span>
           <span><small>板块</small>{stockBoard(item)}</span>
           <span><small>市值</small>{formatMarketCapYi(item.marketCap)}</span>
           <span><small>营收</small>{item.revenue != null ? `${formatRevenueYuan(item.revenue)} · ${formatRevenuePeriod(item.revenueReportDate)}` : "—"}</span>
           <span><small>当日涨跌</small>{formatSignedPercent(item.changePercent)}</span>
-          <span><small>5日涨跌</small>{formatSignedPercent(item.change5Percent)}</span>
+          <span><small>5日收盘涨跌 · 未复权</small>{formatSignedPercent(item.change5Percent)}</span>
           <span><small>上市</small>{item.listingDate ?? "—"}</span>
           <span><small>探索度</small>{item.explorationScore}</span>
         </div>
         {item.businessProfile && <p className="stock-facts-profile">{item.businessProfile}</p>}
+        </div>
       </details>
       <div className="score-script"><span>本命 {item.natalScore}</span><span>流日 {item.dailyScore}</span><span>缘感 {item.affinityScore}</span></div>
       <div className="feedback-row" aria-label={`${item.name}缘分反馈`}>

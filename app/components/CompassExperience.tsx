@@ -156,6 +156,7 @@ export default function CompassExperience({
   const railCloseButton = useRef<HTMLButtonElement>(null);
   const mobileMenuButton = useRef<HTMLButtonElement>(null);
   const wheelRef = useRef<HTMLDivElement>(null);
+  const rerollDialog = useRef<HTMLDialogElement>(null);
   const wheelRotationRef = useRef(0);
   const wheelDrag = useRef<{ pointerId: number; lastAngle: number; lastTime: number; velocity: number } | null>(null);
   const wheelInertiaFrame = useRef<number | null>(null);
@@ -423,7 +424,7 @@ export default function CompassExperience({
 
   const reroll = async () => {
     if (!result || !state.profile || loading) return;
-    if (!window.confirm("换卦不改变守护签与相冲签，确定再换一卦吗？")) return;
+    rerollDialog.current?.close();
     const nextVersion = (state.rerolls[todayKey] ?? 0) + 1;
     const withReroll: PersistedMysticState = { ...state, rerolls: { ...state.rerolls, [todayKey]: nextVersion } };
     const saved = commit(withReroll);
@@ -843,7 +844,7 @@ export default function CompassExperience({
           </section>
         ) : view === "today" && result ? (
           <section className="daily-workspace" id="daily-oracle">
-            <header className="daily-heading"><div><span className="oracle-date">{formatDate(result.dailyContext.dateKey)} · 北京时间</span><h1>今日玄签，<em>{result.dailyFortune.grade}</em></h1><p>{result.dailyFortune.title}。本命「{result.riskProfile}」今日宜观象，不宜因签下注。</p></div><div className="daily-actions"><button onClick={share}>生成分享卡</button><button className="reroll-button" disabled={loading} onClick={reroll}>{loading ? "天机运转中" : rerollCount ? `再换一卦 · 今日第${rerollCount}卦` : "换一卦 · 每日不限"}</button></div></header>
+            <header className="daily-heading"><div><span className="oracle-date">{formatDate(result.dailyContext.dateKey)} · 北京时间</span><h1>今日玄签，<em>{result.dailyFortune.grade}</em></h1><p>{result.dailyFortune.title}。本命「{result.riskProfile}」今日宜观象，不宜因签下注。</p></div><div className="daily-actions"><button onClick={share}>生成分享卡</button><button className="reroll-button" disabled={loading} onClick={() => rerollDialog.current?.showModal()}>{loading ? "天机运转中" : rerollCount ? `再换一卦 · 今日第${rerollCount}卦` : "换一卦 · 每日不限"}</button></div></header>
             <div className="daily-oracle-grid">
               <section className="daily-compass surface-card">
                 <div className="daily-compass-rings"><span className="ring-one" /><span className="ring-two" /><span className="ring-three" /><div className="daily-core"><small>今日流日</small><strong>{result.dailyContext.dayPillar}</strong><span>{result.dailyContext.dayElement}气行运</span></div>{ELEMENTS.map((element, index) => <i key={element} style={{ "--daily-index": index } as React.CSSProperties}>{element}</i>)}</div>
@@ -874,6 +875,16 @@ export default function CompassExperience({
           <section className="subpage history-page"><header className="subpage-heading"><span>星轨回看 · 最近30日</span><h1>{streak ? `已连续开签 ${streak} 日` : "星轨尚待点亮"}</h1><p>回看每日流日、上签与换卦痕迹。历史只保留30天。</p></header><div className="history-layout"><div className="history-timeline">{currentHistory.length ? currentHistory.map((entry) => { const top = entry.recommendations.find((item) => item.role === "today"); return <article key={`${entry.dateKey}-${entry.profileFingerprint}`}><span className="history-dot" /><time>{formatDate(entry.dateKey)}</time><div><small>{entry.dailyContext.dayPillar}日 · {entry.dailyFortune.grade}{entry.drawVersion ? ` · 换卦${entry.drawVersion}次` : ""}</small><h2>{top?.name ?? "当日玄签"}</h2><p>{top?.code} · {top?.theme}</p></div><strong>{top ? `${scoreGrade(top.combinedScore)} · ${top.combinedScore}` : ""}</strong></article>; }) : <div className="empty-oracle"><strong>还没有星轨</strong><p>完成首次开签后，这里会记录每日上签。</p></div>}</div><aside className="history-aside surface-card"><span className="section-kicker">历史上上签</span>{topSigns.length ? topSigns.map(({ item, count }) => <div key={item.code}><span><strong>{item.name}</strong><small>{item.code}</small></span><b>{count}次</b></div>) : <p>连续开签后，与你最常共振的股票会在这里显现。</p>}</aside></div></section>
         )}
       </main>
+      <dialog ref={rerollDialog} className="reroll-dialog" aria-labelledby="reroll-dialog-title" aria-describedby="reroll-dialog-description">
+        <span className="section-kicker">玄鉴 · 天机再转</span>
+        <h2 id="reroll-dialog-title">再换一卦？</h2>
+        <p id="reroll-dialog-description">上签、潜龙、同曜与补运将重新取签，守护签与相冲签保持不变。每日换卦不限次数。</p>
+        <small>命签仅供文化娱乐，不构成投资建议。</small>
+        <form method="dialog" className="reroll-dialog-actions">
+          <button type="submit">暂留此卦</button>
+          <button type="button" className="reroll-confirm" disabled={loading} onClick={reroll}>确认换卦</button>
+        </form>
+      </dialog>
     </div>
   );
 }

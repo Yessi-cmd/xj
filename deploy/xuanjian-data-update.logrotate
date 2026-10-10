@@ -1,0 +1,8 @@
+/var/log/xuanjian-data-update.log {
+    weekly
+    rotate 8
+    compress
+    missingok
+    notifempty
+    copytruncate
+}

@@ -12,17 +12,17 @@
 """
 
 import concurrent.futures
+from datetime import datetime
 import gzip
 import json
 import sys
 import time
 import urllib.request
+from zoneinfo import ZoneInfo
 
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
       "Accept-Encoding": "gzip"}
 
-UNIVERSE_PATH = sys.argv[1] if len(sys.argv) > 1 else "/var/www/xj.norliva.top/current/data/mystic-stocks.json"
-LIMIT = int(sys.argv[2]) if len(sys.argv) > 2 else 0
 PARTIAL_PATH = "/tmp/stock-facts-partial.json"
 OUTPUT_PATH = "/tmp/stock-facts.json"
 BATCH = 70
@@ -89,11 +89,11 @@ def fetch_quotes(stocks):
 
 
 def fetch_change5(prefix):
-    url = f"https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={prefix},day,,,6,qfq"
+    url = f"https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={prefix},day,,,6"
     try:
         data = json.loads(http_get(url, timeout=12))
         node = data.get("data", {}).get(prefix, {})
-        rows = node.get("qfqday") or node.get("day") or []
+        rows = node.get("day") or []
         if len(rows) >= 2:
             first_close = number(rows[0][2])
             last_close = number(rows[-1][2])
@@ -162,6 +162,8 @@ def fetch_one(prefix):
 
 
 def main():
+    UNIVERSE_PATH = sys.argv[1] if len(sys.argv) > 1 else "/var/www/xj.norliva.top/current/data/mystic-stocks.json"
+    LIMIT = int(sys.argv[2]) if len(sys.argv) > 2 else 0
     with open(UNIVERSE_PATH, encoding="utf-8") as handle:
         universe = json.load(handle)
     stocks = universe.get("stocks", [])
@@ -169,16 +171,20 @@ def main():
         stocks = stocks[:LIMIT]
     print(f"universe: {len(stocks)} stocks", flush=True)
 
+    quotes = fetch_quotes(stocks)
+    print(f"quotes: {len(quotes)} fetched", flush=True)
+    quote_time = max((item.get("quoteTime") or "") for item in quotes.values() if item.get("quoteTime")) or ""
+    trading_date = quote_time[:8] if len(quote_time) >= 8 else ""
+
     partial = {}
     try:
         with open(PARTIAL_PATH, encoding="utf-8") as handle:
-            partial = json.load(handle).get("stocks", {})
+            cache = json.load(handle)
+            if trading_date and cache.get("tradingDate") == trading_date:
+                partial = cache.get("stocks", {})
     except Exception:
         pass
     print(f"resume: {len(partial)} stocks already done", flush=True)
-
-    quotes = fetch_quotes(stocks)
-    print(f"quotes: {len(quotes)} fetched", flush=True)
 
     todo = [stock for stock in stocks if stock["code"] not in partial]
     done = 0
@@ -199,16 +205,15 @@ def main():
                 elapsed = time.time() - start
                 print(f"progress: {done}/{len(todo)} errors={errors} elapsed={elapsed:.0f}s", flush=True)
                 with open(PARTIAL_PATH, "w", encoding="utf-8") as handle:
-                    json.dump({"stocks": partial}, handle, ensure_ascii=False)
+                    json.dump({"tradingDate": trading_date, "stocks": partial}, handle, ensure_ascii=False)
 
     with open(PARTIAL_PATH, "w", encoding="utf-8") as handle:
-        json.dump({"stocks": partial}, handle, ensure_ascii=False)
+        json.dump({"tradingDate": trading_date, "stocks": partial}, handle, ensure_ascii=False)
 
-    quote_time = max((item.get("quoteTime") or "") for item in quotes.values() if item.get("quoteTime")) or ""
     output = {
         "schemaVersion": 1,
-        "capturedAt": time.strftime("%Y-%m-%dT%H:%M:%S+08:00"),
-        "tradingDate": quote_time[:8] if len(quote_time) >= 8 else "",
+        "capturedAt": datetime.now(ZoneInfo("Asia/Shanghai")).isoformat(timespec="seconds"),
+        "tradingDate": trading_date,
         "quotes": quotes,
         "profiles": partial,
     }

@@ -1,0 +1,16 @@
+[Unit]
+Description=Xuanjian low-traffic stock data refresh and atomic release
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/xuanjian-updater/source
+ExecStart=/bin/bash /opt/xuanjian-updater/source/deploy/update-data.sh
+Environment=TZ=Asia/Shanghai
+TimeoutStartSec=2h
+Nice=15
+IOSchedulingClass=idle
+UMask=0022
+StandardOutput=append:/var/log/xuanjian-data-update.log
+StandardError=append:/var/log/xuanjian-data-update.log

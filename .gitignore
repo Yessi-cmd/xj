@@ -42,3 +42,4 @@ yarn-error.log*
 /var/
 *.tsbuildinfo
 /.openai/devlogs/
+__pycache__/

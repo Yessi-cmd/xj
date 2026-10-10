@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh Xuanjian after weekday market close (Asia/Shanghai)
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 16:30:00 Asia/Shanghai
+Persistent=true
+RandomizedDelaySec=120
+Unit=xuanjian-data-update.service
+
+[Install]
+WantedBy=timers.target

@@ -170,3 +170,24 @@ npm test
 ## Documentation updates
 
 当产品行为、评分公式、存储格式、数据来源或部署方式变化时，同步更新 `README.md`、`docs/architecture.md` 和本文件。文档必须描述已经实现的行为，不写占位符或未确认的未来承诺。
+
+换卦使用玄青鎏金风格的站内确认弹窗，支持键盘操作与 Esc 取消。股票静态事实资料默认折叠，展开后在独立滚动区域展示完整简介，不截断正文；可通过触摸、滚轮和键盘查看。
+
+## RackNerd 低流量自动更新
+
+- RackNerd 使用 `xuanjian-data-update.timer`，按北京时间周一至周五 16:30 执行，随机延迟不超过两分钟；`Persistent=true` 在服务器恢复后补触发。运行前用文件锁避免重复抓取。
+- 先用一次三大指数请求检查交易日；交易日未变化时跳过股票抓取和发布（节假日也不会重复全量下载）。每个新交易日刷新批量行情，并在服务器保留最近三十个收盘快照；只请求一次上证指数六根日线来确定五个交易日边界，用对应两日真实收盘价计算五日收盘涨跌（未复权）。未积累够六个交易日或对应日期缺失时，该字段留空，不逐股请求 K 线。公司简介、真实行业和营收等 F10 资料至少间隔七天刷新一次，不再跨日复用 `/tmp` 断点文件。
+- 公司资料请求缺失时保留上次真实字段；当日行情缺失字段为空，不伪造新值。发布要求当日行情覆盖率至少 95%、每周公司概况和营收同时有效的覆盖率至少 90%，否则保留当前线上版本。
+- 维护源码在 `/opt/xuanjian-updater/source`，独立 Node 运行环境在 `/opt/xuanjian-updater/node`。首次安装依赖后，每日复用依赖在 VPS 本地执行 `npm run build:vps`，不进行 npm 安装或整站往返上传。`scripts/update-vps-data.py` 更新版本化源数据，`scripts/validate-data-release.py` 校验完整池、索引及全部事实分片；构建完成后创建 `auto-data-*` release 并原子切换 `current`，HTTP 或安全头检查失败会切回上一版本。
+- `/var/log/xuanjian-data-update.log` 记录抓取请求次数、成功响应体字节数、跳过原因和发布结果（字节数不含 TCP/TLS、HTTP 头以及失败响应流量）；日志每周轮转、压缩，保留八份。`/var/lib/xuanjian-updater/last-success` 和 `last-failure` 保存最近成功、失败记录。使用 `systemctl status xuanjian-data-update.service` 和 `systemctl list-timers xuanjian-data-update.timer` 排查执行状态。
+- 三大指数静态快照同时发布为 `data/market-snapshot.json`，页面仍展示构建时注入的版本化数据；生产浏览器不请求第三方行情接口。每周公司资料的抓取时间记录在 `factsSnapshot.profilesCapturedAt`，旧快照缺少该字段时首次执行会刷新公司资料。
+- 离线维护测试：`python3 -m unittest discover -s tests -p '*test.py'`；该测试不访问行情源。常规应用验证仍执行 `npm run lint`、`npm test`。
+自动更新的大盘首选东方财富；其接口不可用时读取腾讯同一组三大指数的真实收盘数据，并在页面来源字段中标明腾讯行情。不会用旧值推算或填造指数。
+
+后续代码发布必须同步维护源码和 .updater-source-id 标识。自动任务发现线上 release 与维护源码标识不一致时会停止，避免翌日定时构建覆盖人工发布的新功能；初始化显式使用 --force。
+
+完整股票源的 schemaVersion 升为 4，股票命理 tagVersion 仍为 3.0；排序规则不变。五日收盘涨跌明确为未复权口径，自动更新只用真实收盘缓存和指数给出的交易日边界计算，不足时为空。
+
+自动生成的 auto-data-* release 保留最近十四个，并额外保护当前及上一个版本；不会清理原有人工发布版本。公司资料断点只在同一周度抓取周期且未超过七天时复用，成功完成后从该周期最早抓取时间计算下一次刷新。
+
+若服务器在周五收盘后未完成更新、到周末才恢复，持久定时器补触发仍会核对最新交易日并补齐；已保存周五收盘的周末执行直接跳过，不产生行情请求。
