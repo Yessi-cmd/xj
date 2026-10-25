@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type CSSProperties } from "react";
+import { useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import {
   scoreGrade,
   type DailyRecommendation,
@@ -18,6 +18,7 @@ type DailySignCardProps = {
   item: DailyRecommendation;
   index: number;
   flipOn: boolean;
+  compactDeck: boolean;
   revealed: boolean;
   feedback?: FeedbackAction;
   onReveal: () => void;
@@ -39,6 +40,30 @@ const EXCHANGE_LABELS: Record<DailyRecommendation["exchange"], string> = {
   BJ: "北交所",
 };
 
+const COMPACT_DECK_QUERY = "(max-width: 640px)";
+
+function subscribeCompactDeck(onChange: () => void): () => void {
+  const query = window.matchMedia(COMPACT_DECK_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+/** 窄屏翻牌改用小牌阵 + 放大浮层；服务端渲染按宽屏处理。 */
+export function useCompactDeck(): boolean {
+  return useSyncExternalStore(
+    subscribeCompactDeck,
+    () => window.matchMedia(COMPACT_DECK_QUERY).matches,
+    () => false,
+  );
+}
+
+function prefersReducedMotion(): boolean {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+// 浮层内这些元素自行处理点击，其余位置轻触即收起签卡
+const FOCUS_INTERACTIVE = "button, a, summary, input, select, textarea, label, .stock-facts-scroll";
+
 function stockIndustry(item: DailyRecommendation): string {
   const csrc = item.industryCsrc?.split("-");
   if (csrc && csrc.length > 1 && csrc[1]) return csrc[1];
@@ -56,12 +81,18 @@ export default function DailySignCard({
   item,
   index,
   flipOn,
+  compactDeck,
   revealed,
   feedback,
   onReveal,
   onFeedback,
 }: DailySignCardProps) {
   const frontRef = useRef<HTMLDivElement>(null);
+  const slotRef = useRef<HTMLButtonElement>(null);
+  const focusDialogRef = useRef<HTMLDialogElement>(null);
+  const focusPanelRef = useRef<HTMLDivElement>(null);
+  const closingRef = useRef(false);
+  const [expanded, setExpanded] = useState(false);
   const grade = scoreGrade(item.combinedScore);
   const isFlipped = !flipOn || revealed;
   const card = (
@@ -110,6 +141,114 @@ export default function DailySignCard({
   );
 
   if (!flipOn) return card;
+
+  if (compactDeck) {
+    // 以牌位中心为原点等比缩放，让浮层签卡看起来从小牌中长出、再收回小牌
+    const slotTransform = (): string | null => {
+      const slot = slotRef.current?.getBoundingClientRect();
+      const panel = focusPanelRef.current?.getBoundingClientRect();
+      if (!slot || !panel || panel.width === 0) return null;
+      const dx = slot.left + slot.width / 2 - (panel.left + panel.width / 2);
+      const dy = slot.top + slot.height / 2 - (panel.top + panel.height / 2);
+      return `translate(${dx}px, ${dy}px) scale(${slot.width / panel.width})`;
+    };
+
+    const expand = () => {
+      const dialog = focusDialogRef.current;
+      if (!dialog || dialog.open) return;
+      const firstReveal = !revealed;
+      if (firstReveal) onReveal();
+      dialog.showModal();
+      dialog.scrollTop = 0;
+      setExpanded(true);
+      const panel = focusPanelRef.current;
+      const from = slotTransform();
+      if (!panel || !from || prefersReducedMotion()) return;
+      panel.animate(
+        [
+          { transform: `perspective(1400px) ${from} rotateY(${firstReveal ? 90 : 0}deg)`, opacity: 0.35 },
+          { transform: "perspective(1400px) translate(0px, 0px) scale(1) rotateY(0deg)", opacity: 1 },
+        ],
+        { duration: firstReveal ? 640 : 440, easing: "cubic-bezier(0.2, 0.9, 0.3, 1.04)" },
+      );
+    };
+
+    const collapse = () => {
+      const dialog = focusDialogRef.current;
+      const panel = focusPanelRef.current;
+      if (!dialog?.open || closingRef.current) return;
+      const to = slotTransform();
+      if (!panel || !to || prefersReducedMotion()) {
+        dialog.close();
+        return;
+      }
+      closingRef.current = true;
+      dialog.classList.add("is-closing");
+      const animation = panel.animate(
+        [
+          { transform: "translate(0px, 0px) scale(1)", opacity: 1 },
+          { transform: to, opacity: 0.2 },
+        ],
+        { duration: 380, easing: "cubic-bezier(0.55, 0, 0.35, 1)", fill: "forwards" },
+      );
+      animation.onfinish = () => {
+        dialog.close();
+        animation.cancel();
+        dialog.classList.remove("is-closing");
+        closingRef.current = false;
+      };
+    };
+
+    return (
+      <div className={`sign-slot${item.isPositive ? "" : " clash-back"}${revealed ? " revealed" : ""}${expanded ? " is-lifted" : ""}`}>
+        <button
+          ref={slotRef}
+          type="button"
+          className="sign-slot-button"
+          aria-label={revealed ? `展开${item.roleLabel}：${item.name}` : `翻开${item.roleLabel}`}
+          aria-haspopup="dialog"
+          onClick={expand}
+        >
+          <span className="flip-back-seal" aria-hidden="true">{ROLE_GLYPHS[item.role]}</span>
+          {revealed ? (
+            <>
+              <strong>{item.name}</strong>
+              <small>{item.roleLabel} · {grade}</small>
+            </>
+          ) : (
+            <>
+              <strong>{item.roleLabel}</strong>
+              <small>轻触翻牌</small>
+            </>
+          )}
+        </button>
+        {/* 轻触空白收起只是触屏便捷手势；键盘用户使用 Esc 或“收起”按钮。 */}
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions */}
+        <dialog
+          ref={focusDialogRef}
+          className="sign-focus"
+          aria-label={`${item.roleLabel}：${item.name}`}
+          onCancel={(event) => {
+            event.preventDefault();
+            collapse();
+          }}
+          onClose={() => setExpanded(false)}
+          onClick={(event) => {
+            if ((event.target as HTMLElement).closest(FOCUS_INTERACTIVE)) return;
+            collapse();
+          }}
+        >
+          <div ref={focusPanelRef} className="sign-focus-panel">
+            <div className="sign-focus-bar">
+              <small>轻触空白处收起</small>
+              <button type="button" className="sign-focus-close" onClick={collapse}>收起</button>
+            </div>
+            {card}
+          </div>
+        </dialog>
+      </div>
+    );
+  }
   return (
     <div className={`flip-card-wrap${item.isPositive ? "" : " clash-back"}${isFlipped ? " flipped" : ""}`}>
       <div className="flip-card-inner">

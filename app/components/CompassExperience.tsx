@@ -5,7 +5,7 @@ import LocationPicker from "@/app/components/LocationPicker";
 import BirthDatePicker from "@/app/components/BirthDatePicker";
 import LunarBirthDatePicker from "@/app/components/LunarBirthDatePicker";
 import TodayOverview from "@/app/components/TodayOverview";
-import DailySignCard from "@/app/components/DailySignCard";
+import DailySignCard, { useCompactDeck } from "@/app/components/DailySignCard";
 import ProfileTransferCard from "@/app/components/ProfileTransferCard";
 import {
   analyzeProfile,
@@ -170,6 +170,7 @@ export default function CompassExperience({
   const avoided = Object.values(state.feedback).filter((entry) => entry.action === "avoid");
   const rerollCount = state.rerolls[todayKey] ?? 0;
   const flipOn = state.flipReveal === true && result !== null;
+  const compactDeck = useCompactDeck();
   const profileReady = profile.gender !== "" && profile.birthDate !== "" && profile.location !== "";
 
   const topSigns = useMemo(() => {
@@ -846,13 +847,14 @@ export default function CompassExperience({
           <section className="daily-workspace" id="daily-oracle">
             <header className="daily-heading"><div><span className="oracle-date">{formatDate(result.dailyContext.dateKey)} · 北京时间</span><h1>今日玄签，<em>{result.dailyFortune.grade}</em></h1><p>{result.dailyFortune.title}。本命「{result.riskProfile}」今日宜观象，不宜因签下注。</p></div><div className="daily-actions"><button onClick={share}>生成分享卡</button><button className="reroll-button" disabled={loading} onClick={() => rerollDialog.current?.showModal()}>{loading ? "天机运转中" : rerollCount ? `再换一卦 · 今日第${rerollCount}卦` : "换一卦 · 每日不限"}</button></div></header>
             <div className="sign-heading"><div><span>六签各司其职</span><h2>揭开今日股缘</h2></div><p>守护签随本命恒定；相冲签只作警示；其余四签随流日与换卦变化。{result.recommendations[0]?.factsDate ? <small className="facts-note">静态事实快照 · {formatSnapshotDate(result.recommendations[0].factsDate)} · 仅供文化娱乐参考，不构成投资建议</small> : null}</p></div>
-            <div className={`daily-sign-grid${flipOn ? " flip-grid" : ""}`}>
+            <div className={`daily-sign-grid${flipOn ? " flip-grid" : ""}${flipOn && compactDeck ? " compact-deck" : ""}`}>
               {result.recommendations.map((item, index) => (
                 <DailySignCard
                   key={item.role}
                   item={item}
                   index={index}
                   flipOn={flipOn}
+                  compactDeck={compactDeck}
                   revealed={revealed.has(item.role)}
                   feedback={feedbackFor(item.code)}
                   onReveal={() => setRevealed((current) => new Set(current).add(item.role))}
